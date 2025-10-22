@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>サービス一覧</title></head>
+<body>
+    <h1>サービス一覧</h1>
+    <ul>
+    {% for s in services %}
+        <li>{{ s.name }} - {{ s.price }}円</li>
+    {% endfor %}
+    </ul>
+    <a href="/">トップに戻る</a>
+</body>
+</html>
