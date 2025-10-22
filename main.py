@@ -20,3 +20,22 @@ def reserve(name: str = Form(...), date: str = Form(...), service: str = Form(..
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+from fastapi.responses import HTMLResponse
+
+# 予約データを一時的に保存するリスト（既にあるなら重複しないよう確認）
+bookings = []
+
+@app.post("/book")
+def book(name: str = Form(...), date: str = Form(...), service: str = Form(...)):
+    booking = {"name": name, "date": date, "service": service}
+    bookings.append(booking)
+    return {"message": f"{name}さんの予約を受け付けました！"}
+
+# ★ここからがSTEP2★
+@app.get("/bookings", response_class=HTMLResponse)
+def show_bookings():
+    html = "<h2>予約一覧</h2><ul>"
+    for booking in bookings:
+        html += f"<li>{booking['date']} - {booking['name']} ({booking['service']})</li>"
+    html += "</ul>"
+    return html
