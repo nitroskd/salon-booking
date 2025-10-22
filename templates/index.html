@@ -1,15 +1,35 @@
+<!-- templates/index.html -->
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>サロン予約サイト</title>
+  <meta charset="UTF-8">
+  <title>サロン予約フォーム</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 50px auto; }
+    h1 { color: #444; }
+    form { display: flex; flex-direction: column; gap: 10px; }
+    input, select, button { padding: 10px; font-size: 16px; }
+    button { background-color: #4CAF50; color: white; border: none; border-radius: 6px; }
+    button:hover { background-color: #45a049; }
+  </style>
 </head>
 <body>
-    <h1>サロン予約へようこそ</h1>
-    <ul>
-        <li><a href="/services">サービス一覧</a></li>
-        <li><a href="/bookings/new">予約フォーム</a></li>
-        <li><a href="/bookings/today">今日の予約（API表示）</a></li>
-    </ul>
+  <h1>サロン予約フォーム 💅</h1>
+  <form action="/book" method="post">
+    <label>お名前:</label>
+    <input type="text" name="customer_name" required>
+
+    <label>サービス:</label>
+    <select name="service_id" required>
+      {% for service in services %}
+      <option value="{{ service.id }}">{{ service.name }}</option>
+      {% endfor %}
+    </select>
+
+    <label>予約日:</label>
+    <input type="date" name="booking_date" required>
+
+    <button type="submit">予約する</button>
+  </form>
 </body>
 </html>
