@@ -76,7 +76,11 @@ def read_form(request: Request):
         "booked": booked_dict
     })
 
-@app.post("/book")
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse
+# 省略
+
+@app.post("/book", response_class=HTMLResponse)
 def book_service(
     customer_name: str = Form(...),
     phone_number: str = Form(...),
@@ -85,31 +89,41 @@ def book_service(
     booking_time: str = Form(...),
     notes: str = Form(default="")
 ):
-    """予約を登録"""
+    """予約を登録して完了画面を表示"""
     try:
         with get_db_connection() as conn:
             c = conn.cursor()
             # 重複チェック
             c.execute("""
                 SELECT id FROM bookings 
-                WHERE booking_date = %s AND booking_time = %s;
+                WHERE booking_date = ? AND booking_time = ?
             """, (booking_date, booking_time))
             
             if c.fetchone():
-                return RedirectResponse("/?error=already_booked", status_code=303)
+                # 既に予約済みの場合はエラー
+                return HTMLResponse("<h2>この時間は既に予約済みです</h2>", status_code=400)
             
-            # 挿入処理
+            # 予約を挿入
             c.execute("""
                 INSERT INTO bookings (customer_name, phone_number, service_name, booking_date, booking_time, notes)
-                VALUES (%s, %s, %s, %s, %s, %s);
+                VALUES (?, ?, ?, ?, ?, ?)
             """, (customer_name, phone_number, service_name, booking_date, booking_time, notes))
             conn.commit()
 
-        return RedirectResponse("/?success=true", status_code=303)
-    
+        # 完了ページを表示
+        return templates.TemplateResponse("complete.html", {
+            "request": {},
+            "customer_name": customer_name,
+            "service_name": service_name,
+            "booking_date": booking_date,
+            "booking_time": booking_time,
+            "notes": notes
+        })
+
     except Exception as e:
-        print(f"❌ 予約エラー: {e}")
-        return RedirectResponse("/?error=system", status_code=303)
+        print(f"予約エラー: {e}")
+        return HTMLResponse("<h2>システムエラーが発生しました</h2>", status_code=500)
+
 
 @app.get("/bookings")
 def get_bookings():
