@@ -3,50 +3,70 @@ from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from contextlib import contextmanager
 import sqlite3
+import os
 
 app = FastAPI()
-templates = Jinja2Templates(directory="templates")
+
+# テンプレートディレクトリの存在確認
+templates_dir = "templates"
+if not os.path.exists(templates_dir):
+    os.makedirs(templates_dir)
+
+templates = Jinja2Templates(directory=templates_dir)
+
+# データベースファイルのパス
+DB_PATH = "bookings.db"
+
+# --- DB接続のコンテキストマネージャー ---
+@contextmanager
+def get_db_connection():
+    """データベース接続を安全に管理"""
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 # --- DB初期化 ---
 def init_db():
-    conn = sqlite3.connect("bookings.db")
-    c = conn.cursor()
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS bookings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            customer_name TEXT,
-            service_name TEXT,
-            booking_date TEXT,
-            booking_time TEXT
-        )
-    """)
-    conn.commit()
-    conn.close()
+    """データベースとテーブルを初期化"""
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS bookings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                customer_name TEXT NOT NULL,
+                service_name TEXT NOT NULL,
+                booking_date TEXT NOT NULL,
+                booking_time TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(booking_date, booking_time)
+            )
+        """)
+        conn.commit()
 
+# アプリ起動時にDB初期化
 init_db()
 
-
 @app.get("/", response_class=HTMLResponse)
-<<<<<<< HEAD
 def read_form(request: Request):
-    conn = sqlite3.connect("bookings.db")
-    c = conn.cursor()
-    c.execute("SELECT booking_date, booking_time FROM bookings")
-    booked = c.fetchall()
-    conn.close()
-=======
-def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
->>>>>>> ef8e8d05b118a1ef820be45e72ef01914eeca66c
-
+    """予約フォームを表示"""
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        c.execute("SELECT booking_date, booking_time FROM bookings ORDER BY booking_date, booking_time")
+        booked = c.fetchall()
+    
     # 予約済みデータを {日付: [時間,時間]} の形式に変換
     booked_dict = {}
     for date, time in booked:
         booked_dict.setdefault(date, []).append(time)
-
-    return templates.TemplateResponse("index.html", {"request": request, "booked": booked_dict})
-
+    
+    return templates.TemplateResponse("index.html", {
+        "request": request, 
+        "booked": booked_dict
+    })
 
 @app.post("/book")
 def book_service(
@@ -55,12 +75,65 @@ def book_service(
     booking_date: str = Form(...),
     booking_time: str = Form(...)
 ):
-    conn = sqlite3.connect("bookings.db")
-    c = conn.cursor()
-    c.execute("""
-        INSERT INTO bookings (customer_name, service_name, booking_date, booking_time)
-        VALUES (?, ?, ?, ?)
-    """, (customer_name, service_name, booking_date, booking_time))
-    conn.commit()
-    conn.close()
-    return RedirectResponse("/", status_code=303)
+    """予約を登録"""
+    try:
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            # 重複チェック
+            c.execute("""
+                SELECT id FROM bookings 
+                WHERE booking_date = ? AND booking_time = ?
+            """, (booking_date, booking_time))
+            
+            if c.fetchone():
+                # 既に予約済みの場合はエラー（本来はエラーページを返すべき）
+                return RedirectResponse("/?error=already_booked", status_code=303)
+            
+            # 予約を挿入
+            c.execute("""
+                INSERT INTO bookings (customer_name, service_name, booking_date, booking_time)
+                VALUES (?, ?, ?, ?)
+            """, (customer_name, service_name, booking_date, booking_time))
+            conn.commit()
+        
+        return RedirectResponse("/?success=true", status_code=303)
+    
+    except sqlite3.IntegrityError:
+        # UNIQUE制約違反の場合
+        return RedirectResponse("/?error=already_booked", status_code=303)
+    except Exception as e:
+        # その他のエラー
+        print(f"予約エラー: {e}")
+        return RedirectResponse("/?error=system", status_code=303)
+
+@app.get("/bookings")
+def get_bookings():
+    """予約一覧をJSON形式で返す（管理用API）"""
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        c.execute("""
+            SELECT id, customer_name, service_name, booking_date, booking_time, created_at 
+            FROM bookings 
+            ORDER BY booking_date DESC, booking_time DESC
+        """)
+        bookings = c.fetchall()
+    
+    return {
+        "bookings": [
+            {
+                "id": b[0],
+                "customer_name": b[1],
+                "service_name": b[2],
+                "booking_date": b[3],
+                "booking_time": b[4],
+                "created_at": b[5]
+            }
+            for b in bookings
+        ]
+    }
+
+# ヘルスチェック用エンドポイント
+@app.get("/health")
+def health_check():
+    """アプリケーションの稼働状態を確認"""
+    return {"status": "ok"}
