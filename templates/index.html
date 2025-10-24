@@ -122,5 +122,25 @@
   <footer>
     <p>© 2025 Salon Coeur</p>
   </footer>
+  <script>
+    const bookedData = {{ booked | tojson }};
+    const dateInput = document.querySelector('input[name="booking_date"]');
+    const timeSelect = document.querySelector('select[name="booking_time"]');
+  
+    dateInput.addEventListener('change', () => {
+      const selectedDate = dateInput.value;
+      const bookedTimes = bookedData[selectedDate] || [];
+      for (let option of timeSelect.options) {
+        if (bookedTimes.includes(option.value)) {
+          option.disabled = true;
+          option.textContent = option.value + "（予約済）";
+        } else {
+          option.disabled = false;
+          option.textContent = option.value;
+        }
+      }
+    });
+  </script>
+  
 </body>
 </html>
