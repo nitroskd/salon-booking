@@ -88,7 +88,7 @@ def shop_page(request: Request):
     })
 
 # --- 予約フォーム ---
-@app.get("/", response_class=HTMLResponse)
+@app.get("/index", response_class=HTMLResponse)
 def read_form(request: Request):
     with get_db_connection() as conn:
         c = conn.cursor()
@@ -216,6 +216,50 @@ async def add_product(
     
     return RedirectResponse("/admin/products", status_code=303)
 
+
+# --- 商品編集 ---
+@app.post("/admin/products/edit/{product_id}")
+async def edit_product(
+    product_id: int,
+    name: str = Form(...),
+    price: int = Form(...),
+    image: UploadFile = File(None)
+):
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        # 画像がアップロードされた場合は保存してファイル名を更新
+        if image:
+            image_path = os.path.join("static/images", image.filename)
+            with open(image_path, "wb") as f:
+                f.write(await image.read())
+            c.execute(
+                "UPDATE products SET name=%s, price=%s, image_filename=%s WHERE id=%s;",
+                (name, price, image.filename, product_id)
+            )
+        else:
+            c.execute(
+                "UPDATE products SET name=%s, price=%s WHERE id=%s;",
+                (name, price, product_id)
+            )
+        conn.commit()
+    return RedirectResponse("/admin/products", status_code=303)
+
+# --- 商品削除 ---
+@app.post("/admin/products/delete/{product_id}")
+def delete_product(product_id: int):
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        # まず商品情報を取得して画像ファイル削除
+        c.execute("SELECT image_filename FROM products WHERE id=%s;", (product_id,))
+        result = c.fetchone()
+        if result and result[0]:
+            image_path = os.path.join("static/images", result[0])
+            if os.path.exists(image_path):
+                os.remove(image_path)
+        # 商品削除
+        c.execute("DELETE FROM products WHERE id=%s;", (product_id,))
+        conn.commit()
+    return RedirectResponse("/admin/products", status_code=303)
 # --- ヘルスチェック ---
 @app.get("/health")
 def health_check():

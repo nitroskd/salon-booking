@@ -1,0 +1,223 @@
+<!-- templates/admin_products.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>商品管理 - Salon Coeur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap');
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #fefbf5;
+      color: #444;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      font-family: 'Roboto', sans-serif;
+      color: #6a8f66;
+      text-align: center;
+      margin-top: 40px;
+      font-size: 2em;
+    }
+
+    nav {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    nav a {
+      display: inline-block;
+      margin: 0 10px;
+      padding: 10px 20px;
+      background-color: #a3b18a;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+
+    nav a:hover {
+      background-color: #879f6f;
+    }
+
+    form {
+      max-width: 480px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    label {
+      font-weight: 500;
+      color: #555;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"], input[type="number"], input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d9d6ce;
+      border-radius: 10px;
+      font-size: 1em;
+      background-color: #fcfaf4;
+      transition: 0.3s;
+      box-sizing: border-box;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #a3b18a;
+      outline: none;
+      box-shadow: 0 0 5px rgba(163, 177, 138, 0.4);
+    }
+
+    button {
+      margin-top: 10px;
+      width: 100%;
+      background-color: #a3b18a;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #879f6f;
+    }
+
+    .products-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .product-card {
+      background-color: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .product-card img {
+      max-width: 100%;
+      border-radius: 10px;
+      object-fit: cover;
+    }
+
+    .product-name {
+      font-weight: 500;
+      font-size: 1.1em;
+      color: #333;
+    }
+
+    .product-price {
+      font-weight: bold;
+      color: #6a8f66;
+      font-size: 1.05em;
+    }
+
+    .product-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .product-actions form {
+      display: inline;
+      margin: 0;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #777;
+      font-size: 0.9em;
+      padding-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>商品管理 🛒</h1>
+
+  <nav>
+    <a href="/home">ホームに戻る</a>
+    <a href="/shop">ショップページ</a>
+  </nav>
+
+  <!-- 商品登録フォーム -->
+  <form action="/admin/products" method="post" enctype="multipart/form-data">
+    <div>
+      <label>商品名:</label>
+      <input type="text" name="name" required>
+    </div>
+
+    <div>
+      <label>価格 (円):</label>
+      <input type="number" name="price" min="0" required>
+    </div>
+
+    <div>
+      <label>商品画像:</label>
+      <input type="file" name="image" accept="image/*" required>
+    </div>
+
+    <button type="submit">商品を登録</button>
+  </form>
+
+  <!-- 登録済み商品一覧 -->
+  <div class="products-container">
+    {% for product in products %}
+    <div class="product-card">
+      {% if product.image_filename %}
+      <img src="/static/images/{{ product.image_filename }}" alt="{{ product.name }}">
+      {% else %}
+      <img src="/static/images/default.png" alt="商品画像なし">
+      {% endif %}
+      <div class="product-name">{{ product.name }}</div>
+      <div class="product-price">{{ product.price | int }} 円</div>
+
+      <div class="product-actions">
+        <!-- 編集フォーム -->
+        <form action="/admin/products/edit/{{ product.id }}" method="post" enctype="multipart/form-data">
+          <input type="text" name="name" value="{{ product.name }}" required style="width:100px">
+          <input type="number" name="price" value="{{ product.price }}" min="0" required style="width:70px">
+          <input type="file" name="image" accept="image/*" style="width:100px">
+          <button type="submit">更新</button>
+        </form>
+
+        <!-- 削除フォーム -->
+        <form action="/admin/products/delete/{{ product.id }}" method="post">
+          <button type="submit" style="background-color:#d9534f;">削除</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+    {% if products|length == 0 %}
+    <p style="text-align:center; color:#888;">登録されている商品はまだありません</p>
+    {% endif %}
+  </div>
+
+  <footer>
+    <p>© 2025 Salon Coeur</p>
+  </footer>
+</body>
+</html>
