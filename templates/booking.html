@@ -1,121 +1,91 @@
+<!-- templates/bookings.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>ご予約フォーム | サロン</title>
+  <title>予約一覧</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+
   <style>
-    /* ===== ベース設定 ===== */
     body {
-      font-family: "Hiragino Sans", "Helvetica", "Arial", sans-serif;
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #fefbf5;
+      color: #444;
       margin: 0;
       padding: 0;
-      background: linear-gradient(135deg, #f0f9ff, #cbebff);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
     }
 
-    /* ===== カード風デザイン ===== */
-    .container {
-      background-color: #fff;
-      width: 90%;
-      max-width: 450px;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-      animation: fadeIn 0.8s ease-in-out;
-    }
-
-    h2 {
+    h1 {
       text-align: center;
-      color: #333;
-      margin-bottom: 1.5rem;
-      font-size: 1.5rem;
-      border-bottom: 2px solid #4CAF50;
-      padding-bottom: 0.5rem;
+      color: #6a8f66;
+      margin-top: 40px;
+      font-size: 2em;
     }
 
-    label {
-      display: block;
-      margin-top: 1rem;
-      color: #333;
-      font-weight: bold;
+    table {
+      width: 90%;
+      margin: 30px auto;
+      border-collapse: collapse;
+      background: #fff;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
     }
 
-    input, select {
-      width: 100%;
-      padding: 10px;
-      margin-top: 0.3rem;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
-      transition: all 0.2s;
+    th, td {
+      border-bottom: 1px solid #ddd;
+      padding: 14px;
+      text-align: center;
     }
 
-    input:focus, select:focus {
-      outline: none;
-      border-color: #4CAF50;
-      box-shadow: 0 0 5px rgba(76, 175, 80, 0.4);
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 1.5rem;
-      background-color: #4CAF50;
+    th {
+      background: #a3b18a;
       color: white;
-      border: none;
+      font-weight: 500;
+    }
+
+    tr:hover {
+      background-color: #f2f2f2;
+    }
+
+    a {
+      display: block;
+      text-align: center;
+      margin: 30px auto;
+      text-decoration: none;
+      background: #a3b18a;
+      color: white;
+      width: 200px;
+      padding: 10px;
       border-radius: 8px;
-      font-size: 1rem;
-      cursor: pointer;
       transition: 0.3s;
     }
 
-    button:hover {
-      background-color: #43a047;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-
-    /* ===== アニメーション ===== */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ===== スマホ対応 ===== */
-    @media (max-width: 600px) {
-      .container {
-        padding: 1.5rem;
-        width: 95%;
-      }
-      h2 {
-        font-size: 1.3rem;
-      }
+    a:hover {
+      background: #879f6f;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>ご予約フォーム</h2>
-    <form action="/book" method="post">
-      <label for="name">お名前</label>
-      <input type="text" id="name" name="name" placeholder="山田太郎" required>
+  <h1>ご予約一覧 🌿</h1>
 
-      <label for="date">日付</label>
-      <input type="date" id="date" name="date" required>
+  <table>
+    <tr>
+      <th>予約日</th>
+      <th>時間</th>
+      <th>お名前</th>
+      <th>サービス</th>
+    </tr>
+    {% for booking in bookings %}
+    <tr>
+      <td>{{ booking[0] }}</td>
+      <td>{{ booking[1] }}</td>
+      <td>{{ booking[2] }}</td>
+      <td>{{ booking[3] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
 
-      <label for="service">サービス</label>
-      <select id="service" name="service" required>
-        <option value="">選択してください</option>
-        <option value="cut">カット</option>
-        <option value="color">カラー</option>
-        <option value="treatment">トリートメント</option>
-      </select>
-
-      <button type="submit">予約する</button>
-    </form>
-  </div>
+  <a href="/">← 予約フォームに戻る</a>
 </body>
 </html>
