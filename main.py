@@ -38,9 +38,11 @@ def init_db():
             CREATE TABLE IF NOT EXISTS bookings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 customer_name TEXT NOT NULL,
+                phone_number TEXT NOT NULL,
                 service_name TEXT NOT NULL,
                 booking_date TEXT NOT NULL,
                 booking_time TEXT NOT NULL,
+                notes TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(booking_date, booking_time)
             )
@@ -71,9 +73,11 @@ def read_form(request: Request):
 @app.post("/book")
 def book_service(
     customer_name: str = Form(...),
+    phone_number: str = Form(...),
     service_name: str = Form(...),
     booking_date: str = Form(...),
-    booking_time: str = Form(...)
+    booking_time: str = Form(...),
+    notes: str = Form(default="")
 ):
     """予約を登録"""
     try:
@@ -86,14 +90,14 @@ def book_service(
             """, (booking_date, booking_time))
             
             if c.fetchone():
-                # 既に予約済みの場合はエラー（本来はエラーページを返すべき）
+                # 既に予約済みの場合はエラー
                 return RedirectResponse("/?error=already_booked", status_code=303)
             
             # 予約を挿入
             c.execute("""
-                INSERT INTO bookings (customer_name, service_name, booking_date, booking_time)
-                VALUES (?, ?, ?, ?)
-            """, (customer_name, service_name, booking_date, booking_time))
+                INSERT INTO bookings (customer_name, phone_number, service_name, booking_date, booking_time, notes)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (customer_name, phone_number, service_name, booking_date, booking_time, notes))
             conn.commit()
         
         return RedirectResponse("/?success=true", status_code=303)
@@ -112,7 +116,7 @@ def get_bookings():
     with get_db_connection() as conn:
         c = conn.cursor()
         c.execute("""
-            SELECT id, customer_name, service_name, booking_date, booking_time, created_at 
+            SELECT id, customer_name, phone_number, service_name, booking_date, booking_time, notes, created_at 
             FROM bookings 
             ORDER BY booking_date DESC, booking_time DESC
         """)
@@ -123,10 +127,12 @@ def get_bookings():
             {
                 "id": b[0],
                 "customer_name": b[1],
-                "service_name": b[2],
-                "booking_date": b[3],
-                "booking_time": b[4],
-                "created_at": b[5]
+                "phone_number": b[2],
+                "service_name": b[3],
+                "booking_date": b[4],
+                "booking_time": b[5],
+                "notes": b[6],
+                "created_at": b[7]
             }
             for b in bookings
         ]

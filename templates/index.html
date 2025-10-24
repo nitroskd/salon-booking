@@ -42,6 +42,7 @@
       display: block;
       font-weight: 500;
       color: #555;
+      margin-bottom: 6px;
     }
 
     input, select, textarea {
@@ -52,12 +53,26 @@
       font-size: 1em;
       background-color: #fcfaf4;
       transition: 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+      font-family: 'Noto Sans JP', sans-serif;
     }
 
     input:focus, select:focus, textarea:focus {
       border-color: #a3b18a;
       outline: none;
       box-shadow: 0 0 5px rgba(163, 177, 138, 0.4);
+    }
+
+    .optional {
+      font-size: 0.85em;
+      color: #888;
+      font-weight: normal;
+      margin-left: 4px;
     }
 
     button {
@@ -82,6 +97,7 @@
       margin-top: 40px;
       color: #777;
       font-size: 0.9em;
+      padding-bottom: 20px;
     }
   </style>
 </head>
@@ -89,32 +105,47 @@
   <h1>ご予約フォーム 🌿</h1>
 
   <form action="/book" method="post">
-    <label>お名前:</label>
-    <input type="text" name="customer_name" required>
+    <div>
+      <label>お名前:</label>
+      <input type="text" name="customer_name" required>
+    </div>
 
-    <!-- ▼ サービス内容ドロップダウン（5個までカスタム可） -->
-    <label>サービス内容:</label>
-    <select name="service_name" required>
-      <option value="">選択してください</option>
-      <option value="シミケア">シミケア</option>
-      <option value="フェイシャルWAX">フェイシャルWAX</option>
-      <option value="脳洗浄">脳洗浄</option>
-      <option value="ピーリング">ピーリング</option>
-      <option value="ハーブサウナ">ハーブサウナ</option>
-    </select>
+    <div>
+      <label>電話番号:</label>
+      <input type="tel" name="phone_number" placeholder="090-1234-5678" pattern="[0-9\-]+" required>
+    </div>
 
-    <!-- ▼ 予約日 -->
-    <label>予約日:</label>
-    <input type="date" name="booking_date" required>
+    <div>
+      <label>サービス内容:</label>
+      <select name="service_name" required>
+        <option value="">選択してください</option>
+        <option value="シミケア">シミケア</option>
+        <option value="フェイシャルWAX">フェイシャルWAX</option>
+        <option value="脳洗浄">脳洗浄</option>
+        <option value="ピーリング">ピーリング</option>
+        <option value="ハーブサウナ">ハーブサウナ</option>
+      </select>
+    </div>
 
-    <!-- ▼ 予約時間 -->
-    <label>予約時間:</label>
-    <select name="booking_time" required>
-      <option value="">選択してください</option>
-      <option value="10:00">10:00</option>
-      <option value="14:00">14:00</option>
-      <option value="17:00">17:00</option>
-    </select>
+    <div>
+      <label>予約日:</label>
+      <input type="date" name="booking_date" required>
+    </div>
+
+    <div>
+      <label>予約時間:</label>
+      <select name="booking_time" required>
+        <option value="">選択してください</option>
+        <option value="10:00">10:00</option>
+        <option value="14:00">14:00</option>
+        <option value="17:00">17:00</option>
+      </select>
+    </div>
+
+    <div>
+      <label>備考 <span class="optional">(任意)</span>:</label>
+      <textarea name="notes" placeholder="お気軽になんでもお申し付けください"></textarea>
+    </div>
 
     <button type="submit">この内容で予約する</button>
   </form>
@@ -122,6 +153,7 @@
   <footer>
     <p>© 2025 Salon Coeur</p>
   </footer>
+
   <script>
     const bookedData = {{ booked | tojson }};
     const dateInput = document.querySelector('input[name="booking_date"]');
