@@ -7,29 +7,25 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
-    /* フォント読み込み */
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap');
-  
-    /* 全体 */
+
     body {
       font-family: 'Noto Sans JP', sans-serif;
-      background: #fefbf5; /* 柔らかいベージュ */
+      background: #fefbf5;
       color: #444;
       margin: 0;
       padding: 0;
     }
-  
-    /* タイトル */
+
     h1 {
       font-family: 'Roboto', sans-serif;
-      color: #6a8f66; /* 落ち着いたグリーン */
+      color: #6a8f66;
       text-align: center;
       margin-top: 40px;
       font-size: 2.2em;
       letter-spacing: 1px;
     }
-  
-    /* フォーム */
+
     form {
       max-width: 480px;
       margin: 30px auto;
@@ -41,13 +37,13 @@
       flex-direction: column;
       gap: 16px;
     }
-  
+
     label {
       display: block;
       font-weight: 500;
       color: #555;
     }
-  
+
     input, select, textarea {
       width: 100%;
       padding: 12px;
@@ -57,18 +53,17 @@
       background-color: #fcfaf4;
       transition: 0.3s ease;
     }
-  
+
     input:focus, select:focus, textarea:focus {
-      border-color: #a3b18a; /* 優しいグリーン */
+      border-color: #a3b18a;
       outline: none;
       box-shadow: 0 0 5px rgba(163, 177, 138, 0.4);
     }
-  
-    /* ボタン */
+
     button {
       margin-top: 20px;
       width: 100%;
-      background-color: #a3b18a; /* グリーンベース */
+      background-color: #a3b18a;
       color: white;
       border: none;
       padding: 14px;
@@ -77,12 +72,11 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
-  
+
     button:hover {
       background-color: #879f6f;
     }
-  
-    /* フッター */
+
     footer {
       text-align: center;
       margin-top: 40px;
@@ -92,23 +86,41 @@
   </style>
 </head>
 <body>
-    <h1>ご予約フォーム 🌿</h1>
+  <h1>ご予約フォーム 🌿</h1>
 
   <form action="/book" method="post">
     <label>お名前:</label>
     <input type="text" name="customer_name" required>
 
-    <label>サービス:</label>
-    <select name="service_id" required>
-      {% for service in services %}
-      <option value="{{ service.id }}">{{ service.name }}</option>
-      {% endfor %}
+    <!-- ▼ サービス内容ドロップダウン（5個までカスタム可） -->
+    <label>サービス内容:</label>
+    <select name="service_name" required>
+      <option value="">選択してください</option>
+      <option value="シミケア">シミケア</option>
+      <option value="フェイシャルWAX">フェイシャルWAX</option>
+      <option value="脳洗浄">脳洗浄</option>
+      <option value="ピーリング">ピーリング</option>
+      <option value="ハーブサウナ">ハーブサウナ</option>
     </select>
 
+    <!-- ▼ 予約日 -->
     <label>予約日:</label>
     <input type="date" name="booking_date" required>
 
+    <!-- ▼ 予約時間 -->
+    <label>予約時間:</label>
+    <select name="booking_time" required>
+      <option value="">選択してください</option>
+      <option value="10:00">10:00</option>
+      <option value="14:00">14:00</option>
+      <option value="17:00">17:00</option>
+    </select>
+
     <button type="submit">この内容で予約する</button>
   </form>
+
+  <footer>
+    <p>© 2025 Salon Coeur</p>
+  </footer>
 </body>
 </html>
