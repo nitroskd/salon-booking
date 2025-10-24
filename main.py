@@ -9,7 +9,7 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
-    return templates.TemplateResponse("booking.html", {"request": request})
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/reserve")
 def reserve(name: str = Form(...), date: str = Form(...), service: str = Form(...)):
