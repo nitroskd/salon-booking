@@ -28,12 +28,17 @@ init_db()
 
 
 @app.get("/", response_class=HTMLResponse)
+<<<<<<< HEAD
 def read_form(request: Request):
     conn = sqlite3.connect("bookings.db")
     c = conn.cursor()
     c.execute("SELECT booking_date, booking_time FROM bookings")
     booked = c.fetchall()
     conn.close()
+=======
+def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+>>>>>>> ef8e8d05b118a1ef820be45e72ef01914eeca66c
 
     # 予約済みデータを {日付: [時間,時間]} の形式に変換
     booked_dict = {}
