@@ -1,41 +1,61 @@
-from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse
+# main.py
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-import uvicorn
+import sqlite3
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
+# --- DB初期化 ---
+def init_db():
+    conn = sqlite3.connect("bookings.db")
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS bookings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            customer_name TEXT,
+            service_name TEXT,
+            booking_date TEXT,
+            booking_time TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
+
+
 @app.get("/", response_class=HTMLResponse)
-def home(request: Request):
-    return templates.TemplateResponse("booking.html", {"request": request})
+def read_form(request: Request):
+    conn = sqlite3.connect("bookings.db")
+    c = conn.cursor()
+    c.execute("SELECT booking_date, booking_time FROM bookings")
+    booked = c.fetchall()
+    conn.close()
 
-@app.post("/reserve")
-def reserve(name: str = Form(...), date: str = Form(...), service: str = Form(...)):
-    # 本来はここでDBに保存するが、今回は表示だけ
-    return {
-        "message": f"{name}さん、{date}に「{service}」を予約しました！"
-    }
+    # 予約済みデータを {日付: [時間,時間]} の形式に変換
+    booked_dict = {}
+    for date, time in booked:
+        booked_dict.setdefault(date, []).append(time)
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
-from fastapi.responses import HTMLResponse
+    return templates.TemplateResponse("index.html", {"request": request, "booked": booked_dict})
 
-# 予約データを一時的に保存するリスト（既にあるなら重複しないよう確認）
-bookings = []
 
 @app.post("/book")
-def book(name: str = Form(...), date: str = Form(...), service: str = Form(...)):
-    booking = {"name": name, "date": date, "service": service}
-    bookings.append(booking)
-    return {"message": f"{name}さんの予約を受け付けました！"}
-
-# ★ここからがSTEP2★
-@app.get("/bookings", response_class=HTMLResponse)
-def show_bookings():
-    html = "<h2>予約一覧</h2><ul>"
-    for booking in bookings:
-        html += f"<li>{booking['date']} - {booking['name']} ({booking['service']})</li>"
-    html += "</ul>"
-    return html
+def book_service(
+    customer_name: str = Form(...),
+    service_name: str = Form(...),
+    booking_date: str = Form(...),
+    booking_time: str = Form(...)
+):
+    conn = sqlite3.connect("bookings.db")
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO bookings (customer_name, service_name, booking_date, booking_time)
+        VALUES (?, ?, ?, ?)
+    """, (customer_name, service_name, booking_date, booking_time))
+    conn.commit()
+    conn.close()
+    return RedirectResponse("/", status_code=303)
