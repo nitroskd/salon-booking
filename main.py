@@ -68,15 +68,31 @@ def init_db():
                 )
             """)
             
+            # 既存のproductsテーブルにカラムを追加（エラーを無視）
+            try:
+                c.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS category VARCHAR(50)")
+                c.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS stock_quantity INTEGER DEFAULT 0")
+                c.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)")
+                c.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE")
+                c.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+                c.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+            except Exception as e:
+                print(f"カラム追加をスキップ: {e}")
+            
             # インデックス作成
             c.execute("""
                 CREATE INDEX IF NOT EXISTS idx_bookings_date 
                 ON bookings(booking_date)
             """)
-            c.execute("""
-                CREATE INDEX IF NOT EXISTS idx_products_category 
-                ON products(category)
-            """)
+            
+            # categoryカラムが存在する場合のみインデックス作成
+            try:
+                c.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_products_category 
+                    ON products(category)
+                """)
+            except Exception as e:
+                print(f"インデックス作成をスキップ: {e}")
             
             conn.commit()
 
