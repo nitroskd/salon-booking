@@ -26,9 +26,29 @@
       letter-spacing: 1px;
     }
 
+    nav {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    nav a {
+      display: inline-block;
+      margin: 0 10px;
+      padding: 10px 20px;
+      background-color: #a3b18a;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+
+    nav a:hover {
+      background-color: #879f6f;
+    }
+
     form {
       max-width: 480px;
-      margin: 30px auto;
+      margin: 0 auto 40px;
       background: #ffffff;
       padding: 30px 40px;
       border-radius: 16px;
@@ -104,6 +124,10 @@
 <body>
   <h1>ご予約フォーム 🌿</h1>
 
+  <nav>
+    <a href="/home">ホームに戻る</a>
+  </nav>
+
   <form action="/book" method="post">
     <div>
       <label>お名前:</label>
@@ -158,7 +182,7 @@
     const bookedData = {{ booked | tojson }};
     const dateInput = document.querySelector('input[name="booking_date"]');
     const timeSelect = document.querySelector('select[name="booking_time"]');
-  
+
     dateInput.addEventListener('change', () => {
       const selectedDate = dateInput.value;
       const bookedTimes = bookedData[selectedDate] || [];
@@ -173,6 +197,5 @@
       }
     });
   </script>
-  
 </body>
 </html>

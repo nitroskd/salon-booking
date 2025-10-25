@@ -1,10 +1,14 @@
+<!-- templates/shop.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Salon Coeur - 商品一覧</title>
+  <title>商品一覧 - Salon Coeur</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap');
+
     body {
       font-family: 'Noto Sans JP', sans-serif;
       background: #fefbf5;
@@ -12,68 +16,110 @@
       margin: 0;
       padding: 0;
     }
-    header {
-      text-align: center;
-      padding: 40px 20px 20px;
-    }
+
     h1 {
       font-family: 'Roboto', sans-serif;
-      font-size: 2em;
       color: #6a8f66;
+      text-align: center;
+      margin-top: 40px;
+      font-size: 2.2em;
+      letter-spacing: 1px;
     }
-    .products {
+
+    nav {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    nav a {
+      display: inline-block;
+      margin: 0 10px;
+      padding: 10px 20px;
+      background-color: #a3b18a;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+
+    nav a:hover {
+      background-color: #879f6f;
+    }
+
+    .products-container {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
       gap: 20px;
-      max-width: 1000px;
-      margin: 40px auto;
+      max-width: 960px;
+      margin: 20px auto 40px;
       padding: 0 20px;
     }
+
     .product-card {
-      background: #fff;
+      background-color: #fff;
       border-radius: 12px;
-      padding: 15px;
-      text-align: center;
+      padding: 16px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 0.2s;
     }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+    }
+
     .product-card img {
-      width: 100%;
+      max-width: 100%;
       border-radius: 10px;
-      margin-bottom: 10px;
+      object-fit: cover;
     }
-    .product-card h2 {
+
+    .product-name {
+      font-weight: 500;
       font-size: 1.1em;
-      margin: 10px 0 5px;
+      color: #333;
+    }
+
+    .product-price {
+      font-weight: bold;
       color: #6a8f66;
+      font-size: 1.05em;
     }
-    .product-card p {
-      color: #555;
-      font-size: 0.95em;
-      margin: 5px 0;
-    }
+
     footer {
       text-align: center;
-      margin-top: 50px;
+      margin-top: 40px;
       color: #777;
       font-size: 0.9em;
-      padding-bottom: 30px;
+      padding-bottom: 20px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>商品一覧 🌿</h1>
-    <p>サロンでおすすめの美容アイテム</p>
-  </header>
+  <h1>商品一覧 🛍️</h1>
 
-  <div class="products">
+  <nav>
+    <a href="/home">ホームに戻る</a>
+  </nav>
+
+  <div class="products-container">
     {% for product in products %}
     <div class="product-card">
-      <img src="{{ url_for('static', path='images/' + product.image_filename) }}" alt="{{ product.name }}">
-      <h2>{{ product.name }}</h2>
-      <p>¥{{ product.price }}</p>
+      {% if product.image_filename %}
+      <img src="/static/images/{{ product.image_filename }}" alt="{{ product.name }}">
+      {% else %}
+      <img src="/static/images/default.png" alt="商品画像なし">
+      {% endif %}
+      <div class="product-name">{{ product.name }}</div>
+      <div class="product-price">{{ product.price | int }} 円</div>
     </div>
     {% endfor %}
+    {% if products|length == 0 %}
+    <p style="text-align:center; color:#888;">現在商品は登録されていません</p>
+    {% endif %}
   </div>
 
   <footer>
