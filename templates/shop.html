@@ -1,129 +1,343 @@
-<!-- templates/shop.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>商品一覧 - Salon Coeur</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商品一覧 | Coeur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&family=Noto+Serif+JP:wght@300;400&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap');
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
     body {
       font-family: 'Noto Sans JP', sans-serif;
       background: #fefbf5;
       color: #444;
-      margin: 0;
-      padding: 0;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin: 40px 0;
     }
 
     h1 {
-      font-family: 'Roboto', sans-serif;
+      font-family: 'Noto Serif JP', serif;
       color: #6a8f66;
-      text-align: center;
-      margin-top: 40px;
-      font-size: 2.2em;
-      letter-spacing: 1px;
+      font-size: 2.5em;
+      font-weight: 300;
+      letter-spacing: 3px;
+      margin-bottom: 10px;
     }
 
-    nav {
-      text-align: center;
-      margin: 20px 0;
+    .subtitle {
+      color: #888;
+      font-size: 1.1em;
+      font-weight: 300;
     }
 
-    nav a {
+    .back-button {
       display: inline-block;
-      margin: 0 10px;
-      padding: 10px 20px;
-      background-color: #a3b18a;
-      color: white;
-      text-decoration: none;
+      margin: 20px auto;
+      padding: 10px 30px;
+      background: #f8f6f2;
+      color: #6a8f66;
+      border: 2px solid #d9d6ce;
       border-radius: 8px;
-      transition: 0.3s;
+      text-decoration: none;
+      font-size: 1em;
+      transition: all 0.3s ease;
     }
 
-    nav a:hover {
-      background-color: #879f6f;
+    .back-button:hover {
+      background: #eee9e0;
+      border-color: #a3b18a;
     }
 
-    .products-container {
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .filter-section {
+      text-align: center;
+      margin: 30px 0;
+    }
+
+    .filter-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 10px 25px;
+      background: #ffffff;
+      border: 2px solid #d9d6ce;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.95em;
+      color: #666;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+      background: #a3b18a;
+      color: white;
+      border-color: #a3b18a;
+    }
+
+    .products-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 20px;
-      max-width: 960px;
-      margin: 20px auto 40px;
-      padding: 0 20px;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 30px;
+      margin: 40px 0;
     }
 
     .product-card {
-      background-color: #fff;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      transition: transform 0.2s;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
     .product-card:hover {
       transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
     }
 
-    .product-card img {
-      max-width: 100%;
-      border-radius: 10px;
-      object-fit: cover;
+    .product-image {
+      width: 100%;
+      height: 220px;
+      background: linear-gradient(135deg, #e8e4dc 0%, #d9d6ce 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3em;
+      color: #a3b18a;
+    }
+
+    .product-info {
+      padding: 20px;
+    }
+
+    .product-category {
+      display: inline-block;
+      padding: 4px 12px;
+      background: #f0ede5;
+      color: #6a8f66;
+      border-radius: 12px;
+      font-size: 0.85em;
+      margin-bottom: 10px;
     }
 
     .product-name {
+      font-size: 1.2em;
       font-weight: 500;
-      font-size: 1.1em;
       color: #333;
+      margin: 10px 0;
+    }
+
+    .product-description {
+      color: #777;
+      font-size: 0.9em;
+      line-height: 1.6;
+      margin: 10px 0;
+      min-height: 40px;
     }
 
     .product-price {
-      font-weight: bold;
+      font-size: 1.5em;
       color: #6a8f66;
-      font-size: 1.05em;
+      font-weight: 500;
+      margin: 15px 0;
+    }
+
+    .stock-info {
+      font-size: 0.85em;
+      color: #999;
+      margin: 5px 0;
+    }
+
+    .stock-info.in-stock {
+      color: #6a8f66;
+    }
+
+    .stock-info.low-stock {
+      color: #d4a574;
+    }
+
+    .stock-info.out-of-stock {
+      color: #c66;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #999;
+      font-size: 1.2em;
+    }
+
+    .error {
+      text-align: center;
+      padding: 60px;
+      color: #c66;
+      font-size: 1.1em;
+    }
+
+    .no-products {
+      text-align: center;
+      padding: 60px;
+      color: #999;
+      font-size: 1.1em;
     }
 
     footer {
       text-align: center;
-      margin-top: 40px;
-      color: #777;
+      margin-top: 60px;
+      padding: 20px;
+      color: #999;
       font-size: 0.9em;
-      padding-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2em;
+      }
+
+      .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 20px;
+      }
+
+      .filter-buttons {
+        gap: 10px;
+      }
+
+      .filter-btn {
+        padding: 8px 20px;
+        font-size: 0.9em;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>商品一覧 🛍️</h1>
-
-  <nav>
-    <a href="/home">ホームに戻る</a>
-  </nav>
-
-  <div class="products-container">
-    {% for product in products %}
-    <div class="product-card">
-      {% if product.image_filename %}
-      <img src="/static/images/{{ product.image_filename }}" alt="{{ product.name }}">
-      {% else %}
-      <img src="/static/images/default.png" alt="商品画像なし">
-      {% endif %}
-      <div class="product-name">{{ product.name }}</div>
-      <div class="product-price">{{ product.price | int }} 円</div>
+  <div class="container">
+    <div class="header">
+      <a href="/home" class="back-button">← ホームに戻る</a>
+      <h1>商品一覧</h1>
+      <p class="subtitle">サロンで使用している厳選商品</p>
     </div>
-    {% endfor %}
-    {% if products|length == 0 %}
-    <p style="text-align:center; color:#888;">現在商品は登録されていません</p>
-    {% endif %}
+
+    <div class="filter-section">
+      <div class="filter-buttons">
+        <button class="filter-btn active" data-category="all">すべて</button>
+        <button class="filter-btn" data-category="スキンケア">スキンケア</button>
+        <button class="filter-btn" data-category="アロマ">アロマ</button>
+        <button class="filter-btn" data-category="ヘアケア">ヘアケア</button>
+        <button class="filter-btn" data-category="ボディケア">ボディケア</button>
+      </div>
+    </div>
+
+    <div id="products-container">
+      <div class="loading">商品を読み込み中...</div>
+    </div>
   </div>
 
   <footer>
     <p>© 2025 Salon Coeur</p>
   </footer>
+
+  <script>
+    let allProducts = [];
+    let currentCategory = 'all';
+
+    // 商品を取得
+    async function fetchProducts() {
+      try {
+        const response = await fetch('/products');
+        const data = await response.json();
+        allProducts = data.products || [];
+        displayProducts(allProducts);
+      } catch (error) {
+        document.getElementById('products-container').innerHTML = 
+          '<div class="error">商品の読み込みに失敗しました</div>';
+        console.error('Error:', error);
+      }
+    }
+
+    // 商品を表示
+    function displayProducts(products) {
+      const container = document.getElementById('products-container');
+      
+      if (!products || products.length === 0) {
+        container.innerHTML = '<div class="no-products">商品がありません</div>';
+        return;
+      }
+
+      const html = '<div class="products-grid">' + 
+        products.map(product => {
+          const stockClass = product.stock_quantity > 10 ? 'in-stock' : 
+                           product.stock_quantity > 0 ? 'low-stock' : 'out-of-stock';
+          const stockText = product.stock_quantity > 0 ? 
+                          `在庫: ${product.stock_quantity}個` : '在庫切れ';
+          
+          return `
+            <div class="product-card">
+              <div class="product-image">🌿</div>
+              <div class="product-info">
+                ${product.category ? `<span class="product-category">${product.category}</span>` : ''}
+                <div class="product-name">${product.product_name}</div>
+                <div class="product-description">${product.description || ''}</div>
+                <div class="product-price">¥${Number(product.price).toLocaleString()}</div>
+                <div class="stock-info ${stockClass}">${stockText}</div>
+              </div>
+            </div>
+          `;
+        }).join('') + 
+        '</div>';
+      
+      container.innerHTML = html;
+    }
+
+    // カテゴリフィルター
+    function filterByCategory(category) {
+      currentCategory = category;
+      
+      // ボタンのアクティブ状態を更新
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.category === category) {
+          btn.classList.add('active');
+        }
+      });
+
+      // フィルタリング
+      if (category === 'all') {
+        displayProducts(allProducts);
+      } else {
+        const filtered = allProducts.filter(p => p.category === category);
+        displayProducts(filtered);
+      }
+    }
+
+    // イベントリスナー
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchProducts();
+
+      // フィルターボタンのイベント
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterByCategory(btn.dataset.category);
+        });
+      });
+    });
+  </script>
 </body>
 </html>

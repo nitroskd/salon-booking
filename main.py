@@ -1,108 +1,126 @@
 # main.py
-from fastapi import FastAPI, Request, Form, UploadFile, File, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
 from contextlib import contextmanager
-from dotenv import load_dotenv
 import psycopg2
+from psycopg2.extras import RealDictCursor
 import os
-
-# --- 環境変数読み込み ---
-load_dotenv()
 
 app = FastAPI()
 
-# --- static フォルダ設定 ---
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# --- templates フォルダ設定 ---
+# ディレクトリの存在確認と作成
 templates_dir = "templates"
+static_dir = "static"
+
 if not os.path.exists(templates_dir):
     os.makedirs(templates_dir)
+
+if not os.path.exists(static_dir):
+    os.makedirs(static_dir)
+
 templates = Jinja2Templates(directory=templates_dir)
 
-# --- PostgreSQL 接続設定 ---
-DB_URL = os.getenv("DATABASE_URL")
-if not DB_URL:
-    raise Exception("❌ DATABASE_URL が .env に設定されていません。")
+# データベース接続情報
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 @contextmanager
 def get_db_connection():
-    conn = psycopg2.connect(DB_URL)
+    """データベース接続を安全に管理"""
+    conn = psycopg2.connect(DATABASE_URL)
     try:
         yield conn
     finally:
         conn.close()
 
-# --- DB 初期化 ---
 def init_db():
+    """データベースとテーブルを初期化"""
     with get_db_connection() as conn:
-        c = conn.cursor()
-
-        # 予約テーブル
-        c.execute("""
-            CREATE TABLE IF NOT EXISTS bookings (
-                id SERIAL PRIMARY KEY,
-                customer_name TEXT NOT NULL,
-                phone_number TEXT NOT NULL,
-                service_name TEXT NOT NULL,
-                booking_date DATE NOT NULL,
-                booking_time TEXT NOT NULL,
-                notes TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(booking_date, booking_time)
-            );
-        """)
-
-        # 商品テーブル
-        c.execute("""
-            CREATE TABLE IF NOT EXISTS products (
-                id SERIAL PRIMARY KEY,
-                name TEXT NOT NULL,
-                price INTEGER NOT NULL,
-                image_filename TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        """)
-
-        conn.commit()
+        with conn.cursor() as c:
+            # bookingsテーブル
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS bookings (
+                    id SERIAL PRIMARY KEY,
+                    customer_name VARCHAR(100) NOT NULL,
+                    phone_number VARCHAR(20) NOT NULL,
+                    service_name VARCHAR(100) NOT NULL,
+                    booking_date DATE NOT NULL,
+                    booking_time TIME NOT NULL,
+                    notes TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(booking_date, booking_time)
+                )
+            """)
+            
+            # productsテーブル
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS products (
+                    id SERIAL PRIMARY KEY,
+                    product_name VARCHAR(200) NOT NULL,
+                    description TEXT,
+                    price DECIMAL(10, 2) NOT NULL,
+                    category VARCHAR(50),
+                    stock_quantity INTEGER DEFAULT 0,
+                    image_url VARCHAR(500),
+                    is_active BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # インデックス作成
+            c.execute("""
+                CREATE INDEX IF NOT EXISTS idx_bookings_date 
+                ON bookings(booking_date)
+            """)
+            c.execute("""
+                CREATE INDEX IF NOT EXISTS idx_products_category 
+                ON products(category)
+            """)
+            
+            conn.commit()
 
 init_db()
 
-# =====================================================
-# ページ構成
-# =====================================================
+# ========== 予約関連のエンドポイント ==========
 
-# --- ホームページ ---
-@app.get("/", response_class=HTMLResponse)
+# ========== ページ表示のエンドポイント ==========
+
 @app.get("/home", response_class=HTMLResponse)
 def home_page(request: Request):
+    """ホームページを表示"""
     return templates.TemplateResponse("home.html", {"request": request})
 
+@app.get("/shop", response_class=HTMLResponse)
+def shop_page(request: Request):
+    """商品一覧ページを表示"""
+    return templates.TemplateResponse("shop.html", {"request": request})
 
-# --- 予約ページ ---
-@app.get("/index", response_class=HTMLResponse)
-def booking_page(request: Request):
+@app.get("/", response_class=HTMLResponse)
+def read_form(request: Request):
+    """予約フォームを表示"""
     with get_db_connection() as conn:
-        c = conn.cursor()
-        c.execute("SELECT booking_date, booking_time FROM bookings;")
-        booked = c.fetchall()
-
+        with conn.cursor() as c:
+            c.execute("""
+                SELECT booking_date, booking_time 
+                FROM bookings 
+                ORDER BY booking_date, booking_time
+            """)
+            booked = c.fetchall()
+    
     booked_dict = {}
     for date, time in booked:
-        booked_dict.setdefault(str(date), []).append(time)
-
+        date_str = date.strftime('%Y-%m-%d') if hasattr(date, 'strftime') else str(date)
+        time_str = time.strftime('%H:%M') if hasattr(time, 'strftime') else str(time)
+        booked_dict.setdefault(date_str, []).append(time_str)
+    
     return templates.TemplateResponse("index.html", {
-        "request": request,
+        "request": request, 
         "booked": booked_dict
     })
 
-
-# --- 予約完了ページ ---
-@app.post("/book", response_class=HTMLResponse)
+@app.post("/book")
 def book_service(
-    request: Request,
     customer_name: str = Form(...),
     phone_number: str = Form(...),
     service_name: str = Form(...),
@@ -110,167 +128,166 @@ def book_service(
     booking_time: str = Form(...),
     notes: str = Form(default="")
 ):
+    """予約を登録"""
     try:
         with get_db_connection() as conn:
-            c = conn.cursor()
-
-            # 重複チェック
-            c.execute("""
-                SELECT id FROM bookings WHERE booking_date = %s AND booking_time = %s
-            """, (booking_date, booking_time))
-            if c.fetchone():
-                return HTMLResponse("<h3>⚠️ この時間はすでに予約されています。</h3>", status_code=400)
-
-            # 登録
-            c.execute("""
-                INSERT INTO bookings (customer_name, phone_number, service_name, booking_date, booking_time, notes)
-                VALUES (%s, %s, %s, %s, %s, %s);
-            """, (customer_name, phone_number, service_name, booking_date, booking_time, notes))
-            conn.commit()
-
-        return templates.TemplateResponse("complete.html", {
-            "request": request,
-            "customer_name": customer_name,
-            "service_name": service_name,
-            "booking_date": booking_date,
-            "booking_time": booking_time
-        })
-
+            with conn.cursor() as c:
+                c.execute("""
+                    SELECT id FROM bookings 
+                    WHERE booking_date = %s AND booking_time = %s
+                """, (booking_date, booking_time))
+                
+                if c.fetchone():
+                    return RedirectResponse("/?error=already_booked", status_code=303)
+                
+                c.execute("""
+                    INSERT INTO bookings 
+                    (customer_name, phone_number, service_name, booking_date, booking_time, notes)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (customer_name, phone_number, service_name, booking_date, booking_time, notes))
+                conn.commit()
+        
+        return RedirectResponse("/?success=true", status_code=303)
+    
     except Exception as e:
         print(f"予約エラー: {e}")
-        return HTMLResponse("<h3>サーバーエラーが発生しました。</h3>", status_code=500)
+        return RedirectResponse("/?error=system", status_code=303)
 
-
-# --- ショップページ（商品一覧） ---
-@app.get("/shop", response_class=HTMLResponse)
-def shop_page(request: Request):
+@app.get("/bookings")
+def get_bookings():
+    """予約一覧を取得"""
     with get_db_connection() as conn:
-        c = conn.cursor()
-        c.execute("SELECT id, name, price, image_filename FROM products ORDER BY created_at DESC;")
-        products = c.fetchall()
+        with conn.cursor(cursor_factory=RealDictCursor) as c:
+            c.execute("""
+                SELECT id, customer_name, phone_number, service_name, 
+                       booking_date, booking_time, notes, created_at 
+                FROM bookings 
+                ORDER BY booking_date DESC, booking_time DESC
+            """)
+            bookings = c.fetchall()
+    
+    return {"bookings": bookings}
 
-    product_list = [
-        {"id": p[0], "name": p[1], "price": p[2], "image_filename": p[3]} for p in products
-    ]
+# ========== 商品関連のエンドポイント ==========
 
-    return templates.TemplateResponse("shop.html", {
-        "request": request,
-        "products": product_list
-    })
-
-
-# =====================================================
-# 管理者ページ
-# =====================================================
-
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")  # .envで設定推奨
-
-
-# --- 管理画面（予約一覧 & 商品一覧） ---
-@app.get("/admin", response_class=HTMLResponse)
-def admin_page(request: Request, password: str = ""):
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="管理者パスワードが違います。")
-
+@app.get("/products")
+def get_products(category: str = None, active_only: bool = True):
+    """商品一覧を取得"""
     with get_db_connection() as conn:
-        c = conn.cursor()
+        with conn.cursor(cursor_factory=RealDictCursor) as c:
+            query = "SELECT * FROM products WHERE 1=1"
+            params = []
+            
+            if active_only:
+                query += " AND is_active = %s"
+                params.append(True)
+            
+            if category:
+                query += " AND category = %s"
+                params.append(category)
+            
+            query += " ORDER BY category, product_name"
+            
+            c.execute(query, params)
+            products = c.fetchall()
+    
+    return {"products": products}
 
-        # 予約一覧
-        c.execute("""
-            SELECT customer_name, phone_number, service_name, booking_date, booking_time, notes, created_at
-            FROM bookings
-            ORDER BY booking_date DESC, booking_time DESC;
-        """)
-        bookings = c.fetchall()
-
-        # 商品一覧
-        c.execute("""
-            SELECT id, name, price, image_filename, created_at
-            FROM products
-            ORDER BY created_at DESC;
-        """)
-        products = c.fetchall()
-
-    return templates.TemplateResponse("admin.html", {
-        "request": request,
-        "bookings": bookings,
-        "products": products
-    })
-
-
-# --- 商品管理ページ ---
-@app.get("/admin_products", response_class=HTMLResponse)
-def admin_products_page(request: Request, password: str = ""):
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="管理者パスワードが違います。")
-
+@app.get("/products/{product_id}")
+def get_product(product_id: int):
+    """特定の商品を取得"""
     with get_db_connection() as conn:
-        c = conn.cursor()
-        c.execute("SELECT id, name, price, image_filename FROM products ORDER BY created_at DESC;")
-        products = c.fetchall()
+        with conn.cursor(cursor_factory=RealDictCursor) as c:
+            c.execute("SELECT * FROM products WHERE id = %s", (product_id,))
+            product = c.fetchone()
+    
+    if not product:
+        return JSONResponse(status_code=404, content={"error": "商品が見つかりません"})
+    
+    return {"product": product}
 
-    products_list = [
-        {"id": p[0], "name": p[1], "price": p[2], "image_filename": p[3]} for p in products
-    ]
-
-    return templates.TemplateResponse("admin_products.html", {
-        "request": request,
-        "products": products_list
-    })
-
-
-# --- 商品登録 ---
-@app.post("/admin_products/add")
-async def add_product(
-    name: str = Form(...),
-    price: int = Form(...),
-    image: UploadFile = File(...),
-    password: str = Form(...)
+@app.post("/products/add")
+def create_product(
+    product_name: str = Form(...),
+    description: str = Form(default=""),
+    price: float = Form(...),
+    category: str = Form(default=""),
+    stock_quantity: int = Form(default=0),
+    image_url: str = Form(default="")
 ):
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="パスワードが違います。")
+    """新しい商品を追加"""
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("""
+                    INSERT INTO products 
+                    (product_name, description, price, category, stock_quantity, image_url)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING id
+                """, (product_name, description, price, category, stock_quantity, image_url))
+                
+                product_id = c.fetchone()[0]
+                conn.commit()
+        
+        return {"success": True, "product_id": product_id, "message": "商品を追加しました"}
+    
+    except Exception as e:
+        print(f"商品追加エラー: {e}")
+        return JSONResponse(status_code=500, content={"error": "商品の追加に失敗しました"})
 
-    os.makedirs("static/images", exist_ok=True)
-    image_path = os.path.join("static/images", image.filename)
-    with open(image_path, "wb") as f:
-        f.write(await image.read())
+@app.put("/products/{product_id}")
+def update_product(
+    product_id: int,
+    product_name: str = Form(...),
+    description: str = Form(default=""),
+    price: float = Form(...),
+    category: str = Form(default=""),
+    stock_quantity: int = Form(default=0),
+    image_url: str = Form(default=""),
+    is_active: bool = Form(default=True)
+):
+    """商品情報を更新"""
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("""
+                    UPDATE products 
+                    SET product_name = %s, description = %s, price = %s, 
+                        category = %s, stock_quantity = %s, image_url = %s,
+                        is_active = %s, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                """, (product_name, description, price, category, stock_quantity, 
+                      image_url, is_active, product_id))
+                
+                conn.commit()
+        
+        return {"success": True, "message": "商品を更新しました"}
+    
+    except Exception as e:
+        print(f"商品更新エラー: {e}")
+        return JSONResponse(status_code=500, content={"error": "商品の更新に失敗しました"})
 
-    with get_db_connection() as conn:
-        c = conn.cursor()
-        c.execute(
-            "INSERT INTO products (name, price, image_filename) VALUES (%s, %s, %s);",
-            (name, price, image.filename)
-        )
-        conn.commit()
+@app.delete("/products/{product_id}")
+def delete_product(product_id: int):
+    """商品を削除（論理削除）"""
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("""
+                    UPDATE products 
+                    SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                """, (product_id,))
+                
+                conn.commit()
+        
+        return {"success": True, "message": "商品を削除しました"}
+    
+    except Exception as e:
+        print(f"商品削除エラー: {e}")
+        return JSONResponse(status_code=500, content={"error": "商品の削除に失敗しました"})
 
-    return RedirectResponse("/admin_products?password=" + password, status_code=303)
-
-
-# --- 商品削除 ---
-@app.post("/admin_products/delete/{product_id}")
-def delete_product(product_id: int, password: str = Form(...)):
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="パスワードが違います。")
-
-    with get_db_connection() as conn:
-        c = conn.cursor()
-
-        c.execute("SELECT image_filename FROM products WHERE id=%s;", (product_id,))
-        result = c.fetchone()
-        if result and result[0]:
-            path = os.path.join("static/images", result[0])
-            if os.path.exists(path):
-                os.remove(path)
-
-        c.execute("DELETE FROM products WHERE id=%s;", (product_id,))
-        conn.commit()
-
-    return RedirectResponse(f"/admin_products?password={password}", status_code=303)
-
-
-# --- ヘルスチェック ---
 @app.get("/health")
 def health_check():
+    """ヘルスチェック"""
     return {"status": "ok"}
-
-
