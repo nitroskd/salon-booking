@@ -166,6 +166,8 @@ def read_form(request: Request):
         "booked": booked_dict
     })
 
+from urllib.parse import urlencode
+
 @app.post("/book")
 def book_service(
     customer_name: str = Form(...),
@@ -179,6 +181,7 @@ def book_service(
     try:
         with get_db_connection() as conn:
             with conn.cursor() as c:
+                # 重複チェック
                 c.execute("""
                     SELECT id FROM bookings 
                     WHERE booking_date = %s AND booking_time = %s
@@ -187,6 +190,7 @@ def book_service(
                 if c.fetchone():
                     return RedirectResponse("/?error=already_booked", status_code=303)
                 
+                # 予約を挿入
                 c.execute("""
                     INSERT INTO bookings 
                     (customer_name, phone_number, service_name, booking_date, booking_time, notes)
@@ -194,12 +198,20 @@ def book_service(
                 """, (customer_name, phone_number, service_name, booking_date, booking_time, notes))
                 conn.commit()
         
-        return RedirectResponse("/?success=true", status_code=303)
+        # クエリパラメータで予約情報を渡してリダイレクト
+        params = urlencode({
+            'customer_name': customer_name,
+            'phone_number': phone_number,
+            'service_name': service_name,
+            'booking_date': booking_date,
+            'booking_time': booking_time,
+            'notes': notes or ''
+        })
+        return RedirectResponse(f"/complete?{params}", status_code=303)
     
     except Exception as e:
         print(f"予約エラー: {e}")
         return RedirectResponse("/?error=system", status_code=303)
-
 @app.get("/bookings")
 def get_bookings():
     """予約一覧を取得"""
