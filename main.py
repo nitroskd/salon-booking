@@ -123,9 +123,25 @@ def admin_products_page(request: Request):
     return templates.TemplateResponse("admin_products.html", {"request": request})
 
 @app.get("/complete", response_class=HTMLResponse)
-def complete_page(request: Request):
+def complete_page(
+    request: Request,
+    customer_name: str = "",
+    phone_number: str = "",
+    service_name: str = "",
+    booking_date: str = "",
+    booking_time: str = "",
+    notes: str = ""
+):
     """予約完了ページを表示"""
-    return templates.TemplateResponse("complete.html", {"request": request})
+    return templates.TemplateResponse("complete.html", {
+        "request": request,
+        "customer_name": customer_name,
+        "phone_number": phone_number,
+        "service_name": service_name,
+        "booking_date": booking_date,
+        "booking_time": booking_time,
+        "notes": notes
+    })
 
 @app.get("/", response_class=HTMLResponse)
 def read_form(request: Request):
