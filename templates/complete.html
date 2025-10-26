@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>予約完了 🌿 Salon Coeur</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -75,6 +76,7 @@
   <div class="container">
     <h1>ご予約ありがとうございました 🌿</h1>
     <p><span class="highlight">お名前:</span> {{ customer_name }}</p>
+    <p><span class="highlight">電話番号:</span> {{ phone_number }}</p>
     <p><span class="highlight">サービス:</span> {{ service_name }}</p>
     <p><span class="highlight">予約日:</span> {{ booking_date }}</p>
     <p><span class="highlight">予約時間:</span> {{ booking_time }}</p>
@@ -87,7 +89,7 @@
       スクショすると予約内容をすぐ確認できます。
     </div>
 
-    <form action="/">
+    <form action="/home">
       <button type="submit">トップに戻る</button>
     </form>
   </div>
