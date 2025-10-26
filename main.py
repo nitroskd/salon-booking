@@ -112,6 +112,21 @@ def shop_page(request: Request):
     """商品一覧ページを表示"""
     return templates.TemplateResponse("shop.html", {"request": request})
 
+@app.get("/admin", response_class=HTMLResponse)
+def admin_page(request: Request):
+    """管理画面を表示"""
+    return templates.TemplateResponse("admin.html", {"request": request})
+
+@app.get("/admin/products", response_class=HTMLResponse)
+def admin_products_page(request: Request):
+    """管理画面 - 商品管理ページを表示"""
+    return templates.TemplateResponse("admin_products.html", {"request": request})
+
+@app.get("/complete", response_class=HTMLResponse)
+def complete_page(request: Request):
+    """予約完了ページを表示"""
+    return templates.TemplateResponse("complete.html", {"request": request})
+
 @app.get("/", response_class=HTMLResponse)
 def read_form(request: Request):
     """予約フォームを表示"""
