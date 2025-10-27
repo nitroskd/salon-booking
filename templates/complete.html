@@ -2,93 +2,160 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>予約完了 🌿 Salon Coeur</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>予約完了 | Salon Coeur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Noto Sans JP', sans-serif;
-      background: #fefbf5; /* 柔らかいベージュ */
+    * {
       margin: 0;
       padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
-
+    
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #fefbf5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
     .container {
       background: #ffffff;
-      padding: 40px 30px;
+      padding: 35px 25px;
       border-radius: 16px;
       box-shadow: 0 6px 18px rgba(0,0,0,0.08);
       max-width: 480px;
-      width: 90%;
+      width: 100%;
       text-align: center;
     }
-
-    h1 {
-      color: #6a8f66; /* 落ち着いたグリーン */
+    
+    .icon {
+      font-size: 3em;
       margin-bottom: 20px;
-      font-size: 2em;
     }
-
-    p {
-      color: #555;
-      font-size: 1em;
-      margin: 8px 0;
+    
+    h1 {
+      color: #6a8f66;
+      margin-bottom: 25px;
+      font-size: 1.5em;
+      font-weight: 500;
     }
-
-    .highlight {
+    
+    .info-box {
+      background: #fcfaf4;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px 0;
+      text-align: left;
+    }
+    
+    .info-item {
+      margin-bottom: 12px;
+      font-size: 0.95em;
+    }
+    
+    .info-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .label {
       font-weight: 600;
       color: #a3b18a;
+      margin-right: 8px;
     }
-
+    
+    .value {
+      color: #555;
+    }
+    
     .note {
       margin-top: 20px;
       font-size: 0.9em;
       color: #888;
-      background: #fcfaf4;
-      padding: 12px;
+      background: #f8f6f2;
+      padding: 15px;
       border-radius: 10px;
-      line-height: 1.4;
+      line-height: 1.6;
     }
-
+    
     button {
       margin-top: 25px;
       width: 100%;
-      background-color: #a3b18a;
+      background: linear-gradient(135deg, #a3b18a 0%, #879f6f 100%);
       color: white;
       border: none;
-      padding: 14px;
+      padding: 16px;
       border-radius: 10px;
-      font-size: 1.1em;
+      font-size: 1.05em;
+      font-weight: 500;
       cursor: pointer;
-      transition: background 0.3s ease;
+      transition: 0.3s;
+      font-family: 'Noto Sans JP', sans-serif;
+      touch-action: manipulation;
     }
-
-    button:hover {
-      background-color: #879f6f;
+    
+    button:active {
+      transform: scale(0.98);
+    }
+    
+    @media (max-width: 480px) {
+      .container {
+        padding: 30px 20px;
+      }
+      
+      h1 {
+        font-size: 1.3em;
+      }
+      
+      .info-item {
+        font-size: 0.9em;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>ご予約ありがとうございました 🌿</h1>
-    <p><span class="highlight">お名前:</span> {{ customer_name }}</p>
-    <p><span class="highlight">電話番号:</span> {{ phone_number }}</p>
-    <p><span class="highlight">サービス:</span> {{ service_name }}</p>
-    <p><span class="highlight">予約日:</span> {{ booking_date }}</p>
-    <p><span class="highlight">予約時間:</span> {{ booking_time }}</p>
-    {% if notes %}
-    <p><span class="highlight">ご要望:</span> {{ notes }}</p>
-    {% endif %}
-
-    <div class="note">
-      このページをスクショしておくことをオススメします。<br>
-      スクショすると予約内容をすぐ確認できます。
+    <div class="icon">✓</div>
+    <h1>ご予約ありがとうございました</h1>
+    
+    <div class="info-box">
+      <div class="info-item">
+        <span class="label">お名前:</span>
+        <span class="value">{{ customer_name }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">電話番号:</span>
+        <span class="value">{{ phone_number }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">サービス:</span>
+        <span class="value">{{ service_name }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">予約日:</span>
+        <span class="value">{{ booking_date }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">予約時間:</span>
+        <span class="value">{{ booking_time }}</span>
+      </div>
+      {% if notes %}
+      <div class="info-item">
+        <span class="label">ご要望:</span>
+        <span class="value">{{ notes }}</span>
+      </div>
+      {% endif %}
     </div>
-
+    
+    <div class="note">
+      このページをスクリーンショットしておくことをオススメします。<br>
+      予約内容をすぐに確認できます。
+    </div>
+    
     <form action="/home">
       <button type="submit">トップに戻る</button>
     </form>
