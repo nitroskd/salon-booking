@@ -2,16 +2,17 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ホーム | Coeur</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&family=Noto+Serif+JP:wght@300;400&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ホーム | Salon Coeur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
-
+    
     body {
       font-family: 'Noto Sans JP', sans-serif;
       background: linear-gradient(135deg, #f5f2ed 0%, #e8e4dc 100%);
@@ -22,112 +23,109 @@
       color: #4a4a4a;
       padding: 20px;
     }
-
+    
     .container {
       background: #ffffff;
       border-radius: 20px;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-      padding: 60px 80px;
+      padding: 40px 30px;
       text-align: center;
-      max-width: 600px;
+      max-width: 500px;
       width: 100%;
     }
-
+    
+    .logo {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    
     h1 {
-      font-family: 'Noto Serif JP', serif;
-      font-size: 2.5em;
+      font-size: 1.8em;
       color: #6a8f66;
-      margin-bottom: 20px;
-      font-weight: 300;
-      letter-spacing: 3px;
+      margin-bottom: 15px;
+      font-weight: 400;
+      letter-spacing: 2px;
     }
-
+    
     p {
-      font-size: 1.1em;
+      font-size: 0.95em;
       color: #777;
-      margin-bottom: 50px;
-      line-height: 1.8;
+      margin-bottom: 35px;
+      line-height: 1.7;
       font-weight: 300;
     }
-
+    
+    .divider {
+      width: 50px;
+      height: 2px;
+      background: #d9d6ce;
+      margin: 30px auto;
+    }
+    
     .button-group {
       display: flex;
       flex-direction: column;
-      gap: 20px;
-      align-items: center;
+      gap: 15px;
     }
-
+    
     button {
-      width: 280px;
-      padding: 16px 40px;
-      font-size: 1.1em;
+      width: 100%;
+      padding: 16px;
+      font-size: 1.05em;
       font-family: 'Noto Sans JP', sans-serif;
       border: none;
       border-radius: 12px;
       cursor: pointer;
       transition: all 0.3s ease;
-      font-weight: 400;
+      font-weight: 500;
+      touch-action: manipulation;
     }
-
+    
     .btn-primary {
       background: linear-gradient(135deg, #a3b18a 0%, #879f6f 100%);
       color: white;
       box-shadow: 0 4px 15px rgba(163, 177, 138, 0.3);
     }
-
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #879f6f 0%, #6e8556 100%);
-      box-shadow: 0 6px 20px rgba(163, 177, 138, 0.4);
-      transform: translateY(-2px);
+    
+    .btn-primary:active {
+      transform: scale(0.98);
+      box-shadow: 0 2px 10px rgba(163, 177, 138, 0.3);
     }
-
-    .btn-secondary {
-      background: #f8f6f2;
-      color: #6a8f66;
-      border: 2px solid #d9d6ce;
-    }
-
-    .btn-secondary:hover {
-      background: #eee9e0;
-      border-color: #a3b18a;
-      transform: translateY(-2px);
-    }
-
-    .divider {
-      width: 60px;
-      height: 2px;
-      background: #d9d6ce;
-      margin: 40px auto;
-    }
-
+    
     footer {
-      margin-top: 40px;
-      font-size: 0.85em;
+      margin-top: 30px;
+      font-size: 0.8em;
       color: #999;
     }
-
-    @media (max-width: 600px) {
+    
+    @media (max-width: 480px) {
       .container {
-        padding: 40px 30px;
+        padding: 35px 25px;
       }
-
+      
       h1 {
-        font-size: 2em;
+        font-size: 1.6em;
       }
-
+      
+      p {
+        font-size: 0.9em;
+      }
+      
       button {
-        width: 100%;
+        padding: 15px;
+        font-size: 1em;
       }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Welcome to Coeur</h1>
-    <p>癒しと美のサロンへようこそ。<br>心と体を整える、上質なひとときをお過ごしください。</p>
-
+    <div class="logo">🌿</div>
+    <h1>Salon Coeur</h1>
+    <p>癒しと美のサロンへようこそ<br>心と体を整える上質なひとときを</p>
+    
     <div class="divider"></div>
-
+    
     <div class="button-group">
       <button class="btn-primary" onclick="window.location.href='/'">
         ご予約はこちら
@@ -136,7 +134,7 @@
         商品一覧
       </button>
     </div>
-
+    
     <footer>
       <p>© 2025 Salon Coeur</p>
     </footer>
