@@ -1,223 +1,227 @@
-<!-- templates/admin_products.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>商品管理 - Salon Coeur</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商品管理 | Coeur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap');
-
     body {
       font-family: 'Noto Sans JP', sans-serif;
       background: #fefbf5;
       color: #444;
       margin: 0;
-      padding: 0;
+      padding: 20px;
     }
-
     h1 {
-      font-family: 'Roboto', sans-serif;
-      color: #6a8f66;
       text-align: center;
-      margin-top: 40px;
+      color: #6a8f66;
+      margin: 30px 0;
       font-size: 2em;
     }
-
     nav {
       text-align: center;
       margin: 20px 0;
     }
-
     nav a {
-      display: inline-block;
       margin: 0 10px;
       padding: 10px 20px;
-      background-color: #a3b18a;
+      background: #a3b18a;
       color: white;
       text-decoration: none;
       border-radius: 8px;
       transition: 0.3s;
     }
-
     nav a:hover {
-      background-color: #879f6f;
+      background: #879f6f;
     }
-
-    form {
-      max-width: 480px;
-      margin: 20px auto;
-      background: #fff;
-      padding: 30px 40px;
-      border-radius: 16px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 5px 16px rgba(0,0,0,0.08);
     }
-
-    label {
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
       font-weight: 500;
       color: #555;
-      margin-bottom: 6px;
     }
-
-    input[type="text"], input[type="number"], input[type="file"] {
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
       width: 100%;
       padding: 12px;
       border: 1px solid #d9d6ce;
-      border-radius: 10px;
+      border-radius: 8px;
       font-size: 1em;
-      background-color: #fcfaf4;
-      transition: 0.3s;
       box-sizing: border-box;
+      background: #fcfaf4;
     }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: #a3b18a;
-      outline: none;
-      box-shadow: 0 0 5px rgba(163, 177, 138, 0.4);
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+      font-family: 'Noto Sans JP', sans-serif;
     }
-
-    button {
-      margin-top: 10px;
+    .form-group input[type="file"] {
+      padding: 8px;
+      background: white;
+    }
+    .optional {
+      font-size: 0.85em;
+      color: #888;
+      font-weight: normal;
+      margin-left: 4px;
+    }
+    .btn-submit {
       width: 100%;
-      background-color: #a3b18a;
+      padding: 14px;
+      background: #6a8f66;
       color: white;
       border: none;
-      padding: 14px;
-      border-radius: 10px;
+      border-radius: 8px;
       font-size: 1.1em;
       cursor: pointer;
-      transition: background 0.3s ease;
+      transition: 0.3s;
     }
-
-    button:hover {
-      background-color: #879f6f;
+    .btn-submit:hover {
+      background: #5a7d56;
     }
-
-    .products-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 20px;
-      max-width: 960px;
-      margin: 40px auto;
-      padding: 0 20px;
+    .preview-image {
+      max-width: 200px;
+      max-height: 200px;
+      margin-top: 10px;
+      border-radius: 8px;
+      display: none;
     }
-
-    .product-card {
-      background-color: #fff;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .product-card img {
-      max-width: 100%;
-      border-radius: 10px;
-      object-fit: cover;
-    }
-
-    .product-name {
-      font-weight: 500;
-      font-size: 1.1em;
-      color: #333;
-    }
-
-    .product-price {
-      font-weight: bold;
-      color: #6a8f66;
-      font-size: 1.05em;
-    }
-
-    .product-actions {
-      display: flex;
-      gap: 6px;
-      justify-content: center;
-    }
-
-    .product-actions form {
-      display: inline;
-      margin: 0;
-    }
-
     footer {
       text-align: center;
+      color: #888;
       margin-top: 40px;
-      color: #777;
       font-size: 0.9em;
-      padding-bottom: 20px;
     }
   </style>
 </head>
 <body>
-  <h1>商品管理 🛒</h1>
-
+  <h1>商品登録 🛍️</h1>
+  
   <nav>
-    <a href="/home">ホームに戻る</a>
+    <a href="/home">ホーム</a>
+    <a href="/admin">予約管理</a>
     <a href="/shop">ショップページ</a>
   </nav>
 
-  <!-- 商品登録フォーム -->
-  <form action="/admin/products" method="post" enctype="multipart/form-data">
-    <div>
-      <label>商品名:</label>
-      <input type="text" name="name" required>
-    </div>
-
-    <div>
-      <label>価格 (円):</label>
-      <input type="number" name="price" min="0" required>
-    </div>
-
-    <div>
-      <label>商品画像:</label>
-      <input type="file" name="image" accept="image/*" required>
-    </div>
-
-    <button type="submit">商品を登録</button>
-  </form>
-
-  <!-- 登録済み商品一覧 -->
-  <div class="products-container">
-    {% for product in products %}
-    <div class="product-card">
-      {% if product.image_filename %}
-      <img src="/static/images/{{ product.image_filename }}" alt="{{ product.name }}">
-      {% else %}
-      <img src="/static/images/default.png" alt="商品画像なし">
-      {% endif %}
-      <div class="product-name">{{ product.name }}</div>
-      <div class="product-price">{{ product.price | int }} 円</div>
-
-      <div class="product-actions">
-        <!-- 編集フォーム -->
-        <form action="/admin/products/edit/{{ product.id }}" method="post" enctype="multipart/form-data">
-          <input type="text" name="name" value="{{ product.name }}" required style="width:100px">
-          <input type="number" name="price" value="{{ product.price }}" min="0" required style="width:70px">
-          <input type="file" name="image" accept="image/*" style="width:100px">
-          <button type="submit">更新</button>
-        </form>
-
-        <!-- 削除フォーム -->
-        <form action="/admin/products/delete/{{ product.id }}" method="post">
-          <button type="submit" style="background-color:#d9534f;">削除</button>
-        </form>
+  <div class="container">
+    <form id="productForm" enctype="multipart/form-data">
+      <div class="form-group">
+        <label>商品画像 *</label>
+        <input type="file" id="image" name="image" accept="image/*" required onchange="previewImage(event)">
+        <img id="preview" class="preview-image" alt="プレビュー">
       </div>
-    </div>
-    {% endfor %}
-    {% if products|length == 0 %}
-    <p style="text-align:center; color:#888;">登録されている商品はまだありません</p>
-    {% endif %}
+
+      <div class="form-group">
+        <label>商品名 *</label>
+        <input type="text" id="product_name" name="product_name" placeholder="例: フェイシャルクリーム" required>
+      </div>
+
+      <div class="form-group">
+        <label>価格 (円) *</label>
+        <input type="number" id="price" name="price" min="0" step="0.01" placeholder="例: 3500" required>
+      </div>
+
+      <div class="form-group">
+        <label>カテゴリ *</label>
+        <select id="category" name="category" required>
+          <option value="">選択してください</option>
+          <option value="スキンケア">スキンケア</option>
+          <option value="アロマ">アロマ</option>
+          <option value="ヘアケア">ヘアケア</option>
+          <option value="ボディケア">ボディケア</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>在庫数 *</label>
+        <input type="number" id="stock_quantity" name="stock_quantity" min="0" value="0" required>
+      </div>
+
+      <div class="form-group">
+        <label>商品説明・備考 <span class="optional">(任意)</span></label>
+        <textarea id="description" name="description" placeholder="商品の説明や管理者コメントを入力"></textarea>
+      </div>
+
+      <button type="submit" class="btn-submit">商品を登録</button>
+    </form>
   </div>
 
-  <footer>
-    <p>© 2025 Salon Coeur</p>
-  </footer>
+  <footer>© 2025 Salon Coeur 管理画面</footer>
+
+  <script>
+    // 画像プレビュー
+    function previewImage(event) {
+      const file = event.target.files[0];
+      const preview = document.getElementById('preview');
+      
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // フォーム送信
+    document.getElementById('productForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData();
+      const imageFile = document.getElementById('image').files[0];
+      
+      // 画像をBase64に変換
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const base64Image = e.target.result;
+        
+        formData.append('product_name', document.getElementById('product_name').value);
+        formData.append('price', document.getElementById('price').value);
+        formData.append('category', document.getElementById('category').value);
+        formData.append('stock_quantity', document.getElementById('stock_quantity').value);
+        formData.append('description', document.getElementById('description').value);
+        formData.append('image_data', base64Image);
+
+        try {
+          const response = await fetch('/admin/products/add', {
+            method: 'POST',
+            body: formData
+          });
+
+          const result = await response.json();
+          
+          if (response.ok) {
+            alert('商品を登録しました！ショップページに移動します。');
+            window.location.href = '/shop';
+          } else {
+            alert('エラー: ' + (result.error || '商品登録に失敗しました'));
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('エラーが発生しました');
+        }
+      };
+
+      if (imageFile) {
+        reader.readAsDataURL(imageFile);
+      } else {
+        alert('画像を選択してください');
+      }
+    });
+  </script>
 </body>
 </html>
