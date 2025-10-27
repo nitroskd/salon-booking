@@ -1,146 +1,173 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>サロン予約フォーム</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ご予約フォーム | Salon Coeur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap');
-
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
     body {
       font-family: 'Noto Sans JP', sans-serif;
       background: #fefbf5;
       color: #444;
-      margin: 0;
-      padding: 0;
+      padding: 20px;
+      padding-bottom: 40px;
     }
-
+    
+    .header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    
+    .logo {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    
     h1 {
-      font-family: 'Roboto', sans-serif;
       color: #6a8f66;
-      text-align: center;
-      margin-top: 40px;
-      font-size: 2.2em;
-      letter-spacing: 1px;
+      font-size: 1.6em;
+      margin-bottom: 10px;
+      font-weight: 500;
     }
-
-    nav {
-      text-align: center;
-      margin: 20px 0;
-    }
-
-    nav a {
+    
+    .back-link {
       display: inline-block;
-      margin: 0 10px;
+      margin-top: 15px;
       padding: 10px 20px;
-      background-color: #a3b18a;
+      background: #a3b18a;
       color: white;
       text-decoration: none;
       border-radius: 8px;
+      font-size: 0.9em;
       transition: 0.3s;
     }
-
-    nav a:hover {
-      background-color: #879f6f;
+    
+    .back-link:active {
+      transform: scale(0.98);
     }
-
+    
     form {
-      max-width: 480px;
-      margin: 0 auto 40px;
+      max-width: 500px;
+      margin: 0 auto;
       background: #ffffff;
-      padding: 30px 40px;
+      padding: 25px 20px;
       border-radius: 16px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     }
-
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
     label {
       display: block;
       font-weight: 500;
       color: #555;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
+      font-size: 0.95em;
     }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #d9d6ce;
-      border-radius: 10px;
-      font-size: 1em;
-      background-color: #fcfaf4;
-      transition: 0.3s ease;
-      box-sizing: border-box;
-    }
-
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-      font-family: 'Noto Sans JP', sans-serif;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: #a3b18a;
-      outline: none;
-      box-shadow: 0 0 5px rgba(163, 177, 138, 0.4);
-    }
-
+    
     .optional {
       font-size: 0.85em;
       color: #888;
       font-weight: normal;
-      margin-left: 4px;
     }
-
-    button {
-      margin-top: 20px;
+    
+    input, select, textarea {
       width: 100%;
-      background-color: #a3b18a;
+      padding: 14px;
+      border: 1px solid #d9d6ce;
+      border-radius: 10px;
+      font-size: 16px;
+      background-color: #fcfaf4;
+      font-family: 'Noto Sans JP', sans-serif;
+      transition: 0.3s;
+    }
+    
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #a3b18a;
+      box-shadow: 0 0 5px rgba(163, 177, 138, 0.3);
+    }
+    
+    button {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #a3b18a 0%, #879f6f 100%);
       color: white;
       border: none;
-      padding: 14px;
       border-radius: 10px;
-      font-size: 1.1em;
+      font-size: 1.05em;
+      font-weight: 500;
       cursor: pointer;
-      transition: background 0.3s ease;
+      margin-top: 10px;
+      transition: 0.3s;
+      touch-action: manipulation;
     }
-
-    button:hover {
-      background-color: #879f6f;
+    
+    button:active {
+      transform: scale(0.98);
     }
-
+    
     footer {
       text-align: center;
-      margin-top: 40px;
-      color: #777;
-      font-size: 0.9em;
-      padding-bottom: 20px;
+      margin-top: 30px;
+      color: #888;
+      font-size: 0.85em;
+    }
+    
+    @media (max-width: 480px) {
+      body {
+        padding: 15px;
+      }
+      
+      h1 {
+        font-size: 1.4em;
+      }
+      
+      form {
+        padding: 20px 18px;
+      }
+      
+      input, select, textarea {
+        padding: 12px;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>ご予約フォーム 🌿</h1>
-
-  <nav>
-    <a href="/home">ホームに戻る</a>
-  </nav>
+  <div class="header">
+    <div class="logo">🌿</div>
+    <h1>ご予約フォーム</h1>
+    <a href="/home" class="back-link">← ホームに戻る</a>
+  </div>
 
   <form action="/book" method="post">
-    <div>
-      <label>お名前:</label>
+    <div class="form-group">
+      <label>お名前 *</label>
       <input type="text" name="customer_name" required>
     </div>
 
-    <div>
-      <label>電話番号:</label>
+    <div class="form-group">
+      <label>電話番号 *</label>
       <input type="tel" name="phone_number" placeholder="090-1234-5678" pattern="[0-9\-]+" required>
     </div>
 
-    <div>
-      <label>サービス内容:</label>
+    <div class="form-group">
+      <label>サービス内容 *</label>
       <select name="service_name" required>
         <option value="">選択してください</option>
         <option value="シミケア">シミケア</option>
@@ -151,13 +178,13 @@
       </select>
     </div>
 
-    <div>
-      <label>予約日:</label>
+    <div class="form-group">
+      <label>予約日 *</label>
       <input type="date" name="booking_date" required>
     </div>
 
-    <div>
-      <label>予約時間:</label>
+    <div class="form-group">
+      <label>予約時間 *</label>
       <select name="booking_time" required>
         <option value="">選択してください</option>
         <option value="10:00">10:00</option>
@@ -166,8 +193,8 @@
       </select>
     </div>
 
-    <div>
-      <label>備考 <span class="optional">(任意)</span>:</label>
+    <div class="form-group">
+      <label>備考 <span class="optional">(任意)</span></label>
       <textarea name="notes" placeholder="お気軽になんでもお申し付けください"></textarea>
     </div>
 
@@ -189,7 +216,7 @@
       for (let option of timeSelect.options) {
         if (bookedTimes.includes(option.value)) {
           option.disabled = true;
-          option.textContent = option.value + "（予約済）";
+          option.textContent = option.value + " (予約済)";
         } else {
           option.disabled = false;
           option.textContent = option.value;
