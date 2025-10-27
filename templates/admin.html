@@ -1,63 +1,202 @@
-<!-- templates/admin.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>予約管理画面</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>予約管理画面 | Coeur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Noto Sans JP', sans-serif;
       background: #fefbf5;
       color: #444;
       margin: 0;
-      padding: 0;
+      padding: 20px;
     }
-
     h1 {
       text-align: center;
       color: #6a8f66;
-      margin: 30px 0 10px 0;
+      margin: 30px 0;
       font-size: 2em;
     }
-
+    nav {
+      text-align: center;
+      margin: 20px 0;
+    }
+    nav a {
+      margin: 0 10px;
+      padding: 10px 20px;
+      background: #a3b18a;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+    nav a:hover {
+      background: #879f6f;
+    }
     .container {
-      width: 90%;
-      max-width: 900px;
-      margin: 0 auto 50px auto;
+      max-width: 1200px;
+      margin: 0 auto;
       background: white;
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 5px 16px rgba(0,0,0,0.08);
     }
-
+    .add-button {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 12px 30px;
+      background: #6a8f66;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: 0.3s;
+    }
+    .add-button:hover {
+      background: #5a7d56;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 15px;
     }
-
     th, td {
-      padding: 10px 12px;
+      padding: 12px;
       text-align: left;
       border-bottom: 1px solid #e0ddd5;
     }
-
     th {
       background-color: #a3b18a;
       color: white;
+      font-weight: 500;
     }
-
     tr:hover {
       background-color: #f6f4ed;
     }
-
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-edit {
+      padding: 6px 12px;
+      background: #5da3d5;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+    .btn-edit:hover {
+      background: #4a8ab8;
+    }
+    .btn-delete {
+      padding: 6px 12px;
+      background: #d9534f;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+    .btn-delete:hover {
+      background: #c9302c;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background-color: white;
+      margin: 5% auto;
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+    .close {
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      color: #aaa;
+      cursor: pointer;
+    }
+    .close:hover {
+      color: #000;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #555;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d9d6ce;
+      border-radius: 8px;
+      font-size: 1em;
+      box-sizing: border-box;
+    }
+    .form-group textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .btn-save {
+      flex: 1;
+      padding: 12px;
+      background: #6a8f66;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    .btn-save:hover {
+      background: #5a7d56;
+    }
+    .btn-cancel {
+      flex: 1;
+      padding: 12px;
+      background: #999;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    .btn-cancel:hover {
+      background: #777;
+    }
     .no-data {
       text-align: center;
       color: #777;
       padding: 30px 0;
     }
-
+    .loading {
+      text-align: center;
+      color: #999;
+      padding: 30px 0;
+    }
     footer {
       text-align: center;
       color: #888;
@@ -67,40 +206,241 @@
   </style>
 </head>
 <body>
-  <h1>予約一覧 🌿</h1>
+  <h1>予約管理画面 🌿</h1>
+  
+  <nav>
+    <a href="/home">ホーム</a>
+    <a href="/admin/products">商品管理</a>
+  </nav>
+
   <div class="container">
-    {% if bookings %}
-    <table>
-      <thead>
-        <tr>
-          <th>お名前</th>
-          <th>電話番号</th>
-          <th>サービス</th>
-          <th>日付</th>
-          <th>時間</th>
-          <th>メモ</th>
-          <th>登録日</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for b in bookings %}
-        <tr>
-          <td>{{ b[0] }}</td>
-          <td>{{ b[1] }}</td>
-          <td>{{ b[2] }}</td>
-          <td>{{ b[3] }}</td>
-          <td>{{ b[4] }}</td>
-          <td>{{ b[5] or '-' }}</td>
-          <td>{{ b[6] }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-      <p class="no-data">まだ予約はありません。</p>
-    {% endif %}
+    <button class="add-button" onclick="openAddModal()">+ 新規予約追加</button>
+    
+    <div id="bookings-container">
+      <div class="loading">読み込み中...</div>
+    </div>
+  </div>
+
+  <!-- 追加・編集モーダル -->
+  <div id="bookingModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2 id="modal-title">予約追加</h2>
+      <form id="bookingForm">
+        <input type="hidden" id="booking-id">
+        
+        <div class="form-group">
+          <label>お名前 *</label>
+          <input type="text" id="customer-name" required>
+        </div>
+        
+        <div class="form-group">
+          <label>電話番号 *</label>
+          <input type="tel" id="phone-number" placeholder="090-1234-5678" required>
+        </div>
+        
+        <div class="form-group">
+          <label>サービス *</label>
+          <select id="service-name" required>
+            <option value="">選択してください</option>
+            <option value="シミケア">シミケア</option>
+            <option value="フェイシャルWAX">フェイシャルWAX</option>
+            <option value="脳洗浄">脳洗浄</option>
+            <option value="ピーリング">ピーリング</option>
+            <option value="ハーブサウナ">ハーブサウナ</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>予約日 *</label>
+          <input type="date" id="booking-date" required>
+        </div>
+        
+        <div class="form-group">
+          <label>予約時間 *</label>
+          <select id="booking-time" required>
+            <option value="">選択してください</option>
+            <option value="10:00">10:00</option>
+            <option value="14:00">14:00</option>
+            <option value="17:00">17:00</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>備考</label>
+          <textarea id="notes"></textarea>
+        </div>
+        
+        <div class="modal-buttons">
+          <button type="button" class="btn-cancel" onclick="closeModal()">キャンセル</button>
+          <button type="submit" class="btn-save">保存</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <footer>© 2025 Salon Coeur 管理画面</footer>
+
+  <script>
+    let bookings = [];
+
+    // 予約一覧を読み込み
+    async function loadBookings() {
+      try {
+        const response = await fetch('/bookings');
+        const data = await response.json();
+        bookings = data.bookings || [];
+        displayBookings();
+      } catch (error) {
+        document.getElementById('bookings-container').innerHTML = 
+          '<div class="no-data">データの読み込みに失敗しました</div>';
+        console.error('Error:', error);
+      }
+    }
+
+    // 予約を表示
+    function displayBookings() {
+      const container = document.getElementById('bookings-container');
+      
+      if (bookings.length === 0) {
+        container.innerHTML = '<div class="no-data">予約はありません</div>';
+        return;
+      }
+
+      const html = `
+        <table>
+          <thead>
+            <tr>
+              <th>お名前</th>
+              <th>電話番号</th>
+              <th>サービス</th>
+              <th>日付</th>
+              <th>時間</th>
+              <th>備考</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${bookings.map(b => `
+              <tr>
+                <td>${b.customer_name}</td>
+                <td>${b.phone_number}</td>
+                <td>${b.service_name}</td>
+                <td>${b.booking_date}</td>
+                <td>${b.booking_time}</td>
+                <td>${b.notes || '-'}</td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn-edit" onclick="openEditModal(${b.id})">編集</button>
+                    <button class="btn-delete" onclick="deleteBooking(${b.id})">削除</button>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      
+      container.innerHTML = html;
+    }
+
+    // 新規追加モーダルを開く
+    function openAddModal() {
+      document.getElementById('modal-title').textContent = '予約追加';
+      document.getElementById('bookingForm').reset();
+      document.getElementById('booking-id').value = '';
+      document.getElementById('bookingModal').style.display = 'block';
+    }
+
+    // 編集モーダルを開く
+    function openEditModal(id) {
+      const booking = bookings.find(b => b.id === id);
+      if (!booking) return;
+
+      document.getElementById('modal-title').textContent = '予約編集';
+      document.getElementById('booking-id').value = booking.id;
+      document.getElementById('customer-name').value = booking.customer_name;
+      document.getElementById('phone-number').value = booking.phone_number;
+      document.getElementById('service-name').value = booking.service_name;
+      document.getElementById('booking-date').value = booking.booking_date;
+      document.getElementById('booking-time').value = booking.booking_time;
+      document.getElementById('notes').value = booking.notes || '';
+      document.getElementById('bookingModal').style.display = 'block';
+    }
+
+    // モーダルを閉じる
+    function closeModal() {
+      document.getElementById('bookingModal').style.display = 'none';
+    }
+
+    // フォーム送信
+    document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const id = document.getElementById('booking-id').value;
+      const data = {
+        customer_name: document.getElementById('customer-name').value,
+        phone_number: document.getElementById('phone-number').value,
+        service_name: document.getElementById('service-name').value,
+        booking_date: document.getElementById('booking-date').value,
+        booking_time: document.getElementById('booking-time').value,
+        notes: document.getElementById('notes').value
+      };
+
+      try {
+        const url = id ? `/admin/bookings/${id}` : '/admin/bookings';
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          closeModal();
+          loadBookings();
+          alert(id ? '予約を更新しました' : '予約を追加しました');
+        } else {
+          alert('エラーが発生しました');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('エラーが発生しました');
+      }
+    });
+
+    // 予約削除
+    async function deleteBooking(id) {
+      if (!confirm('この予約を削除しますか？')) return;
+
+      try {
+        const response = await fetch(`/admin/bookings/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          loadBookings();
+          alert('予約を削除しました');
+        } else {
+          alert('削除に失敗しました');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('エラーが発生しました');
+      }
+    }
+
+    // 初期化
+    document.addEventListener('DOMContentLoaded', loadBookings);
+
+    // モーダル外クリックで閉じる
+    window.onclick = function(event) {
+      const modal = document.getElementById('bookingModal');
+      if (event.target == modal) {
+        closeModal();
+      }
+    }
+  </script>
 </body>
 </html>
