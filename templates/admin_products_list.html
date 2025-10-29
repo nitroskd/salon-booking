@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>商品一覧管理 | Salon Coeur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #fefbf5;
+      color: #444;
+      padding: 15px;
+      padding-bottom: 40px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .logo {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    
+    h1 {
+      color: #6a8f66;
+      font-size: 1.6em;
+      font-weight: 500;
+      margin-bottom: 15px;
+    }
+    
+    nav {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    nav a {
+      padding: 10px 18px;
+      background: #a3b18a;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.9em;
+      transition: 0.3s;
+      white-space: nowrap;
+    }
+    
+    nav a:active {
+      transform: scale(0.98);
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    .add-button {
+      width: 100%;
+      max-width: 300px;
+      padding: 14px;
+      background: #6a8f66;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 500;
+      margin: 0 auto 20px;
+      display: block;
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+      text-decoration: none;
+      text-align: center;
+    }
+    
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+    }
+    
+    .product-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    }
+    
+    .product-image {
+      width: 100%;
+      height: 180px;
+      background: linear-gradient(135deg, #e8e4dc 0%, #d9d6ce 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3em;
+      color: #a3b18a;
+      overflow: hidden;
+    }
+    
+    .product-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .product-info {
+      padding: 15px;
+    }
+    
+    .product-category {
+      display: inline-block;
+      padding: 3px 10px;
+      background: #f0ede5;
+      color: #6a8f66;
+      border-radius: 10px;
+      font-size: 0.75em;
+      margin-bottom: 8px;
+    }
+    
+    .product-name {
+      font-size: 1em;
+      font-weight: 500;
+      color: #333;
+      margin: 8px 0;
+    }
+    
+    .product-price {
+      font-size: 1.2em;
+      color: #6a8f66;
+      font-weight: 600;
+      margin: 10px 0;
+    }
+    
+    .product-stock {
+      font-size: 0.85em;
+      color: #666;
+      margin: 5px 0;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .btn-edit, .btn-delete {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9em;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+      touch-action: manipulation;
+    }
+    
+    .btn-edit {
+      background: #5da3d5;
+      color: white;
+    }
+    
+    .btn-delete {
+      background: #d9534f;
+      color: white;
+    }
+    
+    .btn-edit:active, .btn-delete:active {
+      opacity: 0.8;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      overflow-y: auto;
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 20px auto;
+      padding: 25px 20px;
+      border-radius: 12px;
+      width: calc(100% - 40px);
+      max-width: 500px;
+    }
+    
+    .close {
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      color: #aaa;
+      cursor: pointer;
+      line-height: 1;
+    }
+    
+    .modal h2 {
+      color: #6a8f66;
+      margin-bottom: 20px;
+      font-size: 1.3em;
+      clear: both;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #555;
+      font-size: 0.95em;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d9d6ce;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    
+    .form-group textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    
+    .current-image {
+      max-width: 150px;
+      max-height: 150px;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
+    
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .btn-save, .btn-cancel {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    
+    .btn-save {
+      background: #6a8f66;
+      color: white;
+    }
+    
+    .btn-cancel {
+      background: #999;
+      color: white;
+    }
+    
+    .loading, .no-data {
+      text-align: center;
+      color: #999;
+      padding: 40px;
+      font-size: 0.95em;
+    }
+    
+    footer {
+      text-align: center;
+      color: #888;
+      margin-top: 30px;
+      font-size: 0.85em;
+    }
+    
+    @media (max-width: 480px) {
+      .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      }
+      
+      .product-image {
+        height: 150px;
+        font-size: 2.5em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">🌿</div>
+    <h1>商品一覧管理</h1>
+  </div>
+  
+  <nav>
+    <a href="/home">ホーム</a>
+    <a href="/admin">予約管理</a>
+    <a href="/shop">ショップ</a>
+  </nav>
+
+  <div class="container">
+    <a href="/admin/products" class="add-button">+ 新規商品追加</a>
+    
+    <div id="products-container">
+      <div class="loading">読み込み中...</div>
+    </div>
+  </div>
+
+  <!-- 編集モーダル -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2>商品編集</h2>
+      <form id="editForm">
+        <input type="hidden" id="product-id">
+        
+        <div class="form-group">
+          <label>現在の画像</label>
+          <img id="current-image" class="current-image" alt="現在の画像">
+        </div>
+        
+        <div class="form-group">
+          <label>新しい画像（変更する場合のみ）</label>
+          <input type="file" id="new-image" accept="image/*" onchange="previewImage(event)">
+        </div>
+        
+        <div class="form-group">
+          <label>商品名 *</label>
+          <input type="text" id="product-name" required>
+        </div>
+        
+        <div class="form-group">
+          <label>価格 (円) *</label>
+          <input type="number" id="price" min="0" step="0.01" required>
+        </div>
+        
+        <div class="form-group">
+          <label>カテゴリ *</label>
+          <select id="category" required>
+            <option value="">選択してください</option>
+            <option value="スキンケア">スキンケア</option>
+            <option value="アロマ">アロマ</option>
+            <option value="ヘアケア">ヘアケア</option>
+            <option value="ボディケア">ボディケア</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>在庫数 *</label>
+          <input type="number" id="stock" min="0" required>
+        </div>
+        
+        <div class="form-group">
+          <label>商品説明・備考</label>
+          <textarea id="description"></textarea>
+        </div>
+        
+        <div class="modal-buttons">
+          <button type="button" class="btn-cancel" onclick="closeModal()">キャンセル</button>
+          <button type="submit" class="btn-save">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>© 2025 Salon Coeur</footer>
+
+  <script>
+    let products = [];
+    let newImageData = null;
+
+    async function loadProducts() {
+      try {
+        const response = await fetch('/products?active_only=false');
+        const data = await response.json();
+        products = data.products || [];
+        displayProducts();
+      } catch (error) {
+        document.getElementById('products-container').innerHTML = 
+          '<div class="no-data">データの読み込みに失敗しました</div>';
+      }
+    }
+
+    function displayProducts() {
+      const container = document.getElementById('products-container');
+      
+      if (products.length === 0) {
+        container.innerHTML = '<div class="no-data">商品がありません</div>';
+        return;
+      }
+
+      const html = '<div class="products-grid">' + products.map(p => {
+        const imageHtml = p.image_data ? 
+          `<img src="${p.image_data}" alt="${p.product_name}">` : '🌿';
+        
+        return `
+          <div class="product-card">
+            <div class="product-image">${imageHtml}</div>
+            <div class="product-info">
+              ${p.category ? `<span class="product-category">${p.category}</span>` : ''}
+              <div class="product-name">${p.product_name}</div>
+              <div class="product-price">¥${Number(p.price).toLocaleString()}</div>
+              <div class="product-stock">在庫: ${p.stock_quantity}個</div>
+              <div class="action-buttons">
+                <button class="btn-edit" onclick="openEditModal(${p.id})">編集</button>
+                <button class="btn-delete" onclick="deleteProduct(${p.id})">削除</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('') + '</div>';
+      
+      container.innerHTML = html;
+    }
+
+    function openEditModal(id) {
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+
+      document.getElementById('product-id').value = product.id;
+      document.getElementById('product-name').value = product.product_name;
+      document.getElementById('price').value = product.price;
+      document.getElementById('category').value = product.category || '';
+      document.getElementById('stock').value = product.stock_quantity || 0;
+      document.getElementById('description').value = product.description || '';
+      
+      if (product.image_data) {
+        document.getElementById('current-image').src = product.image_data;
+        document.getElementById('current-image').style.display = 'block';
+      } else {
+        document.getElementById('current-image').style.display = 'none';
+      }
+      
+      newImageData = null;
+      document.getElementById('editModal').style.display = 'block';
+    }
+
+    function closeModal() {
+      document.getElementById('editModal').style.display = 'none';
+      document.getElementById('new-image').value = '';
+      newImageData = null;
+    }
+
+    function previewImage(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          newImageData = e.target.result;
+          document.getElementById('current-image').src = newImageData;
+          document.getElementById('current-image').style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const id = document.getElementById('product-id').value;
+      const formData = new FormData();
+      
+      formData.append('product_name', document.getElementById('product-name').value);
+      formData.append('price', document.getElementById('price').value);
+      formData.append('category', document.getElementById('category').value);
+      formData.append('stock_quantity', document.getElementById('stock').value);
+      formData.append('description', document.getElementById('description').value);
+      
+      if (newImageData) {
+        formData.append('image_data', newImageData);
+      }
+
+      try {
+        const response = await fetch(`/admin/products/${id}`, {
+          method: 'PUT',
+          body: formData
+        });
+
+        if (response.ok) {
+          closeModal();
+          loadProducts();
+          alert('商品を更新しました');
+        } else {
+          alert('更新に失敗しました');
+        }
+      } catch (error) {
+        alert('エラーが発生しました');
+      }
+    });
+
+    async function deleteProduct(id) {
+      if (!confirm('この商品を削除しますか？')) return;
+
+      try {
+        const response = await fetch(`/admin/products/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          loadProducts();
+          alert('商品を削除しました');
+        } else {
+          alert('削除に失敗しました');
+        }
+      } catch (error) {
+        alert('エラーが発生しました');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProducts);
+    
+    window.onclick = function(event) {
+      const modal = document.getElementById('editModal');
+      if (event.target == modal) closeModal();
+    }
+  </script>
+</body>
+</html>
