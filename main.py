@@ -90,19 +90,28 @@ init_db()
 
 @app.get("/home", response_class=HTMLResponse)
 def home_page(request: Request):
+    """ホームページを表示"""
     return templates.TemplateResponse("home.html", {"request": request})
 
 @app.get("/shop", response_class=HTMLResponse)
 def shop_page(request: Request):
+    """商品一覧ページを表示"""
     return templates.TemplateResponse("shop.html", {"request": request})
 
 @app.get("/admin", response_class=HTMLResponse)
 def admin_page(request: Request):
+    """管理画面を表示"""
     return templates.TemplateResponse("admin.html", {"request": request})
 
 @app.get("/admin/products", response_class=HTMLResponse)
 def admin_products_page(request: Request):
+    """管理画面 - 商品登録ページを表示"""
     return templates.TemplateResponse("admin_products.html", {"request": request})
+
+@app.get("/admin/products/list", response_class=HTMLResponse)
+def admin_products_list_page(request: Request):
+    """管理画面 - 商品一覧管理ページを表示"""
+    return templates.TemplateResponse("admin_products_list.html", {"request": request})
 
 @app.get("/complete", response_class=HTMLResponse)
 def complete_page(request: Request, customer_name: str = "", phone_number: str = "",
