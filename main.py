@@ -86,7 +86,7 @@ def init_db():
 
 init_db()
 
-# ========== ページ表示 ==========
+# ========== ページ表示のエンドポイント ==========
 
 @app.get("/home", response_class=HTMLResponse)
 def home_page(request: Request):
@@ -100,7 +100,7 @@ def shop_page(request: Request):
 
 @app.get("/admin", response_class=HTMLResponse)
 def admin_page(request: Request):
-    """管理画面を表示"""
+    """管理画面 - 予約管理を表示"""
     return templates.TemplateResponse("admin.html", {"request": request})
 
 @app.get("/admin/products", response_class=HTMLResponse)
@@ -116,13 +116,20 @@ def admin_products_list_page(request: Request):
 @app.get("/complete", response_class=HTMLResponse)
 def complete_page(request: Request, customer_name: str = "", phone_number: str = "",
                   service_name: str = "", booking_date: str = "", booking_time: str = "", notes: str = ""):
+    """予約完了ページを表示"""
     return templates.TemplateResponse("complete.html", {
-        "request": request, "customer_name": customer_name, "phone_number": phone_number,
-        "service_name": service_name, "booking_date": booking_date, "booking_time": booking_time, "notes": notes
+        "request": request, 
+        "customer_name": customer_name, 
+        "phone_number": phone_number,
+        "service_name": service_name, 
+        "booking_date": booking_date, 
+        "booking_time": booking_time, 
+        "notes": notes
     })
 
 @app.get("/", response_class=HTMLResponse)
 def read_form(request: Request):
+    """予約フォームを表示"""
     with get_db_connection() as conn:
         with conn.cursor() as c:
             c.execute("SELECT booking_date, booking_time FROM bookings ORDER BY booking_date, booking_time")
@@ -142,6 +149,7 @@ def read_form(request: Request):
 def book_service(customer_name: str = Form(...), phone_number: str = Form(...),
                  service_name: str = Form(...), booking_date: str = Form(...),
                  booking_time: str = Form(...), notes: str = Form(default="")):
+    """予約を登録"""
     try:
         with get_db_connection() as conn:
             with conn.cursor() as c:
@@ -165,6 +173,7 @@ def book_service(customer_name: str = Form(...), phone_number: str = Form(...),
 
 @app.get("/bookings")
 def get_bookings():
+    """予約一覧を取得"""
     with get_db_connection() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as c:
             c.execute("""SELECT id, customer_name, phone_number, service_name, 
@@ -177,6 +186,7 @@ def get_bookings():
 
 @app.post("/admin/bookings")
 async def create_booking_admin(request: Request):
+    """予約を追加（管理者用）"""
     data = await request.json()
     try:
         with get_db_connection() as conn:
@@ -193,6 +203,7 @@ async def create_booking_admin(request: Request):
 
 @app.put("/admin/bookings/{booking_id}")
 async def update_booking_admin(booking_id: int, request: Request):
+    """予約を更新（管理者用）"""
     data = await request.json()
     try:
         with get_db_connection() as conn:
@@ -209,6 +220,7 @@ async def update_booking_admin(booking_id: int, request: Request):
 
 @app.delete("/admin/bookings/{booking_id}")
 def delete_booking_admin(booking_id: int):
+    """予約を削除（管理者用）"""
     try:
         with get_db_connection() as conn:
             with conn.cursor() as c:
@@ -223,6 +235,7 @@ def delete_booking_admin(booking_id: int):
 
 @app.get("/products")
 def get_products(category: str = None, active_only: bool = True):
+    """商品一覧を取得"""
     with get_db_connection() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as c:
             query = "SELECT * FROM products WHERE 1=1"
@@ -243,6 +256,7 @@ async def create_product_admin(request: Request, product_name: str = Form(...),
                                 price: float = Form(...), category: str = Form(...),
                                 stock_quantity: int = Form(...), description: str = Form(default=""),
                                 image_data: str = Form(...)):
+    """商品を追加（管理者用）"""
     try:
         with get_db_connection() as conn:
             with conn.cursor() as c:
@@ -256,6 +270,56 @@ async def create_product_admin(request: Request, product_name: str = Form(...),
         print(f"商品追加エラー: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+@app.put("/admin/products/{product_id}")
+async def update_product_admin(product_id: int, request: Request):
+    """商品を更新（管理者用）"""
+    try:
+        form_data = await request.form()
+        product_name = form_data.get('product_name')
+        price = float(form_data.get('price'))
+        category = form_data.get('category')
+        stock_quantity = int(form_data.get('stock_quantity'))
+        description = form_data.get('description', '')
+        image_data = form_data.get('image_data', '')
+        
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                if image_data:
+                    # 画像も更新
+                    c.execute("""UPDATE products SET product_name=%s, description=%s, price=%s, 
+                                category=%s, stock_quantity=%s, image_data=%s, updated_at=CURRENT_TIMESTAMP
+                                WHERE id=%s""",
+                             (product_name, description, price, category, stock_quantity, image_data, product_id))
+                else:
+                    # 画像以外を更新
+                    c.execute("""UPDATE products SET product_name=%s, description=%s, price=%s, 
+                                category=%s, stock_quantity=%s, updated_at=CURRENT_TIMESTAMP
+                                WHERE id=%s""",
+                             (product_name, description, price, category, stock_quantity, product_id))
+                conn.commit()
+        return {"success": True, "message": "商品を更新しました"}
+    except Exception as e:
+        print(f"商品更新エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.delete("/admin/products/{product_id}")
+async def delete_product_admin(product_id: int):
+    """商品を削除（管理者用）"""
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("DELETE FROM products WHERE id = %s", (product_id,))
+                conn.commit()
+        return {"success": True, "message": "商品を削除しました"}
+    except Exception as e:
+        print(f"商品削除エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.get("/health")
 def health_check():
+    """ヘルスチェック"""
     return {"status": "ok"}

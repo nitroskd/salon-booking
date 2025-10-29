@@ -496,15 +496,20 @@
           body: formData
         });
 
+        const result = await response.json();
+        console.log('Response:', result);
+
         if (response.ok) {
           closeModal();
           loadProducts();
           alert('商品を更新しました');
         } else {
-          alert('更新に失敗しました');
+          console.error('Error:', result);
+          alert('更新に失敗しました: ' + (result.error || result.detail || '不明なエラー'));
         }
       } catch (error) {
-        alert('エラーが発生しました');
+        console.error('Fetch error:', error);
+        alert('エラーが発生しました: ' + error.message);
       }
     });
 
@@ -516,14 +521,19 @@
           method: 'DELETE'
         });
 
+        const result = await response.json();
+        console.log('Delete response:', result);
+
         if (response.ok) {
           loadProducts();
           alert('商品を削除しました');
         } else {
-          alert('削除に失敗しました');
+          console.error('Delete error:', result);
+          alert('削除に失敗しました: ' + (result.error || result.detail || '不明なエラー'));
         }
       } catch (error) {
-        alert('エラーが発生しました');
+        console.error('Delete fetch error:', error);
+        alert('エラーが発生しました: ' + error.message);
       }
     }
 
