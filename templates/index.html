@@ -90,6 +90,20 @@
       background-color: #fcfaf4;
       font-family: 'Noto Sans JP', sans-serif;
       transition: 0.3s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    
+    input[type="date"] {
+      padding: 12px 14px;
+      display: block;
+      position: relative;
+    }
+    
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      position: absolute;
+      right: 10px;
+      cursor: pointer;
     }
     
     textarea {
