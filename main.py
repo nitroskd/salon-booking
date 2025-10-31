@@ -8,6 +8,10 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
 import json
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import requests
 
 app = FastAPI()
 
@@ -24,6 +28,162 @@ templates = Jinja2Templates(directory=templates_dir)
 
 # データベース接続情報
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+# 通知設定
+GMAIL_USER = os.getenv("GMAIL_USER")
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
+LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
+LINE_USER_ID = os.getenv("LINE_USER_ID")  # 通知を送りたいユーザーのID
+
+def send_gmail_notification(booking_data):
+    """Gmailで予約通知を送信"""
+    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
+        print("Gmail設定が見つかりません")
+        return False
+    
+    try:
+        # サイトのベースURLを取得（環境変数から、なければデフォルト）
+        base_url = os.getenv("BASE_URL", "https://salon-booking-k54d.onrender.com")
+        admin_url = f"{base_url}/admin"
+        
+        # メール内容を作成
+        subject = f"【新規予約】{booking_data['customer_name']}様 - {booking_data['booking_date']}"
+        
+        # HTML形式のメール本文
+        html_body = f"""
+<html>
+<body style="font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; color: #333; line-height: 1.8;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #a3b18a 0%, #879f6f 100%); padding: 20px; border-radius: 10px 10px 0 0;">
+            <h2 style="color: white; margin: 0; font-size: 1.3em;">🌿 新しい予約が入りました</h2>
+        </div>
+        
+        <div style="background: #fefbf5; padding: 30px; border: 1px solid #e8e4dc; border-top: none; border-radius: 0 0 10px 10px;">
+            <h3 style="color: #6a8f66; margin-top: 0;">予約情報</h3>
+            
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #e8e4dc;">
+                    <td style="padding: 12px 0; color: #888; width: 100px;">お名前</td>
+                    <td style="padding: 12px 0; font-weight: 600;">{booking_data['customer_name']} 様</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e8e4dc;">
+                    <td style="padding: 12px 0; color: #888;">電話番号</td>
+                    <td style="padding: 12px 0; font-weight: 600;">{booking_data['phone_number']}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e8e4dc;">
+                    <td style="padding: 12px 0; color: #888;">サービス</td>
+                    <td style="padding: 12px 0; font-weight: 600;">{booking_data['service_name']}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e8e4dc;">
+                    <td style="padding: 12px 0; color: #888;">予約日</td>
+                    <td style="padding: 12px 0; font-weight: 600; color: #6a8f66;">{booking_data['booking_date']}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e8e4dc;">
+                    <td style="padding: 12px 0; color: #888;">予約時間</td>
+                    <td style="padding: 12px 0; font-weight: 600; color: #6a8f66;">{booking_data['booking_time']}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0; color: #888; vertical-align: top;">備考</td>
+                    <td style="padding: 12px 0;">{booking_data.get('notes', 'なし')}</td>
+                </tr>
+            </table>
+            
+            <div style="margin-top: 30px; text-align: center;">
+                <a href="{admin_url}" style="display: inline-block; background: linear-gradient(135deg, #a3b18a 0%, #879f6f 100%); color: white; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: 600; box-shadow: 0 4px 12px rgba(163, 177, 138, 0.3);">
+                    管理画面で確認する →
+                </a>
+            </div>
+            
+            <div style="margin-top: 30px; padding: 15px; background: #f8f6f2; border-radius: 8px; font-size: 0.9em; color: #666;">
+                <p style="margin: 0;">このメールは予約システムから自動送信されています。</p>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; color: #999; font-size: 0.85em;">
+            <p>© 2025 Salon Coeur</p>
+        </div>
+    </div>
+</body>
+</html>
+        """
+        
+        # プレーンテキスト版（メーラーがHTMLに対応していない場合用）
+        text_body = f"""
+新しい予約が入りました。
+
+【予約情報】
+お名前: {booking_data['customer_name']} 様
+電話番号: {booking_data['phone_number']}
+サービス: {booking_data['service_name']}
+予約日: {booking_data['booking_date']}
+予約時間: {booking_data['booking_time']}
+備考: {booking_data.get('notes', 'なし')}
+
+管理画面で確認:
+{admin_url}
+
+---
+Salon Coeur 予約システム
+        """
+        
+        # メールメッセージを作成
+        msg = MIMEMultipart('alternative')
+        msg['From'] = GMAIL_USER
+        msg['To'] = GMAIL_USER  # 自分宛に送信
+        msg['Subject'] = subject
+        
+        # プレーンテキストとHTMLの両方を添付
+        part1 = MIMEText(text_body, 'plain', 'utf-8')
+        part2 = MIMEText(html_body, 'html', 'utf-8')
+        msg.attach(part1)
+        msg.attach(part2)
+        
+        # Gmail SMTPサーバーに接続して送信
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+            server.send_message(msg)
+        
+        print("Gmail通知を送信しました")
+        return True
+    except Exception as e:
+        print(f"Gmail送信エラー: {e}")
+        return False
+
+def send_line_notification(booking_data):
+    """LINE Notifyで予約通知を送信"""
+    if not LINE_NOTIFY_TOKEN:
+        print("LINE Notify設定が見つかりません")
+        return False
+    
+    try:
+        # LINE通知メッセージを作成
+        message = f"""
+🌿 新しい予約が入りました
+
+👤 {booking_data['customer_name']} 様
+📞 {booking_data['phone_number']}
+💆 {booking_data['service_name']}
+📅 {booking_data['booking_date']} {booking_data['booking_time']}
+"""
+        if booking_data.get('notes'):
+            message += f"📝 {booking_data['notes']}\n"
+        
+        # LINE Notify APIにPOST
+        url = "https://notify-api.line.me/api/notify"
+        headers = {"Authorization": f"Bearer {LINE_NOTIFY_TOKEN}"}
+        data = {"message": message}
+        
+        response = requests.post(url, headers=headers, data=data)
+        
+        if response.status_code == 200:
+            print("LINE通知を送信しました")
+            return True
+        else:
+            print(f"LINE送信エラー: {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"LINE送信エラー: {e}")
+        return False
 
 @contextmanager
 def get_db_connection():
@@ -162,6 +322,28 @@ def book_service(customer_name: str = Form(...), phone_number: str = Form(...),
                             VALUES (%s, %s, %s, %s, %s, %s)""",
                          (customer_name, phone_number, service_name, booking_date, booking_time, notes))
                 conn.commit()
+        
+        # 予約データを準備
+        booking_data = {
+            'customer_name': customer_name,
+            'phone_number': phone_number,
+            'service_name': service_name,
+            'booking_date': booking_date,
+            'booking_time': booking_time,
+            'notes': notes
+        }
+        
+        # Gmail通知を送信（非同期で実行してエラーでも予約は完了させる）
+        try:
+            send_gmail_notification(booking_data)
+        except Exception as e:
+            print(f"Gmail通知エラー（無視）: {e}")
+        
+        # LINE通知を送信
+        try:
+            send_line_notification(booking_data)
+        except Exception as e:
+            print(f"LINE通知エラー（無視）: {e}")
         
         params = urlencode({'customer_name': customer_name, 'phone_number': phone_number,
                            'service_name': service_name, 'booking_date': booking_date,
