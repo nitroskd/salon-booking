@@ -138,51 +138,86 @@ Salon Coeur 予約システム
         msg.attach(part1)
         msg.attach(part2)
         
-        # Gmail SMTPサーバーに接続して送信
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-            server.send_message(msg)
+        # Gmail SMTPサーバーに接続して送信（TLS使用）
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()  # TLS暗号化
+        server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+        server.send_message(msg)
+        server.quit()
         
         print("Gmail通知を送信しました")
         return True
     except Exception as e:
         print(f"Gmail送信エラー: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def send_line_notification(booking_data):
-    """LINE Notifyで予約通知を送信"""
-    if not LINE_NOTIFY_TOKEN:
-        print("LINE Notify設定が見つかりません")
+    """LINE Messaging APIで予約通知を送信"""
+    if not LINE_CHANNEL_ACCESS_TOKEN or not LINE_USER_ID:
+        print("LINE Messaging API設定が見つかりません")
         return False
     
     try:
         # LINE通知メッセージを作成
-        message = f"""
-🌿 新しい予約が入りました
+        message = f"""🌿 新しい予約が入りました
 
 👤 {booking_data['customer_name']} 様
 📞 {booking_data['phone_number']}
 💆 {booking_data['service_name']}
-📅 {booking_data['booking_date']} {booking_data['booking_time']}
-"""
+📅 {booking_data['booking_date']} {booking_data['booking_time']}"""
+        
         if booking_data.get('notes'):
-            message += f"📝 {booking_data['notes']}\n"
+            message += f"\n📝 {booking_data['notes']}"
         
-        # LINE Notify APIにPOST
-        url = "https://notify-api.line.me/api/notify"
-        headers = {"Authorization": f"Bearer {LINE_NOTIFY_TOKEN}"}
-        data = {"message": message}
+        # サイトのベースURLを取得
+        base_url = os.getenv("BASE_URL", "https://salon-booking-k54d.onrender.com")
+        admin_url = f"{base_url}/admin"
         
-        response = requests.post(url, headers=headers, data=data)
+        # LINE Messaging APIにPOST
+        url = "https://api.line.me/v2/bot/message/push"
+        headers = {
+            "Authorization": f"Bearer {LINE_CHANNEL_ACCESS_TOKEN}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "to": LINE_USER_ID,
+            "messages": [
+                {
+                    "type": "text",
+                    "text": message
+                },
+                {
+                    "type": "template",
+                    "altText": "管理画面を開く",
+                    "template": {
+                        "type": "buttons",
+                        "text": "予約の詳細を確認しますか？",
+                        "actions": [
+                            {
+                                "type": "uri",
+                                "label": "管理画面を開く",
+                                "uri": admin_url
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+        
+        response = requests.post(url, headers=headers, json=data)
         
         if response.status_code == 200:
             print("LINE通知を送信しました")
             return True
         else:
-            print(f"LINE送信エラー: {response.status_code}")
+            print(f"LINE送信エラー: {response.status_code}, {response.text}")
             return False
     except Exception as e:
         print(f"LINE送信エラー: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 @contextmanager
