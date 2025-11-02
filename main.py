@@ -30,8 +30,8 @@ templates = Jinja2Templates(directory=templates_dir)
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 # 通知設定
-GMAIL_USER = os.getenv("GMAIL_USER")
-GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
+GMAIL_USER = os.getenv("GMAIL_USER")  # 送信元メールアドレス
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
 LINE_USER_ID = os.getenv("LINE_USER_ID")  # 通知を送りたいユーザーのID
 
