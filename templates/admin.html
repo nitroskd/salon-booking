@@ -38,6 +38,43 @@
       margin-bottom: 15px;
     }
     
+    /* アクセス統計 */
+    .stats-container {
+      max-width: 1000px;
+      margin: 0 auto 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #ffffff 0%, #fcfaf4 100%);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      border: 2px solid #e8e4dc;
+    }
+    
+    .stat-label {
+      font-size: 0.85em;
+      color: #888;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    
+    .stat-value {
+      font-size: 2em;
+      color: #6a8f66;
+      font-weight: 600;
+    }
+    
+    .stat-unit {
+      font-size: 0.5em;
+      color: #999;
+      font-weight: 400;
+    }
+    
     nav {
       display: flex;
       gap: 10px;
@@ -59,6 +96,10 @@
     
     nav a:active {
       transform: scale(0.98);
+    }
+    
+    .btn-logout {
+      background: #d9534f;
     }
     
     .container {
@@ -279,6 +320,14 @@
         font-size: 0.85em;
         padding: 9px 15px;
       }
+      
+      .stats-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .stat-value {
+        font-size: 1.8em;
+      }
     }
   </style>
 </head>
@@ -288,9 +337,26 @@
     <h1>予約管理画面</h1>
   </div>
   
+  <!-- アクセス統計 -->
+  <div class="stats-container">
+    <div class="stat-card">
+      <div class="stat-label">📅 当日</div>
+      <div class="stat-value">{{ stats.today }}<span class="stat-unit">views</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">📊 前日</div>
+      <div class="stat-value">{{ stats.yesterday }}<span class="stat-unit">views</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">📈 累計</div>
+      <div class="stat-value">{{ stats.total }}<span class="stat-unit">views</span></div>
+    </div>
+  </div>
+  
   <nav>
     <a href="/home">ホーム</a>
     <a href="/admin/products">商品管理</a>
+    <a href="/admin/logout" class="btn-logout">ログアウト</a>
   </nav>
 
   <div class="container">
@@ -456,6 +522,9 @@
           closeModal();
           loadBookings();
           alert(id ? '予約を更新しました' : '予約を追加しました');
+        } else if (response.status === 401) {
+          alert('セッションが切れました。再度ログインしてください。');
+          window.location.href = '/admin/login';
         } else {
           alert('エラーが発生しました');
         }
@@ -472,6 +541,9 @@
         if (response.ok) {
           loadBookings();
           alert('予約を削除しました');
+        } else if (response.status === 401) {
+          alert('セッションが切れました。再度ログインしてください。');
+          window.location.href = '/admin/login';
         } else {
           alert('削除に失敗しました');
         }

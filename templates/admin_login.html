@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>管理画面ログイン | Salon Coeur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(135deg, #f5f2ed 0%, #e8e4dc 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+      padding: 40px 30px;
+      max-width: 400px;
+      width: 100%;
+    }
+    
+    .logo {
+      font-size: 3em;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    
+    h1 {
+      font-size: 1.5em;
+      color: #6a8f66;
+      margin-bottom: 10px;
+      font-weight: 500;
+      text-align: center;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 0.9em;
+      margin-bottom: 30px;
+      font-weight: 300;
+    }
+    
+    .error-message {
+      background: #ffe6e6;
+      color: #c66;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.9em;
+      text-align: center;
+      display: none;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #555;
+      font-size: 0.95em;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #d9d6ce;
+      border-radius: 10px;
+      font-size: 16px;
+      background: #fcfaf4;
+      font-family: 'Noto Sans JP', sans-serif;
+      transition: 0.3s;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: #a3b18a;
+      box-shadow: 0 0 5px rgba(163, 177, 138, 0.3);
+    }
+    
+    .btn-login {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #6a8f66 0%, #5a7d56 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.05em;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: 0.3s;
+      font-family: 'Noto Sans JP', sans-serif;
+      touch-action: manipulation;
+    }
+    
+    .btn-login:active {
+      transform: scale(0.98);
+    }
+    
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: #888;
+      text-decoration: none;
+      font-size: 0.9em;
+      transition: 0.3s;
+    }
+    
+    .back-link:hover {
+      color: #6a8f66;
+    }
+    
+    footer {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 0.8em;
+      color: #999;
+    }
+    
+    @media (max-width: 480px) {
+      .container {
+        padding: 35px 25px;
+      }
+      
+      h1 {
+        font-size: 1.3em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">🔐</div>
+    <h1>管理画面ログイン</h1>
+    <p class="subtitle">Salon Coeur Admin</p>
+    
+    <div id="error-message" class="error-message">
+      ユーザー名またはパスワードが正しくありません
+    </div>
+    
+    <form action="/admin/login" method="post">
+      <div class="form-group">
+        <label>ユーザー名</label>
+        <input type="text" name="username" required autofocus>
+      </div>
+      
+      <div class="form-group">
+        <label>パスワード</label>
+        <input type="password" name="password" required>
+      </div>
+      
+      <button type="submit" class="btn-login">ログイン</button>
+    </form>
+    
+    <a href="/home" class="back-link">← ホームに戻る</a>
+    
+    <footer>© 2025 Salon Coeur</footer>
+  </div>
+
+  <script>
+    // URLパラメータからエラーを確認
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'invalid') {
+      document.getElementById('error-message').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

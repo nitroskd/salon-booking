@@ -1,22 +1,23 @@
-from fastapi import FastAPI, Request, Form, File, UploadFile
+from fastapi import FastAPI, Request, Form, Depends, Cookie, Response
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from contextlib import contextmanager
 from urllib.parse import urlencode
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
 import json
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import schedule
 import threading
 import time
+import hashlib
+import secrets
 
 app = FastAPI()
+security = HTTPBasic()
 
 # ディレクトリの存在確認と作成
 templates_dir = "templates"
@@ -33,10 +34,41 @@ templates = Jinja2Templates(directory=templates_dir)
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 # 通知設定
-GMAIL_USER = os.getenv("GMAIL_USER")  # 送信元メールアドレス
+GMAIL_USER = os.getenv("GMAIL_USER")
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
-LINE_USER_ID = os.getenv("LINE_USER_ID")  # 通知を送りたいユーザーのID
+LINE_USER_ID = os.getenv("LINE_USER_ID")
+
+# 管理者認証情報（環境変数から取得、デフォルト値あり）
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "salon2025")
+
+# セッション管理用（本番環境では Redis などを推奨）
+active_sessions = {}
+
+def hash_password(password: str) -> str:
+    """パスワードをハッシュ化"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """パスワードを検証"""
+    return hash_password(plain_password) == hashed_password
+
+def create_session_token() -> str:
+    """セッショントークンを生成"""
+    return secrets.token_urlsafe(32)
+
+def verify_admin_session(session_token: str = Cookie(None)) -> bool:
+    """セッショントークンを検証"""
+    if not session_token:
+        return False
+    return session_token in active_sessions
+
+async def get_current_admin(session_token: str = Cookie(None)):
+    """管理者認証チェック"""
+    if not verify_admin_session(session_token):
+        return None
+    return active_sessions.get(session_token)
 
 def send_gmail_notification(booking_data):
     """SendGrid経由でメール通知を送信"""
@@ -45,14 +77,11 @@ def send_gmail_notification(booking_data):
         return False
     
     try:
-        # サイトのベースURLを取得
         base_url = os.getenv("BASE_URL", "https://salon-booking-k54d.onrender.com")
         admin_url = f"{base_url}/admin"
         
-        # メール内容を作成
         subject = f"【新規予約】{booking_data['customer_name']}様 - {booking_data['booking_date']}"
         
-        # HTML形式のメール本文
         html_body = f"""
 <html>
 <body style="font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; color: #333; line-height: 1.8;">
@@ -110,7 +139,6 @@ def send_gmail_notification(booking_data):
 </html>
         """
         
-        # プレーンテキスト版
         text_body = f"""
 新しい予約が入りました。
 
@@ -129,7 +157,6 @@ def send_gmail_notification(booking_data):
 Salon Coeur 予約システム
         """
         
-        # SendGrid API経由で送信
         url = "https://api.sendgrid.com/v3/mail/send"
         headers = {
             "Authorization": f"Bearer {SENDGRID_API_KEY}",
@@ -273,7 +300,6 @@ def send_line_notification(booking_data):
         return False
     
     try:
-        # LINE通知メッセージを作成
         message = f"""🌿 新しい予約が入りました
 
 👤 {booking_data['customer_name']} 様
@@ -284,11 +310,9 @@ def send_line_notification(booking_data):
         if booking_data.get('notes'):
             message += f"\n📝 {booking_data['notes']}"
         
-        # サイトのベースURLを取得
         base_url = os.getenv("BASE_URL", "https://salon-booking-k54d.onrender.com")
         admin_url = f"{base_url}/admin"
         
-        # LINE Messaging APIにPOST
         url = "https://api.line.me/v2/bot/message/push"
         headers = {
             "Authorization": f"Bearer {LINE_CHANNEL_ACCESS_TOKEN}",
@@ -342,6 +366,61 @@ def get_db_connection():
     finally:
         conn.close()
 
+def track_page_view(page_name: str):
+    """ページビューを記録"""
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("""
+                    INSERT INTO page_views (page_name, view_date, view_count)
+                    VALUES (%s, CURRENT_DATE, 1)
+                    ON CONFLICT (page_name, view_date)
+                    DO UPDATE SET view_count = page_views.view_count + 1
+                """, (page_name,))
+                conn.commit()
+    except Exception as e:
+        print(f"ページビュー記録エラー: {e}")
+
+def get_page_view_stats():
+    """ページビュー統計を取得"""
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as c:
+                today = date.today()
+                yesterday = today - timedelta(days=1)
+                
+                # 当日のビュー数
+                c.execute("""
+                    SELECT COALESCE(SUM(view_count), 0) as count
+                    FROM page_views
+                    WHERE view_date = %s
+                """, (today,))
+                today_views = c.fetchone()['count']
+                
+                # 前日のビュー数
+                c.execute("""
+                    SELECT COALESCE(SUM(view_count), 0) as count
+                    FROM page_views
+                    WHERE view_date = %s
+                """, (yesterday,))
+                yesterday_views = c.fetchone()['count']
+                
+                # トータルビュー数
+                c.execute("""
+                    SELECT COALESCE(SUM(view_count), 0) as count
+                    FROM page_views
+                """)
+                total_views = c.fetchone()['count']
+                
+                return {
+                    'today': int(today_views),
+                    'yesterday': int(yesterday_views),
+                    'total': int(total_views)
+                }
+    except Exception as e:
+        print(f"統計取得エラー: {e}")
+        return {'today': 0, 'yesterday': 0, 'total': 0}
+
 def init_db():
     """データベースとテーブルを初期化"""
     with get_db_connection() as conn:
@@ -377,7 +456,7 @@ def init_db():
                 )
             """)
             
-            # remindersテーブル（新規追加）
+            # remindersテーブル
             c.execute("""
                 CREATE TABLE IF NOT EXISTS reminders (
                     id SERIAL PRIMARY KEY,
@@ -391,6 +470,18 @@ def init_db():
                 )
             """)
             
+            # page_viewsテーブル（新規追加）
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS page_views (
+                    id SERIAL PRIMARY KEY,
+                    page_name VARCHAR(100) NOT NULL,
+                    view_date DATE NOT NULL,
+                    view_count INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(page_name, view_date)
+                )
+            """)
+            
             # 既存テーブルにカラム追加
             try:
                 c.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS image_data TEXT")
@@ -400,6 +491,7 @@ def init_db():
             # インデックス作成
             c.execute("CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(booking_date)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_reminders_date ON reminders(booking_date)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(view_date)")
             try:
                 c.execute("CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)")
             except:
@@ -407,7 +499,6 @@ def init_db():
             
             conn.commit()
 
-# リマインダー送信バッチ処理
 def send_reminders():
     """前日のリマインダーを送信"""
     try:
@@ -426,9 +517,7 @@ def send_reminders():
                 
                 for reminder in reminders:
                     try:
-                        # リマインダーメール送信
                         if send_reminder_email(reminder):
-                            # 送信済みフラグを更新
                             c.execute("UPDATE reminders SET sent = TRUE WHERE id = %s", (reminder['id'],))
                             conn.commit()
                             print(f"リマインダー送信完了: ID {reminder['id']}")
@@ -439,7 +528,6 @@ def send_reminders():
         import traceback
         traceback.print_exc()
 
-# スケジューラー実行
 def run_scheduler():
     """バックグラウンドでスケジュール実行"""
     schedule.every().day.at("09:00").do(send_reminders)
@@ -455,37 +543,92 @@ init_db()
 # スケジューラーをバックグラウンドで起動
 threading.Thread(target=run_scheduler, daemon=True).start()
 
+# ========== 認証エンドポイント ==========
+
+@app.get("/admin/login", response_class=HTMLResponse)
+def admin_login_page(request: Request):
+    """管理画面ログインページ"""
+    return templates.TemplateResponse("admin_login.html", {"request": request})
+
+@app.post("/admin/login")
+async def admin_login(response: Response, username: str = Form(...), password: str = Form(...)):
+    """管理画面ログイン処理"""
+    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        # セッショントークンを生成
+        session_token = create_session_token()
+        active_sessions[session_token] = {
+            'username': username,
+            'login_time': datetime.now()
+        }
+        
+        # クッキーにセッショントークンを設定
+        redirect_response = RedirectResponse(url="/admin", status_code=303)
+        redirect_response.set_cookie(
+            key="session_token",
+            value=session_token,
+            httponly=True,
+            max_age=86400,  # 24時間
+            samesite="lax"
+        )
+        return redirect_response
+    else:
+        return RedirectResponse(url="/admin/login?error=invalid", status_code=303)
+
+@app.get("/admin/logout")
+async def admin_logout(response: Response, session_token: str = Cookie(None)):
+    """ログアウト処理"""
+    if session_token and session_token in active_sessions:
+        del active_sessions[session_token]
+    
+    redirect_response = RedirectResponse(url="/admin/login", status_code=303)
+    redirect_response.delete_cookie(key="session_token")
+    return redirect_response
+
 # ========== ページ表示のエンドポイント ==========
 
 @app.get("/home", response_class=HTMLResponse)
 def home_page(request: Request):
     """ホームページを表示"""
+    track_page_view('home')
     return templates.TemplateResponse("home.html", {"request": request})
 
 @app.get("/shop", response_class=HTMLResponse)
 def shop_page(request: Request):
     """商品一覧ページを表示"""
+    track_page_view('shop')
     return templates.TemplateResponse("shop.html", {"request": request})
 
 @app.get("/admin", response_class=HTMLResponse)
-def admin_page(request: Request):
+async def admin_page(request: Request, session_token: str = Cookie(None)):
     """管理画面 - 予約管理を表示"""
-    return templates.TemplateResponse("admin.html", {"request": request})
+    if not verify_admin_session(session_token):
+        return RedirectResponse(url="/admin/login", status_code=303)
+    
+    stats = get_page_view_stats()
+    return templates.TemplateResponse("admin.html", {
+        "request": request,
+        "stats": stats
+    })
 
 @app.get("/admin/products", response_class=HTMLResponse)
-def admin_products_page(request: Request):
+async def admin_products_page(request: Request, session_token: str = Cookie(None)):
     """管理画面 - 商品登録ページを表示"""
+    if not verify_admin_session(session_token):
+        return RedirectResponse(url="/admin/login", status_code=303)
     return templates.TemplateResponse("admin_products.html", {"request": request})
 
 @app.get("/admin/products/list", response_class=HTMLResponse)
-def admin_products_list_page(request: Request):
+async def admin_products_list_page(request: Request, session_token: str = Cookie(None)):
     """管理画面 - 商品一覧管理ページを表示"""
+    if not verify_admin_session(session_token):
+        return RedirectResponse(url="/admin/login", status_code=303)
     return templates.TemplateResponse("admin_products_list.html", {"request": request})
 
 @app.get("/complete", response_class=HTMLResponse)
 def complete_page(request: Request, customer_name: str = "", phone_number: str = "",
                   service_name: str = "", booking_date: str = "", booking_time: str = "", notes: str = ""):
     """予約完了ページを表示"""
+    track_page_view('complete')
     return templates.TemplateResponse("complete.html", {
         "request": request, 
         "customer_name": customer_name, 
@@ -499,6 +642,7 @@ def complete_page(request: Request, customer_name: str = "", phone_number: str =
 @app.get("/", response_class=HTMLResponse)
 def read_form(request: Request):
     """予約フォームを表示"""
+    track_page_view('booking_form')
     with get_db_connection() as conn:
         with conn.cursor() as c:
             c.execute("SELECT booking_date, booking_time FROM bookings ORDER BY booking_date, booking_time")
@@ -532,7 +676,6 @@ def book_service(customer_name: str = Form(...), phone_number: str = Form(...),
                          (customer_name, phone_number, service_name, booking_date, booking_time, notes))
                 conn.commit()
         
-        # 予約データを準備
         booking_data = {
             'customer_name': customer_name,
             'phone_number': phone_number,
@@ -542,13 +685,11 @@ def book_service(customer_name: str = Form(...), phone_number: str = Form(...),
             'notes': notes
         }
         
-        # Gmail通知を送信（非同期で実行してエラーでも予約は完了させる）
         try:
             send_gmail_notification(booking_data)
         except Exception as e:
             print(f"Gmail通知エラー（無視）: {e}")
         
-        # LINE通知を送信
         try:
             send_line_notification(booking_data)
         except Exception as e:
@@ -576,8 +717,11 @@ def get_bookings():
 # ========== 予約管理API（管理者用） ==========
 
 @app.post("/admin/bookings")
-async def create_booking_admin(request: Request):
+async def create_booking_admin(request: Request, session_token: str = Cookie(None)):
     """予約を追加（管理者用）"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
     data = await request.json()
     try:
         with get_db_connection() as conn:
@@ -593,8 +737,11 @@ async def create_booking_admin(request: Request):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.put("/admin/bookings/{booking_id}")
-async def update_booking_admin(booking_id: int, request: Request):
+async def update_booking_admin(booking_id: int, request: Request, session_token: str = Cookie(None)):
     """予約を更新（管理者用）"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
     data = await request.json()
     try:
         with get_db_connection() as conn:
@@ -610,8 +757,11 @@ async def update_booking_admin(booking_id: int, request: Request):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.delete("/admin/bookings/{booking_id}")
-def delete_booking_admin(booking_id: int):
+async def delete_booking_admin(booking_id: int, session_token: str = Cookie(None)):
     """予約を削除（管理者用）"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
     try:
         with get_db_connection() as conn:
             with conn.cursor() as c:
@@ -646,8 +796,11 @@ def get_products(category: str = None, active_only: bool = True):
 async def create_product_admin(request: Request, product_name: str = Form(...),
                                 price: float = Form(...), category: str = Form(...),
                                 stock_quantity: int = Form(...), description: str = Form(default=""),
-                                image_data: str = Form(...)):
+                                image_data: str = Form(...), session_token: str = Cookie(None)):
     """商品を追加（管理者用）"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
     try:
         with get_db_connection() as conn:
             with conn.cursor() as c:
@@ -662,8 +815,11 @@ async def create_product_admin(request: Request, product_name: str = Form(...),
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.put("/admin/products/{product_id}")
-async def update_product_admin(product_id: int, request: Request):
+async def update_product_admin(product_id: int, request: Request, session_token: str = Cookie(None)):
     """商品を更新（管理者用）"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
     try:
         form_data = await request.form()
         product_name = form_data.get('product_name')
@@ -676,13 +832,11 @@ async def update_product_admin(product_id: int, request: Request):
         with get_db_connection() as conn:
             with conn.cursor() as c:
                 if image_data:
-                    # 画像も更新
                     c.execute("""UPDATE products SET product_name=%s, description=%s, price=%s, 
                                 category=%s, stock_quantity=%s, image_data=%s, updated_at=CURRENT_TIMESTAMP
                                 WHERE id=%s""",
                              (product_name, description, price, category, stock_quantity, image_data, product_id))
                 else:
-                    # 画像以外を更新
                     c.execute("""UPDATE products SET product_name=%s, description=%s, price=%s, 
                                 category=%s, stock_quantity=%s, updated_at=CURRENT_TIMESTAMP
                                 WHERE id=%s""",
@@ -696,8 +850,11 @@ async def update_product_admin(product_id: int, request: Request):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.delete("/admin/products/{product_id}")
-async def delete_product_admin(product_id: int):
+async def delete_product_admin(product_id: int, session_token: str = Cookie(None)):
     """商品を削除（管理者用）"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
     try:
         with get_db_connection() as conn:
             with conn.cursor() as c:
@@ -723,7 +880,6 @@ async def set_reminder(request: Request):
         customer_name = data.get('customer_name')
         service_name = data.get('service_name')
         
-        # バリデーション
         if not email or not booking_date or not booking_time:
             return JSONResponse(status_code=400, content={"error": "必須項目が不足しています"})
         
@@ -742,6 +898,16 @@ async def set_reminder(request: Request):
         import traceback
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
+
+# ========== 統計API ==========
+
+@app.get("/api/stats")
+async def get_stats(session_token: str = Cookie(None)):
+    """アクセス統計を取得（管理者用）"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
+    return get_page_view_stats()
 
 @app.get("/health")
 def health_check():
