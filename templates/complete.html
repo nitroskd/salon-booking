@@ -36,6 +36,23 @@
     .icon {
       font-size: 3em;
       margin-bottom: 20px;
+      display: inline-block;
+      opacity: 0;
+      animation: checkmarkAppear 0.6s ease forwards;
+    }
+    
+    @keyframes checkmarkAppear {
+      0% {
+        opacity: 0;
+        transform: scale(0.3) rotate(-45deg);
+      }
+      50% {
+        transform: scale(1.1) rotate(5deg);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+      }
     }
     
     h1 {
@@ -43,6 +60,19 @@
       margin-bottom: 25px;
       font-size: 1.5em;
       font-weight: 500;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease 0.3s forwards;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     
     .info-box {
@@ -51,6 +81,8 @@
       border-radius: 12px;
       margin: 20px 0;
       text-align: left;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease 0.5s forwards;
     }
     
     .info-item {
@@ -72,6 +104,102 @@
       color: #555;
     }
     
+    /* カレンダーボタン */
+    .calendar-section {
+      margin: 20px 0;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease 0.7s forwards;
+    }
+    
+    .calendar-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .btn-calendar {
+      flex: 1;
+      padding: 12px;
+      background: #ffffff;
+      border: 2px solid #a3b18a;
+      color: #6a8f66;
+      border-radius: 8px;
+      font-size: 0.9em;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.3s;
+      font-family: 'Noto Sans JP', sans-serif;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    
+    .btn-calendar:hover {
+      background: #f8f6f2;
+    }
+    
+    .btn-calendar:active {
+      transform: scale(0.98);
+    }
+    
+    /* リマインダーセクション */
+    .reminder-section {
+      margin: 20px 0;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease 0.9s forwards;
+    }
+    
+    .reminder-title {
+      font-size: 0.9em;
+      color: #666;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+    
+    .reminder-form {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .reminder-input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #d9d6ce;
+      border-radius: 8px;
+      font-size: 0.9em;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    
+    .btn-reminder {
+      padding: 12px 20px;
+      background: #6a8f66;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9em;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: 'Noto Sans JP', sans-serif;
+      transition: 0.3s;
+    }
+    
+    .btn-reminder:active {
+      transform: scale(0.98);
+    }
+    
+    .reminder-success {
+      margin-top: 10px;
+      padding: 10px;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-radius: 8px;
+      font-size: 0.85em;
+      display: none;
+    }
+    
     .note {
       margin-top: 20px;
       font-size: 0.9em;
@@ -80,9 +208,11 @@
       padding: 15px;
       border-radius: 10px;
       line-height: 1.6;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease 1.1s forwards;
     }
     
-    button {
+    .btn-home {
       margin-top: 25px;
       width: 100%;
       background: linear-gradient(135deg, #a3b18a 0%, #879f6f 100%);
@@ -96,9 +226,11 @@
       transition: 0.3s;
       font-family: 'Noto Sans JP', sans-serif;
       touch-action: manipulation;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease 1.3s forwards;
     }
     
-    button:active {
+    .btn-home:active {
       transform: scale(0.98);
     }
     
@@ -113,6 +245,14 @@
       
       .info-item {
         font-size: 0.9em;
+      }
+      
+      .calendar-buttons {
+        flex-direction: column;
+      }
+      
+      .reminder-form {
+        flex-direction: column;
       }
     }
   </style>
@@ -151,14 +291,166 @@
       {% endif %}
     </div>
     
+    <!-- カレンダー登録 -->
+    <div class="calendar-section">
+      <div class="reminder-title">📅 カレンダーに追加</div>
+      <div class="calendar-buttons">
+        <a href="#" id="googleCalendarLink" class="btn-calendar" target="_blank">
+          Google Calendar
+        </a>
+        <a href="#" id="icalLink" class="btn-calendar" download="salon_booking.ics">
+          iCal/Outlook
+        </a>
+      </div>
+    </div>
+    
+    <!-- リマインダー設定 -->
+    <div class="reminder-section">
+      <div class="reminder-title">📧 リマインダー設定（前日にメール送信）</div>
+      <div class="reminder-form">
+        <input 
+          type="email" 
+          id="reminderEmail" 
+          class="reminder-input" 
+          placeholder="メールアドレスを入力"
+        >
+        <button type="button" class="btn-reminder" onclick="setReminder()">
+          設定
+        </button>
+      </div>
+      <div id="reminderSuccess" class="reminder-success">
+        ✓ リマインダーを設定しました
+      </div>
+    </div>
+    
     <div class="note">
       このページをスクリーンショットしておくことをオススメします。<br>
       予約内容をすぐに確認できます。
     </div>
     
-    <form action="/home">
-      <button type="submit">トップに戻る</button>
-    </form>
+    <button type="button" class="btn-home" onclick="window.location.href='/home'">
+      トップに戻る
+    </button>
   </div>
+
+  <script>
+    // 予約情報を取得
+    const bookingData = {
+      customerName: "{{ customer_name }}",
+      phoneNumber: "{{ phone_number }}",
+      serviceName: "{{ service_name }}",
+      bookingDate: "{{ booking_date }}",
+      bookingTime: "{{ booking_time }}",
+      notes: "{{ notes }}"
+    };
+
+    // Google Calendar リンク生成
+    function generateGoogleCalendarLink() {
+      const startDateTime = `${bookingData.bookingDate.replace(/-/g, '')}T${bookingData.bookingTime.replace(':', '')}00`;
+      
+      // 1時間後を終了時刻として設定
+      const startDate = new Date(`${bookingData.bookingDate}T${bookingData.bookingTime}`);
+      const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+      const endDateTime = endDate.toISOString().replace(/[-:]/g, '').split('.')[0];
+      
+      const title = encodeURIComponent(`Salon Coeur - ${bookingData.serviceName}`);
+      const details = encodeURIComponent(
+        `サービス: ${bookingData.serviceName}\n` +
+        `お名前: ${bookingData.customerName}\n` +
+        `電話番号: ${bookingData.phoneNumber}\n` +
+        (bookingData.notes ? `備考: ${bookingData.notes}` : '')
+      );
+      const location = encodeURIComponent('Salon Coeur');
+      
+      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDateTime}/${endDateTime}&details=${details}&location=${location}`;
+    }
+
+    // iCal ファイル生成
+    function generateICalFile() {
+      const startDate = new Date(`${bookingData.bookingDate}T${bookingData.bookingTime}`);
+      const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+      
+      const formatICalDate = (date) => {
+        return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      };
+      
+      const icalContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Salon Coeur//Booking//JP',
+        'BEGIN:VEVENT',
+        `DTSTART:${formatICalDate(startDate)}`,
+        `DTEND:${formatICalDate(endDate)}`,
+        `SUMMARY:Salon Coeur - ${bookingData.serviceName}`,
+        `DESCRIPTION:サービス: ${bookingData.serviceName}\\n` +
+          `お名前: ${bookingData.customerName}\\n` +
+          `電話番号: ${bookingData.phoneNumber}` +
+          (bookingData.notes ? `\\n備考: ${bookingData.notes}` : ''),
+        'LOCATION:Salon Coeur',
+        `UID:${Date.now()}@saloncoeur.com`,
+        'STATUS:CONFIRMED',
+        'BEGIN:VALARM',
+        'TRIGGER:-PT24H',
+        'ACTION:DISPLAY',
+        'DESCRIPTION:明日は Salon Coeur のご予約日です',
+        'END:VALARM',
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
+      
+      const blob = new Blob([icalContent], { type: 'text/calendar;charset=utf-8' });
+      return URL.createObjectURL(blob);
+    }
+
+    // リマインダー設定
+    async function setReminder() {
+      const email = document.getElementById('reminderEmail').value;
+      
+      if (!email) {
+        alert('メールアドレスを入力してください');
+        return;
+      }
+      
+      if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+        alert('有効なメールアドレスを入力してください');
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/set-reminder', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: email,
+            booking_date: bookingData.bookingDate,
+            booking_time: bookingData.bookingTime,
+            customer_name: bookingData.customerName,
+            service_name: bookingData.serviceName
+          })
+        });
+        
+        if (response.ok) {
+          document.getElementById('reminderSuccess').style.display = 'block';
+          document.getElementById('reminderEmail').value = '';
+          setTimeout(() => {
+            document.getElementById('reminderSuccess').style.display = 'none';
+          }, 5000);
+        } else {
+          alert('リマインダーの設定に失敗しました');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('エラーが発生しました');
+      }
+    }
+
+    // ページ読み込み時にリンクを設定
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('googleCalendarLink').href = generateGoogleCalendarLink();
+      document.getElementById('icalLink').href = generateICalFile();
+    });
+  </script>
 </body>
 </html>

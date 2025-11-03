@@ -1,4 +1,3 @@
-# main.py
 from fastapi import FastAPI, Request, Form, File, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -12,6 +11,10 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import requests
+from datetime import datetime, timedelta
+import schedule
+import threading
+import time
 
 app = FastAPI()
 
@@ -36,13 +39,13 @@ LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
 LINE_USER_ID = os.getenv("LINE_USER_ID")  # 通知を送りたいユーザーのID
 
 def send_gmail_notification(booking_data):
-    """Gmailで予約通知を送信"""
-    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
-        print("Gmail設定が見つかりません")
+    """SendGrid経由でメール通知を送信"""
+    if not SENDGRID_API_KEY or not GMAIL_USER:
+        print("SendGrid設定が見つかりません")
         return False
     
     try:
-        # サイトのベースURLを取得（環境変数から、なければデフォルト）
+        # サイトのベースURLを取得
         base_url = os.getenv("BASE_URL", "https://salon-booking-k54d.onrender.com")
         admin_url = f"{base_url}/admin"
         
@@ -107,7 +110,7 @@ def send_gmail_notification(booking_data):
 </html>
         """
         
-        # プレーンテキスト版（メーラーがHTMLに対応していない場合用）
+        # プレーンテキスト版
         text_body = f"""
 新しい予約が入りました。
 
@@ -126,29 +129,139 @@ def send_gmail_notification(booking_data):
 Salon Coeur 予約システム
         """
         
-        # メールメッセージを作成
-        msg = MIMEMultipart('alternative')
-        msg['From'] = GMAIL_USER
-        msg['To'] = GMAIL_USER  # 自分宛に送信
-        msg['Subject'] = subject
+        # SendGrid API経由で送信
+        url = "https://api.sendgrid.com/v3/mail/send"
+        headers = {
+            "Authorization": f"Bearer {SENDGRID_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "personalizations": [{
+                "to": [{"email": GMAIL_USER}],
+                "subject": subject
+            }],
+            "from": {"email": GMAIL_USER, "name": "Salon Coeur 予約システム"},
+            "content": [
+                {"type": "text/plain", "value": text_body},
+                {"type": "text/html", "value": html_body}
+            ]
+        }
         
-        # プレーンテキストとHTMLの両方を添付
-        part1 = MIMEText(text_body, 'plain', 'utf-8')
-        part2 = MIMEText(html_body, 'html', 'utf-8')
-        msg.attach(part1)
-        msg.attach(part2)
+        response = requests.post(url, headers=headers, json=data)
         
-        # Gmail SMTPサーバーに接続して送信（TLS使用）
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()  # TLS暗号化
-        server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-        server.send_message(msg)
-        server.quit()
+        if response.status_code == 202:
+            print("メール通知を送信しました")
+            return True
+        else:
+            print(f"メール送信エラー: {response.status_code}, {response.text}")
+            return False
         
-        print("Gmail通知を送信しました")
-        return True
     except Exception as e:
-        print(f"Gmail送信エラー: {e}")
+        print(f"メール送信エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+def send_reminder_email(reminder):
+    """リマインダーメールを送信"""
+    if not SENDGRID_API_KEY or not GMAIL_USER:
+        print("SendGrid設定が見つかりません")
+        return False
+    
+    try:
+        subject = f"【予約リマインダー】明日のご予約について - Salon Coeur"
+        
+        html_body = f"""
+<html>
+<body style="font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; color: #333; line-height: 1.8;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #a3b18a 0%, #879f6f 100%); padding: 20px; border-radius: 10px 10px 0 0;">
+            <h2 style="color: white; margin: 0; font-size: 1.3em;">🌿 明日はご予約日です</h2>
+        </div>
+        
+        <div style="background: #fefbf5; padding: 30px; border: 1px solid #e8e4dc; border-top: none; border-radius: 0 0 10px 10px;">
+            <p style="font-size: 1.1em; color: #6a8f66; margin-top: 0;">
+                {reminder['customer_name']} 様
+            </p>
+            
+            <p style="margin: 20px 0;">
+                明日はSalon Coeurのご予約日です。<br>
+                お気をつけてお越しくださいませ。
+            </p>
+            
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <tr style="border-bottom: 1px solid #e8e4dc;">
+                    <td style="padding: 12px 0; color: #888; width: 100px;">予約日</td>
+                    <td style="padding: 12px 0; font-weight: 600; color: #6a8f66;">{reminder['booking_date']}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e8e4dc;">
+                    <td style="padding: 12px 0; color: #888;">予約時間</td>
+                    <td style="padding: 12px 0; font-weight: 600; color: #6a8f66;">{reminder['booking_time']}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0; color: #888;">サービス</td>
+                    <td style="padding: 12px 0; font-weight: 600;">{reminder['service_name']}</td>
+                </tr>
+            </table>
+            
+            <div style="margin-top: 30px; padding: 15px; background: #f8f6f2; border-radius: 8px; font-size: 0.9em; color: #666;">
+                <p style="margin: 0;">ご不明点がございましたら、お気軽にお問い合わせください。</p>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; color: #999; font-size: 0.85em;">
+            <p>© 2025 Salon Coeur</p>
+        </div>
+    </div>
+</body>
+</html>
+        """
+        
+        text_body = f"""
+{reminder['customer_name']} 様
+
+明日はSalon Coeurのご予約日です。
+お気をつけてお越しくださいませ。
+
+【予約情報】
+予約日: {reminder['booking_date']}
+予約時間: {reminder['booking_time']}
+サービス: {reminder['service_name']}
+
+ご不明点がございましたら、お気軽にお問い合わせください。
+
+---
+Salon Coeur
+        """
+        
+        url = "https://api.sendgrid.com/v3/mail/send"
+        headers = {
+            "Authorization": f"Bearer {SENDGRID_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "personalizations": [{
+                "to": [{"email": reminder['email']}],
+                "subject": subject
+            }],
+            "from": {"email": GMAIL_USER, "name": "Salon Coeur"},
+            "content": [
+                {"type": "text/plain", "value": text_body},
+                {"type": "text/html", "value": html_body}
+            ]
+        }
+        
+        response = requests.post(url, headers=headers, json=data)
+        
+        if response.status_code == 202:
+            print(f"リマインダーメールを送信しました: {reminder['email']}")
+            return True
+        else:
+            print(f"リマインダー送信エラー: {response.status_code}, {response.text}")
+            return False
+        
+    except Exception as e:
+        print(f"リマインダー送信エラー: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -264,6 +377,20 @@ def init_db():
                 )
             """)
             
+            # remindersテーブル（新規追加）
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS reminders (
+                    id SERIAL PRIMARY KEY,
+                    email VARCHAR(255) NOT NULL,
+                    booking_date DATE NOT NULL,
+                    booking_time TIME NOT NULL,
+                    customer_name VARCHAR(100) NOT NULL,
+                    service_name VARCHAR(100) NOT NULL,
+                    sent BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
             # 既存テーブルにカラム追加
             try:
                 c.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS image_data TEXT")
@@ -272,6 +399,7 @@ def init_db():
             
             # インデックス作成
             c.execute("CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(booking_date)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_reminders_date ON reminders(booking_date)")
             try:
                 c.execute("CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)")
             except:
@@ -279,7 +407,53 @@ def init_db():
             
             conn.commit()
 
+# リマインダー送信バッチ処理
+def send_reminders():
+    """前日のリマインダーを送信"""
+    try:
+        tomorrow = (datetime.now() + timedelta(days=1)).date()
+        print(f"リマインダーチェック: {tomorrow}")
+        
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as c:
+                c.execute("""
+                    SELECT * FROM reminders 
+                    WHERE booking_date = %s AND sent = FALSE
+                """, (tomorrow,))
+                reminders = c.fetchall()
+                
+                print(f"送信するリマインダー数: {len(reminders)}")
+                
+                for reminder in reminders:
+                    try:
+                        # リマインダーメール送信
+                        if send_reminder_email(reminder):
+                            # 送信済みフラグを更新
+                            c.execute("UPDATE reminders SET sent = TRUE WHERE id = %s", (reminder['id'],))
+                            conn.commit()
+                            print(f"リマインダー送信完了: ID {reminder['id']}")
+                    except Exception as e:
+                        print(f"リマインダー送信エラー (ID: {reminder['id']}): {e}")
+    except Exception as e:
+        print(f"リマインダーチェックエラー: {e}")
+        import traceback
+        traceback.print_exc()
+
+# スケジューラー実行
+def run_scheduler():
+    """バックグラウンドでスケジュール実行"""
+    schedule.every().day.at("09:00").do(send_reminders)
+    print("スケジューラー起動: 毎日9:00にリマインダーチェック")
+    
+    while True:
+        schedule.run_pending()
+        time.sleep(60)
+
+# データベース初期化
 init_db()
+
+# スケジューラーをバックグラウンドで起動
+threading.Thread(target=run_scheduler, daemon=True).start()
 
 # ========== ページ表示のエンドポイント ==========
 
@@ -536,7 +710,40 @@ async def delete_product_admin(product_id: int):
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+# ========== リマインダーAPI ==========
+
+@app.post("/api/set-reminder")
+async def set_reminder(request: Request):
+    """リマインダーを設定"""
+    try:
+        data = await request.json()
+        email = data.get('email')
+        booking_date = data.get('booking_date')
+        booking_time = data.get('booking_time')
+        customer_name = data.get('customer_name')
+        service_name = data.get('service_name')
+        
+        # バリデーション
+        if not email or not booking_date or not booking_time:
+            return JSONResponse(status_code=400, content={"error": "必須項目が不足しています"})
+        
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("""
+                    INSERT INTO reminders (email, booking_date, booking_time, customer_name, service_name)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (email, booking_date, booking_time, customer_name, service_name))
+                conn.commit()
+        
+        print(f"リマインダー設定完了: {email} - {booking_date} {booking_time}")
+        return {"success": True, "message": "リマインダーを設定しました"}
+    except Exception as e:
+        print(f"リマインダー設定エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.get("/health")
 def health_check():
     """ヘルスチェック"""
-    return {"status": "ok"}
+    return {"status": "ok", "timestamp": datetime.now().isoformat()}
