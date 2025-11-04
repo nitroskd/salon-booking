@@ -506,8 +506,22 @@ def init_db():
             # 既存テーブルにカラム追加
             try:
                 c.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS image_data TEXT")
+                c.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS original_price DECIMAL(10, 2)")
+                c.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS brand VARCHAR(100)")
             except Exception as e:
                 print(f"カラム追加スキップ: {e}")
+            
+            # デフォルトカテゴリーを追加
+            default_categories = ['スキンケア', 'アロマ', 'ヘアケア', 'ボディケア']
+            for idx, cat in enumerate(default_categories):
+                try:
+                    c.execute("""
+                        INSERT INTO categories (category_name, display_order)
+                        VALUES (%s, %s)
+                        ON CONFLICT (category_name) DO NOTHING
+                    """, (cat, idx))
+                except Exception as e:
+                    print(f"デフォルトカテゴリー追加エラー: {e}")
             
             # インデックス作成
             c.execute("CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(booking_date)")
@@ -796,7 +810,7 @@ async def delete_booking_admin(booking_id: int, session_token: str = Cookie(None
 # ========== 商品API ==========
 
 @app.get("/products")
-def get_products(category: str = None, active_only: bool = True):
+def get_products(category: str = None, brand: str = None, active_only: bool = True):
     """商品一覧を取得"""
     with get_db_connection() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as c:
@@ -808,16 +822,133 @@ def get_products(category: str = None, active_only: bool = True):
             if category:
                 query += " AND category = %s"
                 params.append(category)
-            query += " ORDER BY category, product_name"
+            if brand:
+                query += " AND brand = %s"
+                params.append(brand)
+            query += " ORDER BY category, brand, product_name"
             c.execute(query, params)
             products = c.fetchall()
     return {"products": products}
+
+# カテゴリー管理API
+@app.get("/categories")
+def get_categories():
+    """カテゴリー一覧を取得"""
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as c:
+            c.execute("SELECT * FROM categories ORDER BY display_order, category_name")
+            categories = c.fetchall()
+    return {"categories": categories}
+
+@app.post("/admin/categories")
+async def create_category(request: Request, session_token: str = Cookie(None)):
+    """カテゴリーを追加（管理者用）"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
+    try:
+        data = await request.json()
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                # 既存のカテゴリーをチェック
+                c.execute("SELECT id FROM categories WHERE category_name = %s", (data['category_name'],))
+                existing = c.fetchone()
+                
+                if existing:
+                    return JSONResponse(status_code=400, content={"error": "カテゴリーは既に存在します"})
+                
+                # 新規追加
+                c.execute("""
+                    INSERT INTO categories (category_name, display_order)
+                    VALUES (%s, %s)
+                    RETURNING id
+                """, (data['category_name'], data.get('display_order', 0)))
+                result = c.fetchone()
+                conn.commit()
+                
+                return {"success": True, "message": "カテゴリーを追加しました", "id": result[0]}
+    except Exception as e:
+        print(f"カテゴリー追加エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.delete("/admin/categories/{category_id}")
+async def delete_category(category_id: int, session_token: str = Cookie(None)):
+    """カテゴリーを削除（管理者用）"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("DELETE FROM categories WHERE id = %s", (category_id,))
+                conn.commit()
+        return {"success": True, "message": "カテゴリーを削除しました"}
+    except Exception as e:
+        print(f"カテゴリー削除エラー: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# ブランド管理API
+@app.get("/brands")
+def get_brands():
+    """ブランド一覧を取得"""
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as c:
+            c.execute("SELECT * FROM brands ORDER BY brand_name")
+            brands = c.fetchall()
+    return {"brands": brands}
+
+@app.post("/admin/brands")
+async def create_brand(request: Request, session_token: str = Cookie(None)):
+    """ブランドを追加（管理者用）"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
+    data = await request.json()
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("""
+                    INSERT INTO brands (brand_name)
+                    VALUES (%s)
+                    ON CONFLICT (brand_name) DO NOTHING
+                    RETURNING id
+                """, (data['brand_name'],))
+                result = c.fetchone()
+                conn.commit()
+                if result:
+                    return {"success": True, "message": "ブランドを追加しました"}
+                else:
+                    return JSONResponse(status_code=400, content={"error": "ブランドは既に存在します"})
+    except Exception as e:
+        print(f"ブランド追加エラー: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.delete("/admin/brands/{brand_id}")
+async def delete_brand(brand_id: int, session_token: str = Cookie(None)):
+    """ブランドを削除（管理者用）"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("DELETE FROM brands WHERE id = %s", (brand_id,))
+                conn.commit()
+        return {"success": True, "message": "ブランドを削除しました"}
+    except Exception as e:
+        print(f"ブランド削除エラー: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.post("/admin/products/add")
 async def create_product_admin(request: Request, product_name: str = Form(...),
                                 price: float = Form(...), category: str = Form(...),
                                 stock_quantity: int = Form(...), description: str = Form(default=""),
-                                image_data: str = Form(...), session_token: str = Cookie(None)):
+                                image_data: str = Form(...), 
+                                original_price: float = Form(None),
+                                brand: str = Form(None),
+                                session_token: str = Cookie(None)):
     """商品を追加（管理者用）"""
     if not verify_admin_session(session_token):
         return JSONResponse(status_code=401, content={"error": "認証が必要です"})
@@ -825,9 +956,9 @@ async def create_product_admin(request: Request, product_name: str = Form(...),
     try:
         with get_db_connection() as conn:
             with conn.cursor() as c:
-                c.execute("""INSERT INTO products (product_name, description, price, category, stock_quantity, image_data)
-                            VALUES (%s, %s, %s, %s, %s, %s) RETURNING id""",
-                         (product_name, description, price, category, stock_quantity, image_data))
+                c.execute("""INSERT INTO products (product_name, description, price, original_price, brand, category, stock_quantity, image_data)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id""",
+                         (product_name, description, price, original_price, brand, category, stock_quantity, image_data))
                 product_id = c.fetchone()[0]
                 conn.commit()
         return {"success": True, "product_id": product_id, "message": "商品を追加しました"}
@@ -845,6 +976,9 @@ async def update_product_admin(product_id: int, request: Request, session_token:
         form_data = await request.form()
         product_name = form_data.get('product_name')
         price = float(form_data.get('price'))
+        original_price = form_data.get('original_price')
+        original_price = float(original_price) if original_price else None
+        brand = form_data.get('brand', None)
         category = form_data.get('category')
         stock_quantity = int(form_data.get('stock_quantity'))
         description = form_data.get('description', '')
@@ -853,15 +987,15 @@ async def update_product_admin(product_id: int, request: Request, session_token:
         with get_db_connection() as conn:
             with conn.cursor() as c:
                 if image_data:
-                    c.execute("""UPDATE products SET product_name=%s, description=%s, price=%s, 
+                    c.execute("""UPDATE products SET product_name=%s, description=%s, price=%s, original_price=%s, brand=%s,
                                 category=%s, stock_quantity=%s, image_data=%s, updated_at=CURRENT_TIMESTAMP
                                 WHERE id=%s""",
-                             (product_name, description, price, category, stock_quantity, image_data, product_id))
+                             (product_name, description, price, original_price, brand, category, stock_quantity, image_data, product_id))
                 else:
-                    c.execute("""UPDATE products SET product_name=%s, description=%s, price=%s, 
+                    c.execute("""UPDATE products SET product_name=%s, description=%s, price=%s, original_price=%s, brand=%s,
                                 category=%s, stock_quantity=%s, updated_at=CURRENT_TIMESTAMP
                                 WHERE id=%s""",
-                             (product_name, description, price, category, stock_quantity, product_id))
+                             (product_name, description, price, original_price, brand, category, stock_quantity, product_id))
                 conn.commit()
         return {"success": True, "message": "商品を更新しました"}
     except Exception as e:
