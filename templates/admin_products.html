@@ -154,9 +154,28 @@
       font-size: 0.8em;
       cursor: pointer;
       text-decoration: none;
+      vertical-align: middle;
     }
     
     .add-new-btn:active {
+      opacity: 0.8;
+    }
+    
+    .manage-btn {
+      display: inline-block;
+      margin-left: 5px;
+      padding: 4px 10px;
+      background: #d9534f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8em;
+      cursor: pointer;
+      text-decoration: none;
+      vertical-align: middle;
+    }
+    
+    .manage-btn:active {
       opacity: 0.8;
     }
     
@@ -249,6 +268,38 @@
     .btn-modal-cancel {
       background: #999;
       color: white;
+    }
+    
+    /* 管理リスト */
+    .manage-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      margin-bottom: 8px;
+      background: #fcfaf4;
+      border-radius: 8px;
+      border: 1px solid #e8e4dc;
+    }
+    
+    .manage-item-name {
+      font-size: 0.95em;
+      color: #333;
+    }
+    
+    .btn-delete-item {
+      padding: 6px 12px;
+      background: #d9534f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85em;
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    
+    .btn-delete-item:active {
+      opacity: 0.8;
     }
     
     @media (max-width: 480px) {
@@ -381,6 +432,28 @@
     </div>
   </div>
 
+  <!-- ブランド管理モーダル -->
+  <div id="brandManageModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeBrandManageModal()">&times;</span>
+      <h2>ブランド管理</h2>
+      <div id="brand-list" style="max-height: 400px; overflow-y: auto;">
+        <div class="loading">読み込み中...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- カテゴリー管理モーダル -->
+  <div id="categoryManageModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeCategoryManageModal()">&times;</span>
+      <h2>カテゴリー管理</h2>
+      <div id="category-list" style="max-height: 400px; overflow-y: auto;">
+        <div class="loading">読み込み中...</div>
+      </div>
+    </div>
+  </div>
+
   <footer>© 2025 Salon Coeur</footer>
 
   <script>
@@ -453,6 +526,61 @@
       document.getElementById('categoryModal').style.display = 'none';
     }
 
+    function openCategoryManageModal() {
+      document.getElementById('categoryManageModal').style.display = 'block';
+      loadCategoryManageList();
+    }
+
+    function closeCategoryManageModal() {
+      document.getElementById('categoryManageModal').style.display = 'none';
+    }
+
+    async function loadCategoryManageList() {
+      const container = document.getElementById('category-list');
+      container.innerHTML = '<div class="loading">読み込み中...</div>';
+      
+      await loadCategories();
+      
+      if (categories.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">カテゴリーがありません</div>';
+        return;
+      }
+      
+      const html = categories.map(cat => `
+        <div class="manage-item">
+          <span class="manage-item-name">${cat.category_name}</span>
+          <button class="btn-delete-item" onclick="deleteCategory(${cat.id}, '${cat.category_name}')">削除</button>
+        </div>
+      `).join('');
+      
+      container.innerHTML = html;
+    }
+
+    async function deleteCategory(id, name) {
+      if (!confirm(`「${name}」を削除しますか？\n※このカテゴリーを使用している商品には影響しません`)) return;
+
+      try {
+        const response = await fetch(`/admin/categories/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          alert('カテゴリーを削除しました');
+          await loadCategoryManageList();
+          await loadCategories();
+        } else if (response.status === 401) {
+          alert('セッションが切れました。再度ログインしてください。');
+          window.location.href = '/admin/login';
+        } else {
+          const data = await response.json();
+          alert('エラー: ' + (data.error || 'カテゴリー削除に失敗しました'));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('エラーが発生しました');
+      }
+    }
+
     async function addCategory() {
       const name = document.getElementById('new-category-name').value.trim();
       if (!name) {
@@ -489,6 +617,61 @@
 
     function closeBrandModal() {
       document.getElementById('brandModal').style.display = 'none';
+    }
+
+    function openBrandManageModal() {
+      document.getElementById('brandManageModal').style.display = 'block';
+      loadBrandManageList();
+    }
+
+    function closeBrandManageModal() {
+      document.getElementById('brandManageModal').style.display = 'none';
+    }
+
+    async function loadBrandManageList() {
+      const container = document.getElementById('brand-list');
+      container.innerHTML = '<div class="loading">読み込み中...</div>';
+      
+      await loadBrands();
+      
+      if (brands.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">ブランドがありません</div>';
+        return;
+      }
+      
+      const html = brands.map(brand => `
+        <div class="manage-item">
+          <span class="manage-item-name">${brand.brand_name}</span>
+          <button class="btn-delete-item" onclick="deleteBrand(${brand.id}, '${brand.brand_name}')">削除</button>
+        </div>
+      `).join('');
+      
+      container.innerHTML = html;
+    }
+
+    async function deleteBrand(id, name) {
+      if (!confirm(`「${name}」を削除しますか？\n※このブランドを使用している商品には影響しません`)) return;
+
+      try {
+        const response = await fetch(`/admin/brands/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          alert('ブランドを削除しました');
+          await loadBrandManageList();
+          await loadBrands();
+        } else if (response.status === 401) {
+          alert('セッションが切れました。再度ログインしてください。');
+          window.location.href = '/admin/login';
+        } else {
+          const data = await response.json();
+          alert('エラー: ' + (data.error || 'ブランド削除に失敗しました'));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('エラーが発生しました');
+      }
     }
 
     async function addBrand() {
@@ -587,8 +770,13 @@
     window.onclick = function(event) {
       const categoryModal = document.getElementById('categoryModal');
       const brandModal = document.getElementById('brandModal');
+      const categoryManageModal = document.getElementById('categoryManageModal');
+      const brandManageModal = document.getElementById('brandManageModal');
+      
       if (event.target == categoryModal) closeCategoryModal();
       if (event.target == brandModal) closeBrandModal();
+      if (event.target == categoryManageModal) closeCategoryManageModal();
+      if (event.target == brandManageModal) closeBrandManageModal();
     }
   </script>
 </body>
