@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>商品管理 | Salon Coeur</title>
+  <title>商品登録 | Salon Coeur</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     * {
@@ -59,6 +59,10 @@
     
     nav a:active {
       transform: scale(0.98);
+    }
+    
+    .btn-logout {
+      background: #d9534f;
     }
     
     .container {
@@ -123,6 +127,39 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     
+    .price-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .discount-info {
+      margin-top: 8px;
+      padding: 10px;
+      background: #fff3cd;
+      border-radius: 6px;
+      font-size: 0.85em;
+      color: #856404;
+      display: none;
+    }
+    
+    .add-new-btn {
+      display: inline-block;
+      margin-left: 10px;
+      padding: 4px 10px;
+      background: #5da3d5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8em;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    
+    .add-new-btn:active {
+      opacity: 0.8;
+    }
+    
     .btn-submit {
       width: 100%;
       padding: 16px;
@@ -149,6 +186,71 @@
       font-size: 0.85em;
     }
     
+    /* モーダル */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      overflow-y: auto;
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 50px auto;
+      padding: 25px 20px;
+      border-radius: 12px;
+      width: calc(100% - 40px);
+      max-width: 400px;
+    }
+    
+    .close {
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      color: #aaa;
+      cursor: pointer;
+      line-height: 1;
+    }
+    
+    .modal h2 {
+      color: #6a8f66;
+      margin-bottom: 20px;
+      font-size: 1.2em;
+      clear: both;
+    }
+    
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .btn-modal-save, .btn-modal-cancel {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95em;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    
+    .btn-modal-save {
+      background: #6a8f66;
+      color: white;
+    }
+    
+    .btn-modal-cancel {
+      background: #999;
+      color: white;
+    }
+    
     @media (max-width: 480px) {
       .container {
         padding: 20px 18px;
@@ -161,6 +263,10 @@
       nav a {
         font-size: 0.85em;
         padding: 9px 15px;
+      }
+      
+      .price-section {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -176,6 +282,7 @@
     <a href="/admin">予約管理</a>
     <a href="/admin/products/list">商品一覧管理</a>
     <a href="/shop">ショップ</a>
+    <a href="/admin/logout" class="btn-logout">ログアウト</a>
   </nav>
 
   <div class="container">
@@ -194,19 +301,36 @@
       </div>
 
       <div class="form-group">
-        <label>価格 (円) *</label>
-        <input type="number" id="price" name="price" min="0" step="0.01" placeholder="例: 3500" required>
+        <label>ブランド <span class="optional">(任意)</span>
+          <button type="button" class="add-new-btn" onclick="openBrandModal()">+ 新規追加</button>
+        </label>
+        <select id="brand" name="brand">
+          <option value="">選択してください</option>
+        </select>
       </div>
 
       <div class="form-group">
-        <label>カテゴリ *</label>
+        <label>カテゴリ *
+          <button type="button" class="add-new-btn" onclick="openCategoryModal()">+ 新規追加</button>
+        </label>
         <select id="category" name="category" required>
           <option value="">選択してください</option>
-          <option value="スキンケア">スキンケア</option>
-          <option value="アロマ">アロマ</option>
-          <option value="ヘアケア">ヘアケア</option>
-          <option value="ボディケア">ボディケア</option>
         </select>
+      </div>
+
+      <div class="form-group">
+        <label>価格設定</label>
+        <div class="price-section">
+          <div>
+            <label style="font-size: 0.85em; margin-bottom: 5px;">販売価格 (円) *</label>
+            <input type="number" id="price" name="price" min="0" step="0.01" placeholder="3500" required oninput="calculateDiscount()">
+          </div>
+          <div>
+            <label style="font-size: 0.85em; margin-bottom: 5px;">元値 (円) <span class="optional">(セール時)</span></label>
+            <input type="number" id="original_price" name="original_price" min="0" step="0.01" placeholder="5000" oninput="calculateDiscount()">
+          </div>
+        </div>
+        <div id="discount-info" class="discount-info"></div>
       </div>
 
       <div class="form-group">
@@ -223,9 +347,87 @@
     </form>
   </div>
 
+  <!-- カテゴリー追加モーダル -->
+  <div id="categoryModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeCategoryModal()">&times;</span>
+      <h2>カテゴリー追加</h2>
+      <div class="form-group">
+        <label>カテゴリー名 *</label>
+        <input type="text" id="new-category-name" placeholder="例: ボディケア">
+      </div>
+      <div class="modal-buttons">
+        <button type="button" class="btn-modal-cancel" onclick="closeCategoryModal()">キャンセル</button>
+        <button type="button" class="btn-modal-save" onclick="addCategory()">追加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ブランド追加モーダル -->
+  <div id="brandModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeBrandModal()">&times;</span>
+      <h2>ブランド追加</h2>
+      <div class="form-group">
+        <label>ブランド名 *</label>
+        <input type="text" id="new-brand-name" placeholder="例: 資生堂">
+      </div>
+      <div class="modal-buttons">
+        <button type="button" class="btn-modal-cancel" onclick="closeBrandModal()">キャンセル</button>
+        <button type="button" class="btn-modal-save" onclick="addBrand()">追加</button>
+      </div>
+    </div>
+  </div>
+
   <footer>© 2025 Salon Coeur</footer>
 
   <script>
+    let categories = [];
+    let brands = [];
+
+    async function loadCategories() {
+      try {
+        const response = await fetch('/categories');
+        const data = await response.json();
+        categories = data.categories || [];
+        
+        const select = document.getElementById('category');
+        select.innerHTML = '<option value="">選択してください</option>' +
+          categories.map(cat => `<option value="${cat.category_name}">${cat.category_name}</option>`).join('');
+      } catch (error) {
+        console.error('カテゴリー読み込みエラー:', error);
+      }
+    }
+
+    async function loadBrands() {
+      try {
+        const response = await fetch('/brands');
+        const data = await response.json();
+        brands = data.brands || [];
+        
+        const select = document.getElementById('brand');
+        select.innerHTML = '<option value="">選択してください</option>' +
+          brands.map(brand => `<option value="${brand.brand_name}">${brand.brand_name}</option>`).join('');
+      } catch (error) {
+        console.error('ブランド読み込みエラー:', error);
+      }
+    }
+
+    function calculateDiscount() {
+      const price = parseFloat(document.getElementById('price').value) || 0;
+      const originalPrice = parseFloat(document.getElementById('original_price').value) || 0;
+      const discountInfo = document.getElementById('discount-info');
+      
+      if (originalPrice > 0 && originalPrice > price) {
+        const discountPercent = Math.round(((originalPrice - price) / originalPrice) * 100);
+        const savedAmount = originalPrice - price;
+        discountInfo.textContent = `💰 ${discountPercent}% OFF（¥${savedAmount.toLocaleString()}お得）`;
+        discountInfo.style.display = 'block';
+      } else {
+        discountInfo.style.display = 'none';
+      }
+    }
+
     function previewImage(event) {
       const file = event.target.files[0];
       const preview = document.getElementById('preview');
@@ -237,6 +439,82 @@
           preview.style.display = 'block';
         }
         reader.readAsDataURL(file);
+      }
+    }
+
+    function openCategoryModal() {
+      document.getElementById('categoryModal').style.display = 'block';
+      document.getElementById('new-category-name').value = '';
+    }
+
+    function closeCategoryModal() {
+      document.getElementById('categoryModal').style.display = 'none';
+    }
+
+    async function addCategory() {
+      const name = document.getElementById('new-category-name').value.trim();
+      if (!name) {
+        alert('カテゴリー名を入力してください');
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ category_name: name, display_order: categories.length })
+        });
+
+        if (response.ok) {
+          alert('カテゴリーを追加しました');
+          closeCategoryModal();
+          await loadCategories();
+          document.getElementById('category').value = name;
+        } else {
+          const data = await response.json();
+          alert('エラー: ' + (data.error || 'カテゴリー追加に失敗しました'));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('エラーが発生しました');
+      }
+    }
+
+    function openBrandModal() {
+      document.getElementById('brandModal').style.display = 'block';
+      document.getElementById('new-brand-name').value = '';
+    }
+
+    function closeBrandModal() {
+      document.getElementById('brandModal').style.display = 'none';
+    }
+
+    async function addBrand() {
+      const name = document.getElementById('new-brand-name').value.trim();
+      if (!name) {
+        alert('ブランド名を入力してください');
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/brands', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brand_name: name })
+        });
+
+        if (response.ok) {
+          alert('ブランドを追加しました');
+          closeBrandModal();
+          await loadBrands();
+          document.getElementById('brand').value = name;
+        } else {
+          const data = await response.json();
+          alert('エラー: ' + (data.error || 'ブランド追加に失敗しました'));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('エラーが発生しました');
       }
     }
 
@@ -257,6 +535,17 @@
         
         formData.append('product_name', document.getElementById('product_name').value);
         formData.append('price', document.getElementById('price').value);
+        
+        const originalPrice = document.getElementById('original_price').value;
+        if (originalPrice) {
+          formData.append('original_price', originalPrice);
+        }
+        
+        const brand = document.getElementById('brand').value;
+        if (brand) {
+          formData.append('brand', brand);
+        }
+        
         formData.append('category', document.getElementById('category').value);
         formData.append('stock_quantity', document.getElementById('stock_quantity').value);
         formData.append('description', document.getElementById('description').value);
@@ -273,6 +562,9 @@
           if (response.ok) {
             alert('商品を登録しました！\nショップページに移動します。');
             window.location.href = '/shop';
+          } else if (response.status === 401) {
+            alert('セッションが切れました。再度ログインしてください。');
+            window.location.href = '/admin/login';
           } else {
             alert('エラー: ' + (result.error || '商品登録に失敗しました'));
           }
@@ -284,6 +576,18 @@
 
       reader.readAsDataURL(imageFile);
     });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCategories();
+      loadBrands();
+    });
+
+    window.onclick = function(event) {
+      const categoryModal = document.getElementById('categoryModal');
+      const brandModal = document.getElementById('brandModal');
+      if (event.target == categoryModal) closeCategoryModal();
+      if (event.target == brandModal) closeBrandModal();
+    }
   </script>
 </body>
 </html>

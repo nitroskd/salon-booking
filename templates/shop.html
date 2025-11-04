@@ -66,11 +66,19 @@
       -webkit-overflow-scrolling: touch;
     }
 
+    .filter-label {
+      font-size: 0.85em;
+      color: #666;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
     .filter-buttons {
       display: flex;
       gap: 10px;
       padding: 5px 0;
       white-space: nowrap;
+      margin-bottom: 15px;
     }
 
     .filter-btn {
@@ -106,10 +114,25 @@
       overflow: hidden;
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
       transition: 0.3s;
+      position: relative;
     }
 
     .product-card:active {
       transform: scale(0.98);
+    }
+
+    .sale-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #ff4757;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75em;
+      font-weight: 600;
+      z-index: 1;
+      box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
     }
 
     .product-image {
@@ -133,6 +156,13 @@
       padding: 15px;
     }
 
+    .product-badges {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
     .product-category {
       display: inline-block;
       padding: 3px 10px;
@@ -140,7 +170,15 @@
       color: #6a8f66;
       border-radius: 10px;
       font-size: 0.75em;
-      margin-bottom: 8px;
+    }
+
+    .product-brand {
+      display: inline-block;
+      padding: 3px 10px;
+      background: #e8f5e9;
+      color: #4caf50;
+      border-radius: 10px;
+      font-size: 0.75em;
     }
 
     .product-name {
@@ -162,11 +200,25 @@
       overflow: hidden;
     }
 
+    .product-price-section {
+      margin: 10px 0 5px;
+    }
+
+    .original-price {
+      font-size: 0.9em;
+      color: #999;
+      text-decoration: line-through;
+      margin-bottom: 3px;
+    }
+
     .product-price {
       font-size: 1.3em;
       color: #6a8f66;
       font-weight: 600;
-      margin: 10px 0 5px;
+    }
+
+    .sale-price {
+      color: #ff4757;
     }
 
     .stock-info {
@@ -222,16 +274,21 @@
     <div class="logo">🌿</div>
     <h1>商品一覧</h1>
     <p class="subtitle">サロン厳選商品</p>
+    <div class="note">
+        商品購入はご来店のお客様のみの販売となります。
+      </div>
     <a href="/home" class="back-link">← ホームに戻る</a>
   </div>
 
   <div class="filter-section">
-    <div class="filter-buttons">
+    <div class="filter-label">カテゴリー</div>
+    <div class="filter-buttons" id="category-filters">
       <button class="filter-btn active" data-category="all">すべて</button>
-      <button class="filter-btn" data-category="スキンケア">スキンケア</button>
-      <button class="filter-btn" data-category="アロマ">アロマ</button>
-      <button class="filter-btn" data-category="ヘアケア">ヘアケア</button>
-      <button class="filter-btn" data-category="ボディケア">ボディケア</button>
+    </div>
+    
+    <div class="filter-label" style="margin-top: 15px;">ブランド</div>
+    <div class="filter-buttons" id="brand-filters">
+      <button class="filter-btn active" data-brand="all">すべて</button>
     </div>
   </div>
 
@@ -245,6 +302,32 @@
 
   <script>
     let allProducts = [];
+    let categories = [];
+    let brands = [];
+    let currentCategory = 'all';
+    let currentBrand = 'all';
+
+    async function fetchCategories() {
+      try {
+        const response = await fetch('/categories');
+        const data = await response.json();
+        categories = data.categories || [];
+        renderCategoryFilters();
+      } catch (error) {
+        console.error('カテゴリー取得エラー:', error);
+      }
+    }
+
+    async function fetchBrands() {
+      try {
+        const response = await fetch('/brands');
+        const data = await response.json();
+        brands = data.brands || [];
+        renderBrandFilters();
+      } catch (error) {
+        console.error('ブランド取得エラー:', error);
+      }
+    }
 
     async function fetchProducts() {
       try {
@@ -256,6 +339,41 @@
         document.getElementById('products-container').innerHTML = 
           '<div class="error">商品の読み込みに失敗しました</div>';
       }
+    }
+
+    function renderCategoryFilters() {
+      const container = document.getElementById('category-filters');
+      const allBtn = '<button class="filter-btn active" data-category="all">すべて</button>';
+      const categoryBtns = categories.map(cat => 
+        `<button class="filter-btn" data-category="${cat.category_name}">${cat.category_name}</button>`
+      ).join('');
+      container.innerHTML = allBtn + categoryBtns;
+      
+      container.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterByCategory(btn.dataset.category);
+        });
+      });
+    }
+
+    function renderBrandFilters() {
+      const container = document.getElementById('brand-filters');
+      const allBtn = '<button class="filter-btn active" data-brand="all">すべて</button>';
+      const brandBtns = brands.map(brand => 
+        `<button class="filter-btn" data-brand="${brand.brand_name}">${brand.brand_name}</button>`
+      ).join('');
+      container.innerHTML = allBtn + brandBtns;
+      
+      container.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterByBrand(btn.dataset.brand);
+        });
+      });
+    }
+
+    function calculateDiscount(originalPrice, salePrice) {
+      if (!originalPrice || originalPrice <= salePrice) return 0;
+      return Math.round(((originalPrice - salePrice) / originalPrice) * 100);
     }
 
     function displayProducts(products) {
@@ -277,14 +395,35 @@
             `<img src="${product.image_data}" alt="${product.product_name}">` :
             '🌿';
           
+          const hasDiscount = product.original_price && product.original_price > product.price;
+          const discountPercent = hasDiscount ? calculateDiscount(product.original_price, product.price) : 0;
+          
+          const saleBadge = hasDiscount ? `<div class="sale-badge">${discountPercent}% OFF</div>` : '';
+          
+          const priceHtml = hasDiscount ? `
+            <div class="original-price">¥${Number(product.original_price).toLocaleString()}</div>
+            <div class="product-price sale-price">¥${Number(product.price).toLocaleString()}</div>
+          ` : `
+            <div class="product-price">¥${Number(product.price).toLocaleString()}</div>
+          `;
+          
+          const badges = [];
+          if (product.category) {
+            badges.push(`<span class="product-category">${product.category}</span>`);
+          }
+          if (product.brand) {
+            badges.push(`<span class="product-brand">${product.brand}</span>`);
+          }
+          
           return `
             <div class="product-card">
+              ${saleBadge}
               <div class="product-image">${imageHtml}</div>
               <div class="product-info">
-                ${product.category ? `<span class="product-category">${product.category}</span>` : ''}
+                <div class="product-badges">${badges.join('')}</div>
                 <div class="product-name">${product.product_name}</div>
                 <div class="product-description">${product.description || ''}</div>
-                <div class="product-price">¥${Number(product.price).toLocaleString()}</div>
+                <div class="product-price-section">${priceHtml}</div>
                 <div class="stock-info ${stockClass}">${stockText}</div>
               </div>
             </div>
@@ -295,29 +434,45 @@
     }
 
     function filterByCategory(category) {
-      document.querySelectorAll('.filter-btn').forEach(btn => {
+      currentCategory = category;
+      document.querySelectorAll('#category-filters .filter-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.category === category) {
           btn.classList.add('active');
         }
       });
-
-      if (category === 'all') {
-        displayProducts(allProducts);
-      } else {
-        const filtered = allProducts.filter(p => p.category === category);
-        displayProducts(filtered);
-      }
+      applyFilters();
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      fetchProducts();
-      
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          filterByCategory(btn.dataset.category);
-        });
+    function filterByBrand(brand) {
+      currentBrand = brand;
+      document.querySelectorAll('#brand-filters .filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.brand === brand) {
+          btn.classList.add('active');
+        }
       });
+      applyFilters();
+    }
+
+    function applyFilters() {
+      let filtered = allProducts;
+      
+      if (currentCategory !== 'all') {
+        filtered = filtered.filter(p => p.category === currentCategory);
+      }
+      
+      if (currentBrand !== 'all') {
+        filtered = filtered.filter(p => p.brand === currentBrand);
+      }
+      
+      displayProducts(filtered);
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await fetchCategories();
+      await fetchBrands();
+      await fetchProducts();
     });
   </script>
 </body>

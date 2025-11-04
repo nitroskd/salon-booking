@@ -447,12 +447,33 @@ def init_db():
                     product_name VARCHAR(200) NOT NULL,
                     description TEXT,
                     price DECIMAL(10, 2) NOT NULL,
+                    original_price DECIMAL(10, 2),
+                    brand VARCHAR(100),
                     category VARCHAR(50),
                     stock_quantity INTEGER DEFAULT 0,
                     image_data TEXT,
                     is_active BOOLEAN DEFAULT TRUE,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # categoriesテーブル（新規追加）
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS categories (
+                    id SERIAL PRIMARY KEY,
+                    category_name VARCHAR(50) UNIQUE NOT NULL,
+                    display_order INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # brandsテーブル（新規追加）
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS brands (
+                    id SERIAL PRIMARY KEY,
+                    brand_name VARCHAR(100) UNIQUE NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
             

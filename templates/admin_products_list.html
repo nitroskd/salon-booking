@@ -61,6 +61,10 @@
       transform: scale(0.98);
     }
     
+    .btn-logout {
+      background: #d9534f;
+    }
+    
     .container {
       max-width: 1000px;
       margin: 0 auto;
@@ -95,6 +99,20 @@
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+      position: relative;
+    }
+    
+    .sale-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #ff4757;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75em;
+      font-weight: 600;
+      z-index: 1;
     }
     
     .product-image {
@@ -119,6 +137,13 @@
       padding: 15px;
     }
     
+    .product-badges {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    
     .product-category {
       display: inline-block;
       padding: 3px 10px;
@@ -126,7 +151,15 @@
       color: #6a8f66;
       border-radius: 10px;
       font-size: 0.75em;
-      margin-bottom: 8px;
+    }
+    
+    .product-brand {
+      display: inline-block;
+      padding: 3px 10px;
+      background: #e8f5e9;
+      color: #4caf50;
+      border-radius: 10px;
+      font-size: 0.75em;
     }
     
     .product-name {
@@ -136,11 +169,26 @@
       margin: 8px 0;
     }
     
+    .product-price-section {
+      margin: 10px 0;
+    }
+    
+    .original-price {
+      font-size: 0.9em;
+      color: #999;
+      text-decoration: line-through;
+      margin-bottom: 3px;
+    }
+    
     .product-price {
       font-size: 1.2em;
       color: #6a8f66;
       font-weight: 600;
       margin: 10px 0;
+    }
+    
+    .sale-price {
+      color: #ff4757;
     }
     
     .product-stock {
@@ -246,6 +294,22 @@
       resize: vertical;
     }
     
+    .price-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .discount-info {
+      margin-top: 8px;
+      padding: 8px;
+      background: #fff3cd;
+      border-radius: 6px;
+      font-size: 0.8em;
+      color: #856404;
+      display: none;
+    }
+    
     .current-image {
       max-width: 150px;
       max-height: 150px;
@@ -303,6 +367,10 @@
         height: 150px;
         font-size: 2.5em;
       }
+      
+      .price-section {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -316,6 +384,7 @@
     <a href="/home">ホーム</a>
     <a href="/admin">予約管理</a>
     <a href="/shop">ショップ</a>
+    <a href="/admin/logout" class="btn-logout">ログアウト</a>
   </nav>
 
   <div class="container">
@@ -350,19 +419,32 @@
         </div>
         
         <div class="form-group">
-          <label>価格 (円) *</label>
-          <input type="number" id="price" min="0" step="0.01" required>
+          <label>ブランド</label>
+          <select id="brand">
+            <option value="">選択してください</option>
+          </select>
         </div>
         
         <div class="form-group">
           <label>カテゴリ *</label>
           <select id="category" required>
             <option value="">選択してください</option>
-            <option value="スキンケア">スキンケア</option>
-            <option value="アロマ">アロマ</option>
-            <option value="ヘアケア">ヘアケア</option>
-            <option value="ボディケア">ボディケア</option>
           </select>
+        </div>
+        
+        <div class="form-group">
+          <label>価格設定</label>
+          <div class="price-section">
+            <div>
+              <label style="font-size: 0.85em; margin-bottom: 5px;">販売価格 *</label>
+              <input type="number" id="price" min="0" step="0.01" required oninput="calculateDiscountEdit()">
+            </div>
+            <div>
+              <label style="font-size: 0.85em; margin-bottom: 5px;">元値 (セール時)</label>
+              <input type="number" id="original-price" min="0" step="0.01" oninput="calculateDiscountEdit()">
+            </div>
+          </div>
+          <div id="discount-info-edit" class="discount-info"></div>
         </div>
         
         <div class="form-group">
@@ -387,7 +469,29 @@
 
   <script>
     let products = [];
+    let categories = [];
+    let brands = [];
     let newImageData = null;
+
+    async function loadCategories() {
+      try {
+        const response = await fetch('/categories');
+        const data = await response.json();
+        categories = data.categories || [];
+      } catch (error) {
+        console.error('カテゴリー読み込みエラー:', error);
+      }
+    }
+
+    async function loadBrands() {
+      try {
+        const response = await fetch('/brands');
+        const data = await response.json();
+        brands = data.brands || [];
+      } catch (error) {
+        console.error('ブランド読み込みエラー:', error);
+      }
+    }
 
     async function loadProducts() {
       try {
@@ -398,6 +502,26 @@
       } catch (error) {
         document.getElementById('products-container').innerHTML = 
           '<div class="no-data">データの読み込みに失敗しました</div>';
+      }
+    }
+
+    function calculateDiscount(originalPrice, salePrice) {
+      if (!originalPrice || originalPrice <= salePrice) return 0;
+      return Math.round(((originalPrice - salePrice) / originalPrice) * 100);
+    }
+
+    function calculateDiscountEdit() {
+      const price = parseFloat(document.getElementById('price').value) || 0;
+      const originalPrice = parseFloat(document.getElementById('original-price').value) || 0;
+      const discountInfo = document.getElementById('discount-info-edit');
+      
+      if (originalPrice > 0 && originalPrice > price) {
+        const discountPercent = Math.round(((originalPrice - price) / originalPrice) * 100);
+        const savedAmount = originalPrice - price;
+        discountInfo.textContent = `💰 ${discountPercent}% OFF（¥${savedAmount.toLocaleString()}お得）`;
+        discountInfo.style.display = 'block';
+      } else {
+        discountInfo.style.display = 'none';
       }
     }
 
@@ -413,13 +537,29 @@
         const imageHtml = p.image_data ? 
           `<img src="${p.image_data}" alt="${p.product_name}">` : '🌿';
         
+        const hasDiscount = p.original_price && p.original_price > p.price;
+        const discountPercent = hasDiscount ? calculateDiscount(p.original_price, p.price) : 0;
+        const saleBadge = hasDiscount ? `<div class="sale-badge">${discountPercent}% OFF</div>` : '';
+        
+        const priceHtml = hasDiscount ? `
+          <div class="original-price">¥${Number(p.original_price).toLocaleString()}</div>
+          <div class="product-price sale-price">¥${Number(p.price).toLocaleString()}</div>
+        ` : `
+          <div class="product-price">¥${Number(p.price).toLocaleString()}</div>
+        `;
+        
+        const badges = [];
+        if (p.category) badges.push(`<span class="product-category">${p.category}</span>`);
+        if (p.brand) badges.push(`<span class="product-brand">${p.brand}</span>`);
+        
         return `
           <div class="product-card">
+            ${saleBadge}
             <div class="product-image">${imageHtml}</div>
             <div class="product-info">
-              ${p.category ? `<span class="product-category">${p.category}</span>` : ''}
+              <div class="product-badges">${badges.join('')}</div>
               <div class="product-name">${p.product_name}</div>
-              <div class="product-price">¥${Number(p.price).toLocaleString()}</div>
+              <div class="product-price-section">${priceHtml}</div>
               <div class="product-stock">在庫: ${p.stock_quantity}個</div>
               <div class="action-buttons">
                 <button class="btn-edit" onclick="openEditModal(${p.id})">編集</button>
@@ -440,9 +580,21 @@
       document.getElementById('product-id').value = product.id;
       document.getElementById('product-name').value = product.product_name;
       document.getElementById('price').value = product.price;
-      document.getElementById('category').value = product.category || '';
+      document.getElementById('original-price').value = product.original_price || '';
       document.getElementById('stock').value = product.stock_quantity || 0;
       document.getElementById('description').value = product.description || '';
+      
+      // カテゴリー選択肢を設定
+      const categorySelect = document.getElementById('category');
+      categorySelect.innerHTML = '<option value="">選択してください</option>' +
+        categories.map(cat => `<option value="${cat.category_name}">${cat.category_name}</option>`).join('');
+      categorySelect.value = product.category || '';
+      
+      // ブランド選択肢を設定
+      const brandSelect = document.getElementById('brand');
+      brandSelect.innerHTML = '<option value="">選択してください</option>' +
+        brands.map(brand => `<option value="${brand.brand_name}">${brand.brand_name}</option>`).join('');
+      brandSelect.value = product.brand || '';
       
       if (product.image_data) {
         document.getElementById('current-image').src = product.image_data;
@@ -451,6 +603,7 @@
         document.getElementById('current-image').style.display = 'none';
       }
       
+      calculateDiscountEdit();
       newImageData = null;
       document.getElementById('editModal').style.display = 'block';
     }
@@ -482,6 +635,17 @@
       
       formData.append('product_name', document.getElementById('product-name').value);
       formData.append('price', document.getElementById('price').value);
+      
+      const originalPrice = document.getElementById('original-price').value;
+      if (originalPrice) {
+        formData.append('original_price', originalPrice);
+      }
+      
+      const brand = document.getElementById('brand').value;
+      if (brand) {
+        formData.append('brand', brand);
+      }
+      
       formData.append('category', document.getElementById('category').value);
       formData.append('stock_quantity', document.getElementById('stock').value);
       formData.append('description', document.getElementById('description').value);
@@ -497,14 +661,15 @@
         });
 
         const result = await response.json();
-        console.log('Response:', result);
 
         if (response.ok) {
           closeModal();
           loadProducts();
           alert('商品を更新しました');
+        } else if (response.status === 401) {
+          alert('セッションが切れました。再度ログインしてください。');
+          window.location.href = '/admin/login';
         } else {
-          console.error('Error:', result);
           alert('更新に失敗しました: ' + (result.error || result.detail || '不明なエラー'));
         }
       } catch (error) {
@@ -522,13 +687,14 @@
         });
 
         const result = await response.json();
-        console.log('Delete response:', result);
 
         if (response.ok) {
           loadProducts();
           alert('商品を削除しました');
+        } else if (response.status === 401) {
+          alert('セッションが切れました。再度ログインしてください。');
+          window.location.href = '/admin/login';
         } else {
-          console.error('Delete error:', result);
           alert('削除に失敗しました: ' + (result.error || result.detail || '不明なエラー'));
         }
       } catch (error) {
@@ -537,7 +703,11 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', loadProducts);
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadCategories();
+      await loadBrands();
+      await loadProducts();
+    });
     
     window.onclick = function(event) {
       const modal = document.getElementById('editModal');
