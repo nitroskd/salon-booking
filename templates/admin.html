@@ -23,78 +23,82 @@
     
     .header {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
     
     .logo {
       font-size: 2em;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
     }
     
     h1 {
       color: #6a8f66;
       font-size: 1.6em;
       font-weight: 500;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
     
-    /* アクセス統計 */
+    /* アクセス統計（小型化） */
     .stats-container {
       max-width: 1000px;
-      margin: 0 auto 20px;
+      margin: 0 auto 15px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
     }
     
     .stat-card {
-      background: linear-gradient(135deg, #ffffff 0%, #fcfaf4 100%);
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+      background: #ffffff;
+      padding: 8px 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
       text-align: center;
-      border: 2px solid #e8e4dc;
+      border: 1px solid #e8e4dc;
     }
     
     .stat-label {
-      font-size: 0.85em;
-      color: #888;
-      margin-bottom: 8px;
-      font-weight: 500;
+      font-size: 0.7em;
+      color: #999;
+      margin-bottom: 2px;
+      font-weight: 400;
     }
     
     .stat-value {
-      font-size: 2em;
+      font-size: 1.2em;
       color: #6a8f66;
       font-weight: 600;
     }
     
     .stat-unit {
-      font-size: 0.5em;
-      color: #999;
+      font-size: 0.6em;
+      color: #bbb;
       font-weight: 400;
+      margin-left: 2px;
     }
     
     nav {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       justify-content: center;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       flex-wrap: wrap;
     }
     
-    nav a {
-      padding: 10px 18px;
+    nav a, nav button {
+      padding: 8px 15px;
       background: #a3b18a;
       color: white;
       text-decoration: none;
       border-radius: 8px;
-      font-size: 0.9em;
+      font-size: 0.85em;
       transition: 0.3s;
       white-space: nowrap;
+      border: none;
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
     }
     
-    nav a:active {
+    nav a:active, nav button:active {
       transform: scale(0.98);
     }
     
@@ -111,22 +115,61 @@
       box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     }
     
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    
     .add-button {
-      width: 100%;
-      padding: 14px;
+      flex: 1;
+      min-width: 150px;
+      padding: 12px;
       background: #6a8f66;
       color: white;
       border: none;
       border-radius: 8px;
-      font-size: 1em;
+      font-size: 0.95em;
       font-weight: 500;
-      margin-bottom: 20px;
       cursor: pointer;
       font-family: 'Noto Sans JP', sans-serif;
       touch-action: manipulation;
     }
     
     .add-button:active {
+      transform: scale(0.98);
+    }
+    
+    /* ソート・フィルターコントロール */
+    .sort-filter-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+    
+    .sort-btn, .filter-btn {
+      padding: 8px 15px;
+      background: #ffffff;
+      border: 2px solid #d9d6ce;
+      color: #666;
+      border-radius: 8px;
+      font-size: 0.85em;
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+      transition: 0.3s;
+      white-space: nowrap;
+    }
+    
+    .sort-btn.active, .filter-btn.active {
+      background: #a3b18a;
+      color: white;
+      border-color: #a3b18a;
+    }
+    
+    .sort-btn:active, .filter-btn:active {
       transform: scale(0.98);
     }
     
@@ -141,13 +184,40 @@
       padding: 15px;
       border-radius: 10px;
       border: 1px solid #e8e4dc;
+      position: relative;
+    }
+    
+    .booking-status {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.7em;
+      font-weight: 500;
+    }
+    
+    .status-past {
+      background: #e0e0e0;
+      color: #666;
+    }
+    
+    .status-today {
+      background: #ffe6e6;
+      color: #d9534f;
+    }
+    
+    .status-upcoming {
+      background: #e8f5e9;
+      color: #4caf50;
     }
     
     .booking-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       margin-bottom: 10px;
+      padding-right: 60px;
     }
     
     .booking-name {
@@ -170,6 +240,14 @@
     
     .booking-info div {
       margin: 4px 0;
+    }
+    
+    .booking-meta {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #e8e4dc;
+      font-size: 0.75em;
+      color: #999;
     }
     
     .action-buttons {
@@ -316,17 +394,21 @@
         font-size: 1.4em;
       }
       
-      nav a {
-        font-size: 0.85em;
-        padding: 9px 15px;
+      nav a, nav button {
+        font-size: 0.8em;
+        padding: 7px 12px;
       }
       
-      .stats-container {
-        grid-template-columns: 1fr;
+      .stat-card {
+        padding: 6px 8px;
+      }
+      
+      .stat-label {
+        font-size: 0.65em;
       }
       
       .stat-value {
-        font-size: 1.8em;
+        font-size: 1em;
       }
     }
   </style>
@@ -337,19 +419,19 @@
     <h1>予約管理画面</h1>
   </div>
   
-  <!-- アクセス統計 -->
+  <!-- アクセス統計（小型化） -->
   <div class="stats-container">
     <div class="stat-card">
-      <div class="stat-label">📅 当日</div>
-      <div class="stat-value">{{ stats.today }}<span class="stat-unit">views</span></div>
+      <div class="stat-label">当日</div>
+      <div class="stat-value">{{ stats.today }}<span class="stat-unit">view</span></div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">📊 前日</div>
-      <div class="stat-value">{{ stats.yesterday }}<span class="stat-unit">views</span></div>
+      <div class="stat-label">前日</div>
+      <div class="stat-value">{{ stats.yesterday }}<span class="stat-unit">view</span></div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">📈 累計</div>
-      <div class="stat-value">{{ stats.total }}<span class="stat-unit">views</span></div>
+      <div class="stat-label">累計</div>
+      <div class="stat-value">{{ stats.total }}<span class="stat-unit">view</span></div>
     </div>
   </div>
   
@@ -360,7 +442,29 @@
   </nav>
 
   <div class="container">
-    <button class="add-button" onclick="openAddModal()">+ 新規予約追加</button>
+    <div class="controls">
+      <button class="add-button" onclick="openAddModal()">+ 新規予約追加</button>
+    </div>
+    
+    <!-- ソート・フィルター -->
+    <div class="sort-filter-controls">
+      <button class="sort-btn active" data-sort="booking-time" onclick="setSortMode('booking-time')">
+        📅 予約日時順
+      </button>
+      <button class="sort-btn" data-sort="created-time" onclick="setSortMode('created-time')">
+        🕐 登録順
+      </button>
+      <button class="filter-btn" data-filter="all" onclick="setFilter('all')">
+        全て
+      </button>
+      <button class="filter-btn" data-filter="upcoming" onclick="setFilter('upcoming')">
+        今後
+      </button>
+      <button class="filter-btn" data-filter="past" onclick="setFilter('past')">
+        過去
+      </button>
+    </div>
+    
     <div id="bookings-container">
       <div class="loading">読み込み中...</div>
     </div>
@@ -427,6 +531,8 @@
 
   <script>
     let bookings = [];
+    let currentSort = 'booking-time';
+    let currentFilter = 'all';
 
     async function loadBookings() {
       try {
@@ -440,6 +546,101 @@
       }
     }
 
+    function getBookingStatus(bookingDate, bookingTime) {
+      const now = new Date();
+      const booking = new Date(`${bookingDate}T${bookingTime}`);
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const bookingDay = new Date(booking.getFullYear(), booking.getMonth(), booking.getDate());
+      
+      if (bookingDay < today) {
+        return 'past';
+      } else if (bookingDay.getTime() === today.getTime()) {
+        return 'today';
+      } else {
+        return 'upcoming';
+      }
+    }
+
+    function getStatusLabel(status) {
+      switch(status) {
+        case 'past': return '終了';
+        case 'today': return '本日';
+        case 'upcoming': return '予定';
+        default: return '';
+      }
+    }
+
+    function setSortMode(mode) {
+      currentSort = mode;
+      document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.sort === mode) {
+          btn.classList.add('active');
+        }
+      });
+      displayBookings();
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.filter === filter) {
+          btn.classList.add('active');
+        }
+      });
+      displayBookings();
+    }
+
+    function sortBookings(bookingsToSort) {
+      const sorted = [...bookingsToSort];
+      
+      if (currentSort === 'booking-time') {
+        // 予約日時順（早い順）
+        sorted.sort((a, b) => {
+          const dateA = new Date(`${a.booking_date}T${a.booking_time}`);
+          const dateB = new Date(`${b.booking_date}T${b.booking_time}`);
+          return dateA - dateB;
+        });
+      } else if (currentSort === 'created-time') {
+        // 登録順（新しい順）
+        sorted.sort((a, b) => {
+          const dateA = new Date(a.created_at);
+          const dateB = new Date(b.created_at);
+          return dateB - dateA;
+        });
+      }
+      
+      return sorted;
+    }
+
+    function filterBookings(bookingsToFilter) {
+      if (currentFilter === 'all') {
+        return bookingsToFilter;
+      }
+      
+      return bookingsToFilter.filter(b => {
+        const status = getBookingStatus(b.booking_date, b.booking_time);
+        if (currentFilter === 'upcoming') {
+          return status === 'upcoming' || status === 'today';
+        } else if (currentFilter === 'past') {
+          return status === 'past';
+        }
+        return true;
+      });
+    }
+
+    function formatDateTime(dateTimeStr) {
+      if (!dateTimeStr) return '';
+      const dt = new Date(dateTimeStr);
+      const year = dt.getFullYear();
+      const month = String(dt.getMonth() + 1).padStart(2, '0');
+      const day = String(dt.getDate()).padStart(2, '0');
+      const hours = String(dt.getHours()).padStart(2, '0');
+      const minutes = String(dt.getMinutes()).padStart(2, '0');
+      return `${year}/${month}/${day} ${hours}:${minutes}`;
+    }
+
     function displayBookings() {
       const container = document.getElementById('bookings-container');
       
@@ -448,8 +649,23 @@
         return;
       }
 
-      const html = '<div class="booking-list">' + bookings.map(b => `
+      let filtered = filterBookings(bookings);
+      let sorted = sortBookings(filtered);
+
+      if (sorted.length === 0) {
+        container.innerHTML = '<div class="no-data">該当する予約はありません</div>';
+        return;
+      }
+
+      const html = '<div class="booking-list">' + sorted.map(b => {
+        const status = getBookingStatus(b.booking_date, b.booking_time);
+        const statusClass = `status-${status}`;
+        const statusLabel = getStatusLabel(status);
+        const createdAt = formatDateTime(b.created_at);
+        
+        return `
         <div class="booking-card">
+          <div class="booking-status ${statusClass}">${statusLabel}</div>
           <div class="booking-header">
             <div class="booking-name">${b.customer_name}</div>
             <div class="booking-date">${b.booking_date} ${b.booking_time}</div>
@@ -459,12 +675,16 @@
             <div>💆 ${b.service_name}</div>
             ${b.notes ? `<div>📝 ${b.notes}</div>` : ''}
           </div>
+          <div class="booking-meta">
+            🕐 登録: ${createdAt}
+          </div>
           <div class="action-buttons">
             <button class="btn-edit" onclick="openEditModal(${b.id})">編集</button>
             <button class="btn-delete" onclick="deleteBooking(${b.id})">削除</button>
           </div>
         </div>
-      `).join('') + '</div>';
+      `;
+      }).join('') + '</div>';
       
       container.innerHTML = html;
     }
@@ -552,7 +772,11 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', loadBookings);
+    document.addEventListener('DOMContentLoaded', () => {
+      loadBookings();
+      // デフォルトで「全て」フィルターをアクティブに
+      document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+    });
     
     window.onclick = function(event) {
       const modal = document.getElementById('bookingModal');
