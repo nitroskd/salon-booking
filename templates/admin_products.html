@@ -40,25 +40,29 @@
     
     nav {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       justify-content: center;
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
     
     nav a {
-      padding: 10px 18px;
+      padding: 8px 15px;
       background: #a3b18a;
       color: white;
       text-decoration: none;
       border-radius: 8px;
-      font-size: 0.9em;
+      font-size: 0.85em;
       transition: 0.3s;
       white-space: nowrap;
     }
     
     nav a:active {
       transform: scale(0.98);
+    }
+    
+    .btn-calendar {
+      background: #5da3d5;
     }
     
     .btn-logout {
@@ -312,8 +316,8 @@
       }
       
       nav a {
-        font-size: 0.85em;
-        padding: 9px 15px;
+        font-size: 0.8em;
+        padding: 7px 12px;
       }
       
       .price-section {
@@ -331,6 +335,7 @@
   <nav>
     <a href="/home">ホーム</a>
     <a href="/admin">予約管理</a>
+    <a href="/admin/calendar" class="btn-calendar">📅 カレンダー管理</a>
     <a href="/admin/products/list">商品一覧管理</a>
     <a href="/shop">ショップ</a>
     <a href="/admin/logout" class="btn-logout">ログアウト</a>

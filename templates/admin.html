@@ -102,6 +102,10 @@
       transform: scale(0.98);
     }
     
+    .btn-calendar {
+      background: #5da3d5;
+    }
+    
     .btn-logout {
       background: #d9534f;
     }
@@ -437,6 +441,7 @@
   
   <nav>
     <a href="/home">ホーム</a>
+    <a href="/admin/calendar" class="btn-calendar">📅 カレンダー管理</a>
     <a href="/admin/products">商品管理</a>
     <a href="/admin/logout" class="btn-logout">ログアウト</a>
   </nav>
@@ -596,14 +601,12 @@
       const sorted = [...bookingsToSort];
       
       if (currentSort === 'booking-time') {
-        // 予約日時順（早い順）
         sorted.sort((a, b) => {
           const dateA = new Date(`${a.booking_date}T${a.booking_time}`);
           const dateB = new Date(`${b.booking_date}T${b.booking_time}`);
           return dateA - dateB;
         });
       } else if (currentSort === 'created-time') {
-        // 登録順（新しい順）
         sorted.sort((a, b) => {
           const dateA = new Date(a.created_at);
           const dateB = new Date(b.created_at);
@@ -754,7 +757,7 @@
     });
 
     async function deleteBooking(id) {
-      if (!confirm('この予約を削除しますか？')) return;
+      if (!confirm('この予約を削除しますか?')) return;
 
       try {
         const response = await fetch(`/admin/bookings/${id}`, { method: 'DELETE' });
@@ -774,7 +777,6 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       loadBookings();
-      // デフォルトで「全て」フィルターをアクティブに
       document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
     });
     

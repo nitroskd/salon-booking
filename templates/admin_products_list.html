@@ -40,25 +40,29 @@
     
     nav {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       justify-content: center;
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
     
     nav a {
-      padding: 10px 18px;
+      padding: 8px 15px;
       background: #a3b18a;
       color: white;
       text-decoration: none;
       border-radius: 8px;
-      font-size: 0.9em;
+      font-size: 0.85em;
       transition: 0.3s;
       white-space: nowrap;
     }
     
     nav a:active {
       transform: scale(0.98);
+    }
+    
+    .btn-calendar {
+      background: #5da3d5;
     }
     
     .btn-logout {
@@ -184,7 +188,6 @@
       font-size: 1.2em;
       color: #6a8f66;
       font-weight: 600;
-      margin: 10px 0;
     }
     
     .sale-price {
@@ -368,8 +371,17 @@
         font-size: 2.5em;
       }
       
+      .product-info {
+        padding: 12px;
+      }
+      
       .price-section {
         grid-template-columns: 1fr;
+      }
+      
+      nav a {
+        font-size: 0.8em;
+        padding: 7px 12px;
       }
     }
   </style>
@@ -383,6 +395,8 @@
   <nav>
     <a href="/home">ホーム</a>
     <a href="/admin">予約管理</a>
+    <a href="/admin/calendar" class="btn-calendar">📅 カレンダー管理</a>
+    <a href="/admin/products">商品登録</a>
     <a href="/shop">ショップ</a>
     <a href="/admin/logout" class="btn-logout">ログアウト</a>
   </nav>
@@ -409,7 +423,7 @@
         </div>
         
         <div class="form-group">
-          <label>新しい画像（変更する場合のみ）</label>
+          <label>新しい画像(変更する場合のみ)</label>
           <input type="file" id="new-image" accept="image/*" onchange="previewImage(event)">
         </div>
         
@@ -518,7 +532,7 @@
       if (originalPrice > 0 && originalPrice > price) {
         const discountPercent = Math.round(((originalPrice - price) / originalPrice) * 100);
         const savedAmount = originalPrice - price;
-        discountInfo.textContent = `💰 ${discountPercent}% OFF（¥${savedAmount.toLocaleString()}お得）`;
+        discountInfo.textContent = `💰 ${discountPercent}% OFF(¥${savedAmount.toLocaleString()}お得)`;
         discountInfo.style.display = 'block';
       } else {
         discountInfo.style.display = 'none';
@@ -584,13 +598,11 @@
       document.getElementById('stock').value = product.stock_quantity || 0;
       document.getElementById('description').value = product.description || '';
       
-      // カテゴリー選択肢を設定
       const categorySelect = document.getElementById('category');
       categorySelect.innerHTML = '<option value="">選択してください</option>' +
         categories.map(cat => `<option value="${cat.category_name}">${cat.category_name}</option>`).join('');
       categorySelect.value = product.category || '';
       
-      // ブランド選択肢を設定
       const brandSelect = document.getElementById('brand');
       brandSelect.innerHTML = '<option value="">選択してください</option>' +
         brands.map(brand => `<option value="${brand.brand_name}">${brand.brand_name}</option>`).join('');
@@ -679,7 +691,7 @@
     });
 
     async function deleteProduct(id) {
-      if (!confirm('この商品を削除しますか？')) return;
+      if (!confirm('この商品を削除しますか?')) return;
 
       try {
         const response = await fetch(`/admin/products/${id}`, {
