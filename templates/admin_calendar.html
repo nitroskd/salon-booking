@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>予約カレンダー管理 | Salon Coeur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #fefbf5;
+      color: #444;
+      padding: 15px;
+      padding-bottom: 40px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .logo {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    
+    h1 {
+      color: #6a8f66;
+      font-size: 1.6em;
+      font-weight: 500;
+      margin-bottom: 15px;
+    }
+    
+    nav {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    nav a {
+      padding: 10px 18px;
+      background: #a3b18a;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.9em;
+      transition: 0.3s;
+      white-space: nowrap;
+    }
+    
+    .btn-logout {
+      background: #d9534f;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    
+    .month-selector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .month-selector button {
+      padding: 8px 16px;
+      background: #a3b18a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    
+    .month-title {
+      font-size: 1.3em;
+      font-weight: 600;
+      color: #6a8f66;
+    }
+    
+    .calendar-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9em;
+    }
+    
+    .calendar-table th {
+      background: #f0ede5;
+      padding: 10px 5px;
+      text-align: center;
+      font-weight: 600;
+      color: #6a8f66;
+      border: 1px solid #d9d6ce;
+    }
+    
+    .calendar-table td {
+      padding: 8px 5px;
+      text-align: center;
+      border: 1px solid #d9d6ce;
+      min-width: 80px;
+    }
+    
+    .calendar-table td:first-child {
+      font-weight: 600;
+      background: #fcfaf4;
+    }
+    
+    .time-cell {
+      cursor: pointer;
+      transition: 0.2s;
+      position: relative;
+    }
+    
+    .time-cell:hover {
+      background: #f8f6f2;
+    }
+    
+    .time-cell.active {
+      background: #a3b18a;
+      color: white;
+      font-weight: 600;
+    }
+    
+    .time-cell.closed {
+      background: #e8e4dc;
+      color: #999;
+      cursor: not-allowed;
+    }
+    
+    .holiday-cell {
+      cursor: pointer;
+      background: #fff;
+      transition: 0.2s;
+    }
+    
+    .holiday-cell:hover {
+      background: #fff3cd;
+    }
+    
+    .holiday-cell.closed {
+      background: #ffe6e6;
+      color: #c66;
+      font-weight: 600;
+    }
+    
+    .note-cell {
+      font-size: 0.85em;
+      color: #888;
+    }
+    
+    .legend {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9em;
+    }
+    
+    .legend-box {
+      width: 30px;
+      height: 20px;
+      border-radius: 4px;
+      border: 1px solid #d9d6ce;
+    }
+    
+    .legend-box.available {
+      background: #a3b18a;
+    }
+    
+    .legend-box.unavailable {
+      background: #e8e4dc;
+    }
+    
+    .legend-box.holiday {
+      background: #ffe6e6;
+    }
+    
+    .save-button {
+      width: 100%;
+      max-width: 300px;
+      margin: 20px auto 0;
+      display: block;
+      padding: 14px;
+      background: #6a8f66;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    footer {
+      text-align: center;
+      color: #888;
+      margin-top: 30px;
+      font-size: 0.85em;
+    }
+    
+    @media (max-width: 768px) {
+      .calendar-table {
+        font-size: 0.75em;
+      }
+      
+      .calendar-table td {
+        padding: 6px 3px;
+        min-width: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">🌿</div>
+    <h1>予約カレンダー管理</h1>
+  </div>
+  
+  <nav>
+    <a href="/home">ホーム</a>
+    <a href="/admin">予約管理</a>
+    <a href="/admin/products">商品管理</a>
+    <a href="/admin/logout" class="btn-logout">ログアウト</a>
+  </nav>
+
+  <div class="container">
+    <div class="month-selector">
+      <button onclick="previousMonth()">◀ 前月</button>
+      <div class="month-title" id="month-title">2025年11月</div>
+      <button onclick="nextMonth()">次月 ▶</button>
+    </div>
+    
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-box available"></div>
+        <span>予約可能</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-box unavailable"></div>
+        <span>予約不可</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-box holiday"></div>
+        <span>定休日</span>
+      </div>
+    </div>
+    
+    <div style="overflow-x: auto;">
+      <table class="calendar-table" id="calendar-table">
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>10:00</th>
+            <th>14:00</th>
+            <th>17:00</th>
+            <th>定休日</th>
+            <th>任意の文字</th>
+          </tr>
+        </thead>
+        <tbody id="calendar-body">
+          <!-- JavaScriptで動的生成 -->
+        </tbody>
+      </table>
+    </div>
+    
+    <button class="save-button" onclick="saveChanges()">変更を保存</button>
+  </div>
+
+  <footer>© 2025 Salon Coeur</footer>
+
+  <script>
+    let currentYear = 2025;
+    let currentMonth = 11; // 11月
+    let availableSlots = [];
+    let businessHours = {};
+    let changes = {};
+
+    async function loadAvailableSlots() {
+      try {
+        const response = await fetch('/available-slots');
+        const data = await response.json();
+        availableSlots = data.slots || [];
+      } catch (error) {
+        console.error('時間枠読み込みエラー:', error);
+      }
+    }
+
+    async function loadBusinessHours() {
+      try {
+        const response = await fetch(`/business-hours/${currentYear}/${currentMonth}`);
+        const data = await response.json();
+        
+        businessHours = {};
+        (data.business_hours || []).forEach(item => {
+          businessHours[item.date] = item.is_open;
+        });
+        
+        renderCalendar();
+      } catch (error) {
+        console.error('営業日読み込みエラー:', error);
+        renderCalendar();
+      }
+    }
+
+    function renderCalendar() {
+      const tbody = document.getElementById('calendar-body');
+      const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+      
+      document.getElementById('month-title').textContent = 
+        `${currentYear}年${currentMonth}月`;
+      
+      let html = '';
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isHoliday = businessHours[dateStr] === false;
+        
+        html += `<tr>`;
+        html += `<td>${currentMonth}月${day}日</td>`;
+        
+        // 時間枠のセル
+        availableSlots.forEach(slot => {
+          const isActive = !isHoliday; // 定休日でなければアクティブ
+          const cellClass = isHoliday ? 'time-cell closed' : 'time-cell active';
+          html += `<td class="${cellClass}" data-date="${dateStr}" data-time="${slot.slot_time}">
+            ${slot.slot_label}
+          </td>`;
+        });
+        
+        // 定休日セル
+        const holidayClass = isHoliday ? 'holiday-cell closed' : 'holiday-cell';
+        html += `<td class="${holidayClass}" data-date="${dateStr}" data-type="holiday">
+          ${isHoliday ? '定休日' : ''}
+        </td>`;
+        
+        // 任意の文字セル
+        html += `<td class="note-cell">任意の文字</td>`;
+        html += `</tr>`;
+      }
+      
+      tbody.innerHTML = html;
+      
+      // イベントリスナーを追加
+      document.querySelectorAll('.time-cell').forEach(cell => {
+        cell.addEventListener('click', toggleTimeCell);
+      });
+      
+      document.querySelectorAll('.holiday-cell').forEach(cell => {
+        cell.addEventListener('click', toggleHolidayCell);
+      });
+    }
+
+    function toggleTimeCell(e) {
+      const cell = e.currentTarget;
+      const date = cell.dataset.date;
+      
+      // 定休日の場合は何もしない
+      if (businessHours[date] === false) return;
+      
+      cell.classList.toggle('active');
+      cell.classList.toggle('closed');
+      
+      // 変更を記録
+      if (!changes[date]) changes[date] = {};
+      changes[date].timeSlots = true;
+    }
+
+    function toggleHolidayCell(e) {
+      const cell = e.currentTarget;
+      const date = cell.dataset.date;
+      const isClosed = cell.classList.contains('closed');
+      
+      // トグル
+      if (isClosed) {
+        cell.classList.remove('closed');
+        cell.textContent = '';
+        businessHours[date] = true;
+      } else {
+        cell.classList.add('closed');
+        cell.textContent = '定休日';
+        businessHours[date] = false;
+        
+        // 同じ行の時間セルを全て無効化
+        const row = cell.parentElement;
+        row.querySelectorAll('.time-cell').forEach(timeCell => {
+          timeCell.classList.remove('active');
+          timeCell.classList.add('closed');
+        });
+      }
+      
+      // 変更を記録
+      changes[date] = { is_open: businessHours[date] !== false };
+    }
+
+    async function saveChanges() {
+      if (Object.keys(changes).length === 0) {
+        alert('変更がありません');
+        return;
+      }
+      
+      try {
+        for (const [date, change] of Object.entries(changes)) {
+          await fetch('/admin/business-hours', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              date: date,
+              is_open: change.is_open !== false
+            })
+          });
+        }
+        
+        alert('変更を保存しました');
+        changes = {};
+        await loadBusinessHours();
+      } catch (error) {
+        console.error('保存エラー:', error);
+        alert('保存に失敗しました');
+      }
+    }
+
+    function previousMonth() {
+      currentMonth--;
+      if (currentMonth < 1) {
+        currentMonth = 12;
+        currentYear--;
+      }
+      loadBusinessHours();
+    }
+
+    function nextMonth() {
+      currentMonth++;
+      if (currentMonth > 12) {
+        currentMonth = 1;
+        currentYear++;
+      }
+      loadBusinessHours();
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadAvailableSlots();
+      await loadBusinessHours();
+    });
+  </script>
+</body>
+</html>
