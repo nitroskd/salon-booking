@@ -502,6 +502,28 @@ def init_db():
                     UNIQUE(page_name, view_date)
                 )
             """)
+
+                        # available_slotsテーブル（予約可能時間管理）
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS available_slots (
+                    id SERIAL PRIMARY KEY,
+                    slot_time TIME NOT NULL UNIQUE,
+                    slot_label VARCHAR(20) NOT NULL,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    display_order INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # business_hoursテーブル（営業日管理）
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS business_hours (
+                    id SERIAL PRIMARY KEY,
+                    date DATE NOT NULL UNIQUE,
+                    is_open BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
             
             # 既存テーブルにカラム追加
             try:
@@ -523,6 +545,22 @@ def init_db():
                     """, (cat, idx))
                 except Exception as e:
                     print(f"デフォルトカテゴリー追加エラー: {e}")
+               
+            # デフォルト予約時間枠を追加
+            default_slots = [
+                ('10:00:00', '10:00', 0),
+                ('14:00:00', '14:00', 1),
+                ('17:00:00', '17:00', 2)
+            ]
+            for slot_time, slot_label, order in default_slots:
+                try:
+                    c.execute("""
+                        INSERT INTO available_slots (slot_time, slot_label, is_active, display_order)
+                        VALUES (%s, %s, TRUE, %s)
+                        ON CONFLICT (slot_time) DO NOTHING
+                    """, (slot_time, slot_label, order))
+                except Exception as e:
+                    print(f"デフォルト時間枠追加エラー: {e}")
             
             # インデックス作成
             c.execute("CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(booking_date)")
@@ -659,6 +697,13 @@ async def admin_products_list_page(request: Request, session_token: str = Cookie
     if not verify_admin_session(session_token):
         return RedirectResponse(url="/admin/login", status_code=303)
     return templates.TemplateResponse("admin_products_list.html", {"request": request})
+
+@app.get("/admin/calendar", response_class=HTMLResponse)
+async def admin_calendar_page(request: Request, session_token: str = Cookie(None)):
+    """管理画面 - 予約カレンダー管理ページを表示"""
+    if not verify_admin_session(session_token):
+        return RedirectResponse(url="/admin/login", status_code=303)
+    return templates.TemplateResponse("admin_calendar.html", {"request": request})
 
 @app.get("/complete", response_class=HTMLResponse)
 def complete_page(request: Request, customer_name: str = "", phone_number: str = "",
