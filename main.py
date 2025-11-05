@@ -915,7 +915,7 @@ async def delete_booking_admin(booking_id: int, session_token: str = Cookie(None
 # ========== 商品API ==========
 
 @app.get("/products")
-def get_products(category: str = None, active_only: bool = True):
+def get_products(category: str = None, brand: str = None, active_only: bool = True):
     """商品一覧を取得"""
     with get_db_connection() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as c:
@@ -1045,10 +1045,11 @@ async def delete_brand(brand_id: int, session_token: str = Cookie(None)):
 async def create_product_admin(request: Request, product_name: str = Form(...),
                                 price: float = Form(...), category: str = Form(...),
                                 stock_quantity: int = Form(...), description: str = Form(default=""),
-                                image_data: str = Form(...),
+                                image_data: str = Form(...), 
                                 original_price: float = Form(None),
                                 brand: str = Form(None),
-                                session_token: str = Cookie(None)):                                                                        
+                                session_token: str = Cookie(None)):
+    
     """商品を追加（管理者用）"""
     if not verify_admin_session(session_token):
         return JSONResponse(status_code=401, content={"error": "認証が必要です"})
@@ -1056,7 +1057,7 @@ async def create_product_admin(request: Request, product_name: str = Form(...),
     try:
         with get_db_connection() as conn:
             with conn.cursor() as c:
-                c.execute("""INSERT INTO products (product_name, description, price, original_price,　brand, category, stock_quantity, image_data)
+                c.execute("""INSERT INTO products (product_name, description, price, original_price, brand, category, stock_quantity, image_data)
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id""",
                          (product_name, description, price, original_price, brand, category, stock_quantity, image_data))
                 product_id = c.fetchone()[0]
@@ -1087,7 +1088,7 @@ async def update_product_admin(product_id: int, request: Request, session_token:
         with get_db_connection() as conn:
             with conn.cursor() as c:
                 if image_data:
-                    c.execute("""UPDATE products SET product_name=%s, description=%s, price=%s,　original_price=%s, brand=%s,
+                    c.execute("""UPDATE products SET product_name=%s, description=%s, price=%s, original_price=%s, brand=%s,
                                 category=%s, stock_quantity=%s, image_data=%s, updated_at=CURRENT_TIMESTAMP
                                 WHERE id=%s""",
                              (product_name, description, price, original_price, brand, category, stock_quantity, image_data, product_id))
