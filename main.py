@@ -1053,6 +1053,12 @@ async def set_reminder(request: Request):
         import traceback
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
+# ========== UptimerobotAPI ==========
+
+@app.get("/", include_in_schema=False)
+@app.head("/", include_in_schema=False)
+def read_root():
+    return {"status": "ok"}
 
 # ========== 統計API ==========
 
