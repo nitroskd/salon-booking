@@ -117,6 +117,10 @@
       box-shadow: 0 0 5px rgba(163, 177, 138, 0.3);
     }
     
+    select option:disabled {
+      color: #ccc;
+    }
+    
     button {
       width: 100%;
       padding: 16px;
@@ -134,6 +138,27 @@
     
     button:active {
       transform: scale(0.98);
+    }
+    
+    .info-message {
+      background: #e8f5e9;
+      color: #2e7d32;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.9em;
+      text-align: center;
+    }
+    
+    .error-message {
+      background: #ffe6e6;
+      color: #c66;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.9em;
+      text-align: center;
+      display: none;
     }
     
     footer {
@@ -169,7 +194,10 @@
     <a href="/home" class="back-link">← ホームに戻る</a>
   </div>
 
-  <form action="/book" method="post">
+  <form action="/book" method="post" onsubmit="return validateForm()">
+    
+    <div id="error-message" class="error-message"></div>
+    
     <div class="form-group">
       <label>お名前 *</label>
       <input type="text" name="customer_name" required>
@@ -194,16 +222,13 @@
 
     <div class="form-group">
       <label>予約日 *</label>
-      <input type="date" name="booking_date" required>
+      <input type="date" name="booking_date" id="booking_date" required>
     </div>
 
     <div class="form-group">
       <label>予約時間 *</label>
-      <select name="booking_time" required>
-        <option value="">選択してください</option>
-        <option value="10:00">10:00</option>
-        <option value="14:00">14:00</option>
-        <option value="17:00">17:00</option>
+      <select name="booking_time" id="booking_time" required>
+        <option value="">まず予約日を選択してください</option>
       </select>
     </div>
 
@@ -220,23 +245,111 @@
   </footer>
 
   <script>
+    // サーバーから渡されたデータ
     const bookedData = {{ booked | tojson }};
-    const dateInput = document.querySelector('input[name="booking_date"]');
-    const timeSelect = document.querySelector('select[name="booking_time"]');
+    const closedDates = {{ closed_dates | tojson }};
+    const timeSlots = {{ time_slots | tojson }};
+    
+    const dateInput = document.getElementById('booking_date');
+    const timeSelect = document.getElementById('booking_time');
+    const errorMessage = document.getElementById('error-message');
 
-    dateInput.addEventListener('change', () => {
-      const selectedDate = dateInput.value;
+    // 今日の日付を取得
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // 最小日付を明日に設定
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const minDate = tomorrow.toISOString().split('T')[0];
+    dateInput.setAttribute('min', minDate);
+    
+    // 最大日付を3ヶ月後に設定
+    const maxDate = new Date(today);
+    maxDate.setMonth(maxDate.getMonth() + 3);
+    dateInput.setAttribute('max', maxDate.toISOString().split('T')[0]);
+
+    // 日付が選択されたときの処理
+    dateInput.addEventListener('change', function() {
+      const selectedDate = this.value;
+      
+      // エラーメッセージをクリア
+      errorMessage.style.display = 'none';
+      errorMessage.textContent = '';
+      
+      // 定休日チェック
+      if (closedDates.includes(selectedDate)) {
+        errorMessage.textContent = '⚠️ 選択された日は定休日です。別の日をお選びください。';
+        errorMessage.style.display = 'block';
+        timeSelect.innerHTML = '<option value="">定休日のため予約できません</option>';
+        timeSelect.disabled = true;
+        return;
+      }
+      
+      // 時間選択肢を生成
+      timeSelect.disabled = false;
+      timeSelect.innerHTML = '<option value="">時間を選択してください</option>';
+      
       const bookedTimes = bookedData[selectedDate] || [];
-      for (let option of timeSelect.options) {
-        if (bookedTimes.includes(option.value)) {
+      let availableCount = 0;
+      
+      timeSlots.forEach(slot => {
+        const option = document.createElement('option');
+        option.value = slot.value;
+        
+        if (bookedTimes.includes(slot.value)) {
+          option.textContent = `${slot.label} (予約済)`;
           option.disabled = true;
-          option.textContent = option.value + " (予約済)";
         } else {
-          option.disabled = false;
-          option.textContent = option.value;
+          option.textContent = slot.label;
+          availableCount++;
         }
+        
+        timeSelect.appendChild(option);
+      });
+      
+      // 全時間が予約済みの場合
+      if (availableCount === 0) {
+        errorMessage.textContent = '⚠️ この日は全ての時間が予約済みです。別の日をお選びください。';
+        errorMessage.style.display = 'block';
+        timeSelect.innerHTML = '<option value="">予約可能な時間がありません</option>';
+        timeSelect.disabled = true;
       }
     });
+
+    // フォーム送信前のバリデーション
+    function validateForm() {
+      const selectedDate = dateInput.value;
+      const selectedTime = timeSelect.value;
+      
+      if (!selectedDate || !selectedTime) {
+        alert('予約日と予約時間を選択してください');
+        return false;
+      }
+      
+      if (closedDates.includes(selectedDate)) {
+        alert('選択された日は定休日です');
+        return false;
+      }
+      
+      const bookedTimes = bookedData[selectedDate] || [];
+      if (bookedTimes.includes(selectedTime)) {
+        alert('選択された時間は既に予約済みです');
+        return false;
+      }
+      
+      return true;
+    }
+    
+    // URLパラメータからエラーを確認
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'already_booked') {
+      errorMessage.textContent = '⚠️ 選択された日時は既に予約済みです。別の日時をお選びください。';
+      errorMessage.style.display = 'block';
+    } else if (urlParams.get('error') === 'system') {
+      errorMessage.textContent = '⚠️ システムエラーが発生しました。もう一度お試しください。';
+      errorMessage.style.display = 'block';
+    }
   </script>
 </body>
 </html>
