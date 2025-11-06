@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, Request, Form, Depends, Cookie, Response
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -522,6 +523,19 @@ def init_db():
                     date DATE NOT NULL UNIQUE,
                     is_open BOOLEAN DEFAULT TRUE,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # slot_availabilityテーブル（時間枠ごとの有効/無効管理）
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS slot_availability (
+                    id SERIAL PRIMARY KEY,
+                    date DATE NOT NULL,
+                    slot_time TIME NOT NULL,
+                    is_available BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(date, slot_time)
                 )
             """)
             
@@ -1248,6 +1262,7 @@ async def set_reminder(request: Request):
         import traceback
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
+
 # ========== Ontime robot API ==========
 
 @app.get("/", include_in_schema=False)
