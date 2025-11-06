@@ -458,7 +458,7 @@ def init_db():
                 )
             """)
             
-            # categoriesテーブル（新規追加）
+            # categoriesテーブル
             c.execute("""
                 CREATE TABLE IF NOT EXISTS categories (
                     id SERIAL PRIMARY KEY,
@@ -468,7 +468,7 @@ def init_db():
                 )
             """)
             
-            # brandsテーブル（新規追加）
+            # brandsテーブル
             c.execute("""
                 CREATE TABLE IF NOT EXISTS brands (
                     id SERIAL PRIMARY KEY,
@@ -491,7 +491,7 @@ def init_db():
                 )
             """)
             
-            # page_viewsテーブル（新規追加）
+            # page_viewsテーブル
             c.execute("""
                 CREATE TABLE IF NOT EXISTS page_views (
                     id SERIAL PRIMARY KEY,
@@ -503,7 +503,7 @@ def init_db():
                 )
             """)
 
-                        # available_slotsテーブル（予約可能時間管理）
+            # available_slotsテーブル（予約可能時間管理）
             c.execute("""
                 CREATE TABLE IF NOT EXISTS available_slots (
                     id SERIAL PRIMARY KEY,
@@ -532,7 +532,6 @@ def init_db():
                 c.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS brand VARCHAR(100)")
             except Exception as e:
                 print(f"カラム追加スキップ: {e}")
-
                             
             # デフォルトカテゴリーを追加
             default_categories = ['スキンケア', 'アロマ', 'ヘアケア', 'ボディケア']
@@ -722,24 +721,6 @@ def complete_page(request: Request, customer_name: str = "", phone_number: str =
 
 @app.get("/", response_class=HTMLResponse)
 def read_form(request: Request):
-    """予約フォームを表示"""
-    track_page_view('booking_form')
-    with get_db_connection() as conn:
-        with conn.cursor() as c:
-            c.execute("SELECT booking_date, booking_time FROM bookings ORDER BY booking_date, booking_time")
-            booked = c.fetchall()
-    
-    booked_dict = {}
-    for date, time in booked:
-        date_str = date.strftime('%Y-%m-%d') if hasattr(date, 'strftime') else str(date)
-        time_str = time.strftime('%H:%M') if hasattr(time, 'strftime') else str(time)
-        booked_dict.setdefault(date_str, []).append(time_str)
-    
-    return templates.TemplateResponse("index.html", {"request": request, "booked": booked_dict})
-# ========== 予約フォーム表示エンドポイント（修正版） ==========
-
-@app.get("/", response_class=HTMLResponse)
-def read_form(request: Request):
     """予約フォームを表示（カレンダー設定反映版）"""
     track_page_view('booking_form')
     
@@ -798,6 +779,111 @@ def read_form(request: Request):
         "closed_dates": closed_dates,
         "time_slots": time_slots
     })
+
+# ========== 予約時間枠管理API ==========
+
+@app.get("/available-slots")
+def get_available_slots():
+    """予約可能時間枠を取得"""
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as c:
+            c.execute("""
+                SELECT * FROM available_slots 
+                WHERE is_active = TRUE
+                ORDER BY display_order, slot_time
+            """)
+            slots = c.fetchall()
+    return {"slots": slots}
+
+@app.get("/business-hours/{year}/{month}")
+async def get_business_hours(year: int, month: int, session_token: str = Cookie(None)):
+    """指定月の営業日情報を取得"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as c:
+                # 指定月の全日付を取得
+                c.execute("""
+                    SELECT date, is_open 
+                    FROM business_hours
+                    WHERE EXTRACT(YEAR FROM date) = %s 
+                    AND EXTRACT(MONTH FROM date) = %s
+                    ORDER BY date
+                """, (year, month))
+                hours = c.fetchall()
+        
+        return {"business_hours": hours}
+    except Exception as e:
+        print(f"営業日取得エラー: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.post("/admin/business-hours")
+async def update_business_hours(request: Request, session_token: str = Cookie(None)):
+    """営業日を更新"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
+    try:
+        data = await request.json()
+        date = data['date']
+        is_open = data['is_open']
+        
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("""
+                    INSERT INTO business_hours (date, is_open)
+                    VALUES (%s, %s)
+                    ON CONFLICT (date) 
+                    DO UPDATE SET is_open = EXCLUDED.is_open
+                """, (date, is_open))
+                conn.commit()
+        
+        return {"success": True, "message": "営業日を更新しました"}
+    except Exception as e:
+        print(f"営業日更新エラー: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.post("/admin/available-slots")
+async def create_time_slot(request: Request, session_token: str = Cookie(None)):
+    """予約時間枠を追加"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
+    try:
+        data = await request.json()
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("""
+                    INSERT INTO available_slots (slot_time, slot_label, display_order)
+                    VALUES (%s, %s, %s)
+                    RETURNING id
+                """, (data['slot_time'], data['slot_label'], data.get('display_order', 0)))
+                slot_id = c.fetchone()[0]
+                conn.commit()
+        
+        return {"success": True, "id": slot_id, "message": "時間枠を追加しました"}
+    except Exception as e:
+        print(f"時間枠追加エラー: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.delete("/admin/available-slots/{slot_id}")
+async def delete_time_slot(slot_id: int, session_token: str = Cookie(None)):
+    """予約時間枠を削除"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("DELETE FROM available_slots WHERE id = %s", (slot_id,))
+                conn.commit()
+        
+        return {"success": True, "message": "時間枠を削除しました"}
+    except Exception as e:
+        print(f"時間枠削除エラー: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 # ========== 予約API（ユーザー用） ==========
 
@@ -947,6 +1033,7 @@ def get_categories():
             c.execute("SELECT * FROM categories ORDER BY display_order, category_name")
             categories = c.fetchall()
     return {"categories": categories}
+
 @app.post("/admin/categories")
 async def create_category(request: Request, session_token: str = Cookie(None)):
     """カテゴリーを追加（管理者用）"""
@@ -979,6 +1066,7 @@ async def create_category(request: Request, session_token: str = Cookie(None)):
         import traceback
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.delete("/admin/categories/{category_id}")
 async def delete_category(category_id: int, session_token: str = Cookie(None)):
     """カテゴリーを削除（管理者用）"""
@@ -994,6 +1082,7 @@ async def delete_category(category_id: int, session_token: str = Cookie(None)):
     except Exception as e:
         print(f"カテゴリー削除エラー: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
+
 # ブランド管理API
 @app.get("/brands")
 def get_brands():
@@ -1003,6 +1092,7 @@ def get_brands():
             c.execute("SELECT * FROM brands ORDER BY brand_name")
             brands = c.fetchall()
     return {"brands": brands}
+
 @app.post("/admin/brands")
 async def create_brand(request: Request, session_token: str = Cookie(None)):
     """ブランドを追加（管理者用）"""
@@ -1028,6 +1118,7 @@ async def create_brand(request: Request, session_token: str = Cookie(None)):
     except Exception as e:
         print(f"ブランド追加エラー: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.delete("/admin/brands/{brand_id}")
 async def delete_brand(brand_id: int, session_token: str = Cookie(None)):
     """ブランドを削除（管理者用）"""
@@ -1157,7 +1248,6 @@ async def set_reminder(request: Request):
         import traceback
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
-
 # ========== Ontime robot API ==========
 
 @app.get("/", include_in_schema=False)
