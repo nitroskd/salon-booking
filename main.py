@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI, Request, Form, Depends, Cookie, Response
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
