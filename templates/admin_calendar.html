@@ -39,21 +39,29 @@
     
     nav {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       justify-content: center;
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
     
     nav a {
-      padding: 10px 18px;
+      padding: 8px 15px;
       background: #a3b18a;
       color: white;
       text-decoration: none;
       border-radius: 8px;
-      font-size: 0.9em;
+      font-size: 0.85em;
       transition: 0.3s;
       white-space: nowrap;
+    }
+    
+    nav a:active {
+      transform: scale(0.98);
+    }
+    
+    .btn-calendar {
+      background: #5da3d5;
     }
     
     .btn-logout {
@@ -158,11 +166,6 @@
       font-weight: 600;
     }
     
-    .note-cell {
-      font-size: 0.85em;
-      color: #888;
-    }
-    
     .legend {
       display: flex;
       gap: 20px;
@@ -228,6 +231,11 @@
         padding: 6px 3px;
         min-width: 60px;
       }
+      
+      nav a {
+        font-size: 0.8em;
+        padding: 7px 12px;
+      }
     }
   </style>
 </head>
@@ -240,6 +248,7 @@
   <nav>
     <a href="/home">ホーム</a>
     <a href="/admin">予約管理</a>
+    <a href="/admin/calendar" class="btn-calendar">📅 カレンダー管理</a>
     <a href="/admin/products">商品管理</a>
     <a href="/admin/logout" class="btn-logout">ログアウト</a>
   </nav>
@@ -275,7 +284,6 @@
             <th>14:00</th>
             <th>17:00</th>
             <th>定休日</th>
-            <th>任意の文字</th>
           </tr>
         </thead>
         <tbody id="calendar-body">
@@ -291,7 +299,7 @@
 
   <script>
     let currentYear = 2025;
-    let currentMonth = 11; // 11月
+    let currentMonth = 11;
     let availableSlots = [];
     let businessHours = {};
     let changes = {};
@@ -338,29 +346,24 @@
         html += `<tr>`;
         html += `<td>${currentMonth}月${day}日</td>`;
         
-        // 時間枠のセル
         availableSlots.forEach(slot => {
-          const isActive = !isHoliday; // 定休日でなければアクティブ
+          const isActive = !isHoliday;
           const cellClass = isHoliday ? 'time-cell closed' : 'time-cell active';
           html += `<td class="${cellClass}" data-date="${dateStr}" data-time="${slot.slot_time}">
             ${slot.slot_label}
           </td>`;
         });
         
-        // 定休日セル
         const holidayClass = isHoliday ? 'holiday-cell closed' : 'holiday-cell';
         html += `<td class="${holidayClass}" data-date="${dateStr}" data-type="holiday">
           ${isHoliday ? '定休日' : ''}
         </td>`;
         
-        // 任意の文字セル
-        html += `<td class="note-cell">任意の文字</td>`;
         html += `</tr>`;
       }
       
       tbody.innerHTML = html;
       
-      // イベントリスナーを追加
       document.querySelectorAll('.time-cell').forEach(cell => {
         cell.addEventListener('click', toggleTimeCell);
       });
@@ -374,13 +377,11 @@
       const cell = e.currentTarget;
       const date = cell.dataset.date;
       
-      // 定休日の場合は何もしない
       if (businessHours[date] === false) return;
       
       cell.classList.toggle('active');
       cell.classList.toggle('closed');
       
-      // 変更を記録
       if (!changes[date]) changes[date] = {};
       changes[date].timeSlots = true;
     }
@@ -390,7 +391,6 @@
       const date = cell.dataset.date;
       const isClosed = cell.classList.contains('closed');
       
-      // トグル
       if (isClosed) {
         cell.classList.remove('closed');
         cell.textContent = '';
@@ -400,7 +400,6 @@
         cell.textContent = '定休日';
         businessHours[date] = false;
         
-        // 同じ行の時間セルを全て無効化
         const row = cell.parentElement;
         row.querySelectorAll('.time-cell').forEach(timeCell => {
           timeCell.classList.remove('active');
@@ -408,7 +407,6 @@
         });
       }
       
-      // 変更を記録
       changes[date] = { is_open: businessHours[date] !== false };
     }
 
