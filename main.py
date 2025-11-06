@@ -736,110 +736,68 @@ def read_form(request: Request):
         booked_dict.setdefault(date_str, []).append(time_str)
     
     return templates.TemplateResponse("index.html", {"request": request, "booked": booked_dict})
-# ========== 予約時間枠管理API ==========
+# ========== 予約フォーム表示エンドポイント（修正版） ==========
 
-@app.get("/available-slots")
-def get_available_slots():
-    """予約可能時間枠を取得"""
+@app.get("/", response_class=HTMLResponse)
+def read_form(request: Request):
+    """予約フォームを表示（カレンダー設定反映版）"""
+    track_page_view('booking_form')
+    
     with get_db_connection() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as c:
+            # 既存の予約を取得
+            c.execute("SELECT booking_date, booking_time FROM bookings ORDER BY booking_date, booking_time")
+            booked = c.fetchall()
+            
+            # 営業日情報を取得（今後3ヶ月分）
+            today = date.today()
+            three_months_later = today + timedelta(days=90)
             c.execute("""
-                SELECT * FROM available_slots 
+                SELECT date, is_open 
+                FROM business_hours
+                WHERE date BETWEEN %s AND %s
+                ORDER BY date
+            """, (today, three_months_later))
+            business_hours_data = c.fetchall()
+            
+            # 予約可能時間枠を取得
+            c.execute("""
+                SELECT slot_time, slot_label, display_order
+                FROM available_slots 
                 WHERE is_active = TRUE
                 ORDER BY display_order, slot_time
             """)
-            slots = c.fetchall()
-    return {"slots": slots}
-
-@app.get("/business-hours/{year}/{month}")
-async def get_business_hours(year: int, month: int, session_token: str = Cookie(None)):
-    """指定月の営業日情報を取得"""
-    if not verify_admin_session(session_token):
-        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+            available_slots = c.fetchall()
     
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as c:
-                # 指定月の全日付を取得
-                c.execute("""
-                    SELECT date, is_open 
-                    FROM business_hours
-                    WHERE EXTRACT(YEAR FROM date) = %s 
-                    AND EXTRACT(MONTH FROM date) = %s
-                    ORDER BY date
-                """, (year, month))
-                hours = c.fetchall()
-        
-        return {"business_hours": hours}
-    except Exception as e:
-        print(f"営業日取得エラー: {e}")
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-@app.post("/admin/business-hours")
-async def update_business_hours(request: Request, session_token: str = Cookie(None)):
-    """営業日を更新"""
-    if not verify_admin_session(session_token):
-        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    # 予約済み時間を辞書形式に変換
+    booked_dict = {}
+    for booking in booked:
+        date_str = booking['booking_date'].strftime('%Y-%m-%d') if hasattr(booking['booking_date'], 'strftime') else str(booking['booking_date'])
+        time_str = booking['booking_time'].strftime('%H:%M') if hasattr(booking['booking_time'], 'strftime') else str(booking['booking_time'])
+        booked_dict.setdefault(date_str, []).append(time_str)
     
-    try:
-        data = await request.json()
-        date = data['date']
-        is_open = data['is_open']
-        
-        with get_db_connection() as conn:
-            with conn.cursor() as c:
-                c.execute("""
-                    INSERT INTO business_hours (date, is_open)
-                    VALUES (%s, %s)
-                    ON CONFLICT (date) 
-                    DO UPDATE SET is_open = EXCLUDED.is_open
-                """, (date, is_open))
-                conn.commit()
-        
-        return {"success": True, "message": "営業日を更新しました"}
-    except Exception as e:
-        print(f"営業日更新エラー: {e}")
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-@app.post("/admin/available-slots")
-async def create_time_slot(request: Request, session_token: str = Cookie(None)):
-    """予約時間枠を追加"""
-    if not verify_admin_session(session_token):
-        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    # 営業日情報を辞書形式に変換
+    closed_dates = []
+    for bh in business_hours_data:
+        if not bh['is_open']:
+            date_str = bh['date'].strftime('%Y-%m-%d') if hasattr(bh['date'], 'strftime') else str(bh['date'])
+            closed_dates.append(date_str)
     
-    try:
-        data = await request.json()
-        with get_db_connection() as conn:
-            with conn.cursor() as c:
-                c.execute("""
-                    INSERT INTO available_slots (slot_time, slot_label, display_order)
-                    VALUES (%s, %s, %s)
-                    RETURNING id
-                """, (data['slot_time'], data['slot_label'], data.get('display_order', 0)))
-                slot_id = c.fetchone()[0]
-                conn.commit()
-        
-        return {"success": True, "id": slot_id, "message": "時間枠を追加しました"}
-    except Exception as e:
-        print(f"時間枠追加エラー: {e}")
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-@app.delete("/admin/available-slots/{slot_id}")
-async def delete_time_slot(slot_id: int, session_token: str = Cookie(None)):
-    """予約時間枠を削除"""
-    if not verify_admin_session(session_token):
-        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    # 時間枠を整形
+    time_slots = []
+    for slot in available_slots:
+        time_str = slot['slot_time'].strftime('%H:%M') if hasattr(slot['slot_time'], 'strftime') else str(slot['slot_time'])
+        time_slots.append({
+            'value': time_str,
+            'label': slot['slot_label']
+        })
     
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor() as c:
-                c.execute("DELETE FROM available_slots WHERE id = %s", (slot_id,))
-                conn.commit()
-        
-        return {"success": True, "message": "時間枠を削除しました"}
-    except Exception as e:
-        print(f"時間枠削除エラー: {e}")
-        return JSONResponse(status_code=500, content={"error": str(e)})
+    return templates.TemplateResponse("index.html", {
+        "request": request, 
+        "booked": booked_dict,
+        "closed_dates": closed_dates,
+        "time_slots": time_slots
+    })
 
 # ========== 予約API（ユーザー用） ==========
 
