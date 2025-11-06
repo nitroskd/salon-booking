@@ -579,6 +579,7 @@ def init_db():
             c.execute("CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(booking_date)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_reminders_date ON reminders(booking_date)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(view_date)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_slot_availability_date ON slot_availability(date)")
             try:
                 c.execute("CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)")
             except:
@@ -738,61 +739,98 @@ def read_form(request: Request):
     """予約フォームを表示（カレンダー設定反映版）"""
     track_page_view('booking_form')
     
-    with get_db_connection() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as c:
-            # 既存の予約を取得
-            c.execute("SELECT booking_date, booking_time FROM bookings ORDER BY booking_date, booking_time")
-            booked = c.fetchall()
-            
-            # 営業日情報を取得（今後3ヶ月分）
-            today = date.today()
-            three_months_later = today + timedelta(days=90)
-            c.execute("""
-                SELECT date, is_open 
-                FROM business_hours
-                WHERE date BETWEEN %s AND %s
-                ORDER BY date
-            """, (today, three_months_later))
-            business_hours_data = c.fetchall()
-            
-            # 予約可能時間枠を取得
-            c.execute("""
-                SELECT slot_time, slot_label, display_order
-                FROM available_slots 
-                WHERE is_active = TRUE
-                ORDER BY display_order, slot_time
-            """)
-            available_slots = c.fetchall()
-    
-    # 予約済み時間を辞書形式に変換
-    booked_dict = {}
-    for booking in booked:
-        date_str = booking['booking_date'].strftime('%Y-%m-%d') if hasattr(booking['booking_date'], 'strftime') else str(booking['booking_date'])
-        time_str = booking['booking_time'].strftime('%H:%M') if hasattr(booking['booking_time'], 'strftime') else str(booking['booking_time'])
-        booked_dict.setdefault(date_str, []).append(time_str)
-    
-    # 営業日情報を辞書形式に変換
-    closed_dates = []
-    for bh in business_hours_data:
-        if not bh['is_open']:
-            date_str = bh['date'].strftime('%Y-%m-%d') if hasattr(bh['date'], 'strftime') else str(bh['date'])
-            closed_dates.append(date_str)
-    
-    # 時間枠を整形
-    time_slots = []
-    for slot in available_slots:
-        time_str = slot['slot_time'].strftime('%H:%M') if hasattr(slot['slot_time'], 'strftime') else str(slot['slot_time'])
-        time_slots.append({
-            'value': time_str,
-            'label': slot['slot_label']
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as c:
+                # 既存の予約を取得
+                c.execute("SELECT booking_date, booking_time FROM bookings ORDER BY booking_date, booking_time")
+                booked = c.fetchall()
+                
+                # 営業日情報を取得（今後3ヶ月分）
+                today = date.today()
+                three_months_later = today + timedelta(days=90)
+                c.execute("""
+                    SELECT date, is_open 
+                    FROM business_hours
+                    WHERE date BETWEEN %s AND %s
+                    ORDER BY date
+                """, (today, three_months_later))
+                business_hours_data = c.fetchall()
+                
+                # 時間枠ごとの有効/無効情報を取得
+                c.execute("""
+                    SELECT date, slot_time, is_available
+                    FROM slot_availability
+                    WHERE date BETWEEN %s AND %s
+                    ORDER BY date, slot_time
+                """, (today, three_months_later))
+                slot_availability_data = c.fetchall()
+                
+                # 予約可能時間枠を取得
+                c.execute("""
+                    SELECT slot_time, slot_label, display_order
+                    FROM available_slots 
+                    WHERE is_active = TRUE
+                    ORDER BY display_order, slot_time
+                """)
+                available_slots = c.fetchall()
+        
+        # 予約済み時間を辞書形式に変換
+        booked_dict = {}
+        for booking in booked:
+            date_str = booking['booking_date'].strftime('%Y-%m-%d') if hasattr(booking['booking_date'], 'strftime') else str(booking['booking_date'])
+            time_str = booking['booking_time'].strftime('%H:%M') if hasattr(booking['booking_time'], 'strftime') else str(booking['booking_time'])
+            booked_dict.setdefault(date_str, []).append(time_str)
+        
+        # 営業日情報を辞書形式に変換
+        closed_dates = []
+        for bh in business_hours_data:
+            if not bh['is_open']:
+                date_str = bh['date'].strftime('%Y-%m-%d') if hasattr(bh['date'], 'strftime') else str(bh['date'])
+                closed_dates.append(date_str)
+        
+        # 時間枠の無効化情報を辞書形式に変換
+        disabled_slots = {}
+        for sa in slot_availability_data:
+            date_str = sa['date'].strftime('%Y-%m-%d') if hasattr(sa['date'], 'strftime') else str(sa['date'])
+            time_str = sa['slot_time'].strftime('%H:%M') if hasattr(sa['slot_time'], 'strftime') else str(sa['slot_time'])
+            if not sa['is_available']:
+                if date_str not in disabled_slots:
+                    disabled_slots[date_str] = []
+                disabled_slots[date_str].append(time_str)
+        
+        # 時間枠を整形
+        time_slots = []
+        for slot in available_slots:
+            time_str = slot['slot_time'].strftime('%H:%M') if hasattr(slot['slot_time'], 'strftime') else str(slot['slot_time'])
+            time_slots.append({
+                'value': time_str,
+                'label': slot['slot_label']
+            })
+        
+        return templates.TemplateResponse("index.html", {
+            "request": request, 
+            "booked": booked_dict,
+            "closed_dates": closed_dates,
+            "disabled_slots": disabled_slots,
+            "time_slots": time_slots
         })
-    
-    return templates.TemplateResponse("index.html", {
-        "request": request, 
-        "booked": booked_dict,
-        "closed_dates": closed_dates,
-        "time_slots": time_slots
-    })
+    except Exception as e:
+        print(f"予約フォーム表示エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        # エラー時は空のデータで表示
+        return templates.TemplateResponse("index.html", {
+            "request": request, 
+            "booked": {},
+            "closed_dates": [],
+            "disabled_slots": {},
+            "time_slots": [
+                {"value": "10:00", "label": "10:00"},
+                {"value": "14:00", "label": "14:00"},
+                {"value": "17:00", "label": "17:00"}
+            ]
+        })
 
 # ========== 予約時間枠管理API ==========
 
@@ -827,8 +865,21 @@ async def get_business_hours(year: int, month: int, session_token: str = Cookie(
                     ORDER BY date
                 """, (year, month))
                 hours = c.fetchall()
+                
+                # 時間枠ごとの有効/無効情報を取得
+                c.execute("""
+                    SELECT date, slot_time, is_available
+                    FROM slot_availability
+                    WHERE EXTRACT(YEAR FROM date) = %s 
+                    AND EXTRACT(MONTH FROM date) = %s
+                    ORDER BY date, slot_time
+                """, (year, month))
+                slot_data = c.fetchall()
         
-        return {"business_hours": hours}
+        return {
+            "business_hours": hours,
+            "slot_availability": slot_data
+        }
     except Exception as e:
         print(f"営業日取得エラー: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
@@ -843,20 +894,34 @@ async def update_business_hours(request: Request, session_token: str = Cookie(No
         data = await request.json()
         date = data['date']
         is_open = data['is_open']
+        time_slots = data.get('time_slots', {})  # {slot_time: is_available}
         
         with get_db_connection() as conn:
             with conn.cursor() as c:
+                # 営業日情報を更新
                 c.execute("""
                     INSERT INTO business_hours (date, is_open)
                     VALUES (%s, %s)
                     ON CONFLICT (date) 
                     DO UPDATE SET is_open = EXCLUDED.is_open
                 """, (date, is_open))
+                
+                # 時間枠ごとの有効/無効を更新
+                for slot_time, is_available in time_slots.items():
+                    c.execute("""
+                        INSERT INTO slot_availability (date, slot_time, is_available, updated_at)
+                        VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+                        ON CONFLICT (date, slot_time)
+                        DO UPDATE SET is_available = EXCLUDED.is_available, updated_at = CURRENT_TIMESTAMP
+                    """, (date, slot_time, is_available))
+                
                 conn.commit()
         
         return {"success": True, "message": "営業日を更新しました"}
     except Exception as e:
         print(f"営業日更新エラー: {e}")
+        import traceback
+        traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.post("/admin/available-slots")
