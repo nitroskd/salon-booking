@@ -440,45 +440,40 @@
     }
 
     function toggleTimeCell(e) {
-      const cell = e.currentTarget;
-      const date = cell.dataset.date;
-      const time = cell.dataset.time;
-      const slotKey = cell.dataset.slotKey;
-      
-      // 定休日の場合は何もしない
-      if (businessHours[date] === false) {
-        alert('この日は定休日です。定休日セルをクリックして解除してください。');
-        return;
-      }
-      
-      // 状態をトグル
-      const isCurrentlyClosed = cell.classList.contains('closed');
-      
-      if (isCurrentlyClosed) {
-        // 無効→有効に変更
-        cell.classList.remove('closed');
-        cell.classList.add('active');
-        disabledSlots[slotKey] = true; // 有効化
-      } else {
-        // 有効→無効に変更
-        cell.classList.remove('active');
-        cell.classList.add('closed');
-        disabledSlots[slotKey] = false; // 無効化
-      }
-      
-      // 変更を記録（重要：時間枠ごとに個別に記録）
-      if (!changes[date]) {
-        changes[date] = { is_open: true, timeSlots: {} };
-      }
-      if (!changes[date].timeSlots) {
-        changes[date].timeSlots = {};
-      }
-      
-      // 無効化された場合はfalse、有効化された場合はtrue
-      changes[date].timeSlots[time] = !isCurrentlyClosed;
-      
-      console.log('変更記録:', date, time, !isCurrentlyClosed);
-    }
+  const cell = e.currentTarget;
+  const date = cell.dataset.date;
+  const time = cell.dataset.time;
+  const slotKey = cell.dataset.slotKey;
+
+  if (businessHours[date] === false) {
+    alert('この日は定休日です。定休日セルをクリックして解除してください。');
+    return;
+  }
+
+  // 現在の状態を反転
+  const isCurrentlyClosed = cell.classList.contains('closed');
+  const newIsAvailable = isCurrentlyClosed; // trueなら有効化、falseなら無効化
+
+  // 見た目更新
+  if (isCurrentlyClosed) {
+    cell.classList.remove('closed');
+    cell.classList.add('active');
+    disabledSlots[slotKey] = true;
+  } else {
+    cell.classList.remove('active');
+    cell.classList.add('closed');
+    disabledSlots[slotKey] = false;
+  }
+
+  // 変更記録
+  if (!changes[date]) {
+    changes[date] = { is_open: true, timeSlots: {} };
+  }
+  changes[date].timeSlots[time] = newIsAvailable;
+
+  console.log('変更記録:', date, time, newIsAvailable);
+}
+
 
     function toggleHolidayCell(e) {
       const cell = e.currentTarget;
