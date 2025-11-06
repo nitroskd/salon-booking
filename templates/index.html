@@ -248,6 +248,7 @@
     // サーバーから渡されたデータ
     const bookedData = {{ booked | tojson }};
     const closedDates = {{ closed_dates | tojson }};
+    const disabledSlots = {{ disabled_slots | tojson }};
     const timeSlots = {{ time_slots | tojson }};
     
     const dateInput = document.getElementById('booking_date');
@@ -291,6 +292,7 @@
       timeSelect.innerHTML = '<option value="">時間を選択してください</option>';
       
       const bookedTimes = bookedData[selectedDate] || [];
+      const disabledTimes = disabledSlots[selectedDate] || [];
       let availableCount = 0;
       
       timeSlots.forEach(slot => {
@@ -299,6 +301,9 @@
         
         if (bookedTimes.includes(slot.value)) {
           option.textContent = `${slot.label} (予約済)`;
+          option.disabled = true;
+        } else if (disabledTimes.includes(slot.value)) {
+          option.textContent = `${slot.label} (受付停止)`;
           option.disabled = true;
         } else {
           option.textContent = slot.label;
@@ -335,6 +340,12 @@
       const bookedTimes = bookedData[selectedDate] || [];
       if (bookedTimes.includes(selectedTime)) {
         alert('選択された時間は既に予約済みです');
+        return false;
+      }
+      
+      const disabledTimes = disabledSlots[selectedDate] || [];
+      if (disabledTimes.includes(selectedTime)) {
+        alert('選択された時間は受付を停止しています');
         return false;
       }
       
