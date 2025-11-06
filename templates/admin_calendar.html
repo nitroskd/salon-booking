@@ -341,21 +341,35 @@
         const response = await fetch(`/business-hours/${currentYear}/${currentMonth}`);
         const data = await response.json();
         
+        console.log('サーバーから取得したデータ:', data);
+        
         businessHours = {};
         disabledSlots = {};
         
         // 営業日情報を読み込み
         (data.business_hours || []).forEach(item => {
           businessHours[item.date] = item.is_open;
+          console.log('営業日:', item.date, item.is_open);
         });
         
         // 時間枠の無効化情報を読み込み
         (data.slot_availability || []).forEach(item => {
           const dateStr = item.date;
-          const timeStr = item.slot_time.substring(0, 5); // HH:MM形式に変換
-          const slotKey = `${dateStr}_${timeStr}:00`;
+          const timeStr = item.slot_time;
+          
+          // slot_timeが "17:00:00" 形式の場合と "17:00" 形式の両方に対応
+          const normalizedTime = timeStr.includes(':00:00') ? timeStr : 
+                                 timeStr.includes(':00') ? timeStr : 
+                                 `${timeStr}:00`;
+          
+          const slotKey = `${dateStr}_${normalizedTime}`;
           disabledSlots[slotKey] = item.is_available;
+          
+          console.log('時間枠:', dateStr, normalizedTime, '→', item.is_available ? '有効' : '無効');
         });
+        
+        console.log('読み込み完了 - businessHours:', businessHours);
+        console.log('読み込み完了 - disabledSlots:', disabledSlots);
         
         renderCalendar();
       } catch (error) {
@@ -381,11 +395,25 @@
         
         // 時間枠のセル
         availableSlots.forEach(slot => {
-          const slotKey = `${dateStr}_${slot.slot_time}`;
-          const isDisabled = disabledSlots[slotKey] === false || isHoliday;
-          const cellClass = isDisabled ? 'time-cell closed' : 'time-cell active';
+          const slotTime = slot.slot_time; // "10:00:00" 形式
+          const slotKey = `${dateStr}_${slotTime}`;
           
-          html += `<td class="${cellClass}" data-date="${dateStr}" data-time="${slot.slot_time}" data-slot-key="${slotKey}">
+          // デフォルトは有効（true）、無効化されている場合のみfalse
+          let isAvailable = true;
+          
+          if (isHoliday) {
+            // 定休日の場合は無効
+            isAvailable = false;
+          } else if (slotKey in disabledSlots) {
+            // disabledSlotsに明示的に登録されている場合はその値を使用
+            isAvailable = disabledSlots[slotKey];
+          }
+          
+          const cellClass = isAvailable ? 'time-cell active' : 'time-cell closed';
+          
+          console.log(`レンダリング: ${dateStr} ${slotTime} → ${isAvailable ? 'active' : 'closed'}`);
+          
+          html += `<td class="${cellClass}" data-date="${dateStr}" data-time="${slotTime}" data-slot-key="${slotKey}">
             ${slot.slot_label}
           </td>`;
         });
@@ -469,6 +497,8 @@
         row.querySelectorAll('.time-cell').forEach(timeCell => {
           timeCell.classList.remove('closed');
           timeCell.classList.add('active');
+          const slotKey = timeCell.dataset.slotKey;
+          disabledSlots[slotKey] = true;
         });
       } else {
         // 定休日に設定
@@ -481,11 +511,18 @@
         row.querySelectorAll('.time-cell').forEach(timeCell => {
           timeCell.classList.remove('active');
           timeCell.classList.add('closed');
+          const slotKey = timeCell.dataset.slotKey;
+          disabledSlots[slotKey] = false;
         });
       }
       
       // 変更を記録
-      changes[date] = { is_open: businessHours[date] !== false };
+      if (!changes[date]) {
+        changes[date] = { timeSlots: {} };
+      }
+      changes[date].is_open = businessHours[date] !== false;
+      
+      console.log('定休日変更:', date, changes[date].is_open);
     }
 
     async function saveChanges() {
@@ -494,38 +531,60 @@
         return;
       }
       
+      console.log('保存する変更:', JSON.stringify(changes, null, 2));
+      
       try {
         let savedCount = 0;
+        let errorCount = 0;
         
         for (const [date, change] of Object.entries(changes)) {
           // time_slotsオブジェクトを準備
           const timeSlots = {};
+          
           if (change.timeSlots) {
             for (const [time, isAvailable] of Object.entries(change.timeSlots)) {
-              timeSlots[time] = isAvailable;
+              // time形式を統一 (HH:MM:00)
+              const normalizedTime = time.includes(':00') ? time : `${time}:00`;
+              timeSlots[normalizedTime] = isAvailable;
+              console.log(`  ${date} ${normalizedTime} -> ${isAvailable ? '有効' : '無効'}`);
             }
           }
           
+          const payload = {
+            date: date,
+            is_open: change.is_open !== false,
+            time_slots: timeSlots
+          };
+          
+          console.log('送信データ:', JSON.stringify(payload, null, 2));
+          
           // 営業日情報と時間枠情報を一緒に保存
-          await fetch('/admin/business-hours', {
+          const response = await fetch('/admin/business-hours', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              date: date,
-              is_open: change.is_open !== false,
-              time_slots: timeSlots
-            })
+            body: JSON.stringify(payload)
           });
           
-          savedCount++;
+          if (response.ok) {
+            savedCount++;
+          } else {
+            errorCount++;
+            const errorData = await response.json();
+            console.error('保存エラー:', date, errorData);
+          }
         }
         
-        alert(`変更を保存しました（${savedCount}日分）`);
+        if (errorCount > 0) {
+          alert(`一部の保存に失敗しました（成功:${savedCount}件、失敗:${errorCount}件）`);
+        } else {
+          alert(`変更を保存しました（${savedCount}日分）`);
+        }
+        
         changes = {};
         await loadBusinessHours();
       } catch (error) {
         console.error('保存エラー:', error);
-        alert('保存に失敗しました');
+        alert('保存に失敗しました: ' + error.message);
       }
     }
 
