@@ -77,6 +77,20 @@
       box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     }
     
+    .info-box {
+      background: #e8f5e9;
+      border: 1px solid #a5d6a7;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      font-size: 0.9em;
+      line-height: 1.6;
+    }
+    
+    .info-box strong {
+      color: #2e7d32;
+    }
+    
     .month-selector {
       display: flex;
       align-items: center;
@@ -134,7 +148,7 @@
       position: relative;
     }
     
-    .time-cell:hover {
+    .time-cell:hover:not(.closed) {
       background: #f8f6f2;
     }
     
@@ -148,6 +162,7 @@
       background: #e8e4dc;
       color: #999;
       cursor: not-allowed;
+      text-decoration: line-through;
     }
     
     .holiday-cell {
@@ -248,12 +263,18 @@
   <nav>
     <a href="/home">ホーム</a>
     <a href="/admin">予約管理</a>
-    <a href="/admin/calendar" class="btn-calendar">📅 カレンダー管理</a>
     <a href="/admin/products">商品管理</a>
     <a href="/admin/logout" class="btn-logout">ログアウト</a>
   </nav>
 
   <div class="container">
+    <div class="info-box">
+      <strong>💡 使い方:</strong><br>
+      • <strong>時間枠をクリック</strong>: その日のその時間の予約受付を無効化/有効化<br>
+      • <strong>定休日をクリック</strong>: その日を定休日に設定（全時間が自動的に無効化されます）<br>
+      • 変更後は必ず「変更を保存」ボタンを押してください
+    </div>
+    
     <div class="month-selector">
       <button onclick="previousMonth()">◀ 前月</button>
       <div class="month-title" id="month-title">2025年11月</div>
@@ -302,6 +323,7 @@
     let currentMonth = 11;
     let availableSlots = [];
     let businessHours = {};
+    let disabledSlots = {}; // 日付ごとの無効化された時間枠
     let changes = {};
 
     async function loadAvailableSlots() {
@@ -320,8 +342,19 @@
         const data = await response.json();
         
         businessHours = {};
+        disabledSlots = {};
+        
+        // 営業日情報を読み込み
         (data.business_hours || []).forEach(item => {
           businessHours[item.date] = item.is_open;
+        });
+        
+        // 時間枠の無効化情報を読み込み
+        (data.slot_availability || []).forEach(item => {
+          const dateStr = item.date;
+          const timeStr = item.slot_time.substring(0, 5); // HH:MM形式に変換
+          const slotKey = `${dateStr}_${timeStr}:00`;
+          disabledSlots[slotKey] = item.is_available;
         });
         
         renderCalendar();
@@ -346,14 +379,18 @@
         html += `<tr>`;
         html += `<td>${currentMonth}月${day}日</td>`;
         
+        // 時間枠のセル
         availableSlots.forEach(slot => {
-          const isActive = !isHoliday;
-          const cellClass = isHoliday ? 'time-cell closed' : 'time-cell active';
-          html += `<td class="${cellClass}" data-date="${dateStr}" data-time="${slot.slot_time}">
+          const slotKey = `${dateStr}_${slot.slot_time}`;
+          const isDisabled = disabledSlots[slotKey] === false || isHoliday;
+          const cellClass = isDisabled ? 'time-cell closed' : 'time-cell active';
+          
+          html += `<td class="${cellClass}" data-date="${dateStr}" data-time="${slot.slot_time}" data-slot-key="${slotKey}">
             ${slot.slot_label}
           </td>`;
         });
         
+        // 定休日セル
         const holidayClass = isHoliday ? 'holiday-cell closed' : 'holiday-cell';
         html += `<td class="${holidayClass}" data-date="${dateStr}" data-type="holiday">
           ${isHoliday ? '定休日' : ''}
@@ -364,6 +401,7 @@
       
       tbody.innerHTML = html;
       
+      // イベントリスナーを追加
       document.querySelectorAll('.time-cell').forEach(cell => {
         cell.addEventListener('click', toggleTimeCell);
       });
@@ -376,14 +414,31 @@
     function toggleTimeCell(e) {
       const cell = e.currentTarget;
       const date = cell.dataset.date;
+      const slotKey = cell.dataset.slotKey;
       
-      if (businessHours[date] === false) return;
+      // 定休日の場合は何もしない
+      if (businessHours[date] === false) {
+        alert('この日は定休日です。定休日セルをクリックして解除してください。');
+        return;
+      }
       
-      cell.classList.toggle('active');
-      cell.classList.toggle('closed');
+      // 状態をトグル
+      const isCurrentlyClosed = cell.classList.contains('closed');
       
+      if (isCurrentlyClosed) {
+        cell.classList.remove('closed');
+        cell.classList.add('active');
+        disabledSlots[slotKey] = true; // 有効化
+      } else {
+        cell.classList.remove('active');
+        cell.classList.add('closed');
+        disabledSlots[slotKey] = false; // 無効化
+      }
+      
+      // 変更を記録
       if (!changes[date]) changes[date] = {};
-      changes[date].timeSlots = true;
+      if (!changes[date].timeSlots) changes[date].timeSlots = {};
+      changes[date].timeSlots[cell.dataset.time] = !isCurrentlyClosed;
     }
 
     function toggleHolidayCell(e) {
@@ -391,15 +446,26 @@
       const date = cell.dataset.date;
       const isClosed = cell.classList.contains('closed');
       
+      // トグル
       if (isClosed) {
+        // 定休日を解除
         cell.classList.remove('closed');
         cell.textContent = '';
         businessHours[date] = true;
+        
+        // 同じ行の時間セルを全て有効化
+        const row = cell.parentElement;
+        row.querySelectorAll('.time-cell').forEach(timeCell => {
+          timeCell.classList.remove('closed');
+          timeCell.classList.add('active');
+        });
       } else {
+        // 定休日に設定
         cell.classList.add('closed');
         cell.textContent = '定休日';
         businessHours[date] = false;
         
+        // 同じ行の時間セルを全て無効化
         const row = cell.parentElement;
         row.querySelectorAll('.time-cell').forEach(timeCell => {
           timeCell.classList.remove('active');
@@ -407,6 +473,7 @@
         });
       }
       
+      // 変更を記録
       changes[date] = { is_open: businessHours[date] !== false };
     }
 
@@ -417,18 +484,32 @@
       }
       
       try {
+        let savedCount = 0;
+        
         for (const [date, change] of Object.entries(changes)) {
+          // time_slotsオブジェクトを準備
+          const timeSlots = {};
+          if (change.timeSlots) {
+            for (const [time, isAvailable] of Object.entries(change.timeSlots)) {
+              timeSlots[time] = isAvailable;
+            }
+          }
+          
+          // 営業日情報と時間枠情報を一緒に保存
           await fetch('/admin/business-hours', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               date: date,
-              is_open: change.is_open !== false
+              is_open: change.is_open !== false,
+              time_slots: timeSlots
             })
           });
+          
+          savedCount++;
         }
         
-        alert('変更を保存しました');
+        alert(`変更を保存しました（${savedCount}日分）`);
         changes = {};
         await loadBusinessHours();
       } catch (error) {
@@ -443,6 +524,7 @@
         currentMonth = 12;
         currentYear--;
       }
+      changes = {}; // 未保存の変更をクリア
       loadBusinessHours();
     }
 
@@ -452,6 +534,7 @@
         currentMonth = 1;
         currentYear++;
       }
+      changes = {}; // 未保存の変更をクリア
       loadBusinessHours();
     }
 
