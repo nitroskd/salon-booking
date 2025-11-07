@@ -251,6 +251,12 @@
         font-size: 0.8em;
         padding: 7px 12px;
       }
+      .sunday {
+  color: #d9534f; /* 赤 */
+}
+.saturday {
+  color: #007bff; /* 青 */
+}
     }
   </style>
 </head>
@@ -391,7 +397,20 @@
         const isHoliday = businessHours[dateStr] === false;
         
         html += `<tr>`;
-        html += `<td>${currentMonth}月${day}日</td>`;
+        // 曜日を取得
+const dateObj = new Date(currentYear, currentMonth - 1, day);
+const weekday = dateObj.getDay(); // 0:日, 6:土
+const weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
+const weekdayLabel = weekdayNames[weekday];
+
+// 曜日ごとのクラス設定
+let dayClass = '';
+if (weekday === 0) dayClass = 'sunday';
+else if (weekday === 6) dayClass = 'saturday';
+
+// 日付セル（例：11月3日(火)）
+html += `<td class="${dayClass}">${currentMonth}月${day}日(${weekdayLabel})</td>`;
+
         
         // 時間枠のセル
         availableSlots.forEach(slot => {
