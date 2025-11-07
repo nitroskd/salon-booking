@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, Form, Depends, Cookie, Response
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from contextlib import contextmanager
 from urllib.parse import urlencode
 import psycopg2
@@ -10,14 +11,110 @@ import os
 import json
 import requests
 from datetime import datetime, timedelta, date
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 import schedule
 import threading
 import time
 import hashlib
 import secrets
+import bcrypt
+
+# ========== 環境変数バリデーション ==========
+
+REQUIRED_ENV_VARS = {
+    "DATABASE_URL": "PostgreSQL接続URL",
+    "ADMIN_USERNAME": "管理者ユーザー名",
+    # ADMIN_PASSWORDまたはADMIN_PASSWORD_HASHのどちらかが必須
+}
+
+OPTIONAL_ENV_VARS = {
+    "SENDGRID_API_KEY": "SendGrid APIキー（メール通知用）",
+    "GMAIL_USER": "Gmail送信元アドレス",
+    "LINE_CHANNEL_ACCESS_TOKEN": "LINE通知用トークン",
+    "LINE_USER_ID": "LINE通知先ユーザーID",
+    "BASE_URL": "アプリケーションのベースURL",
+    "ENVIRONMENT": "動作環境（production/development）",
+}
+
+def validate_env_vars():
+    """環境変数をバリデート"""
+    print("🔍 環境変数をチェック中...")
+    
+    missing_vars = []
+    
+    # 基本的な必須変数のチェック
+    for var, description in REQUIRED_ENV_VARS.items():
+        value = os.getenv(var)
+        if not value:
+            missing_vars.append(f"  ❌ {var}: {description}")
+        else:
+            print(f"  ✅ {var}: 設定済み")
+    
+    if missing_vars:
+        print("\n🚨 以下の必須環境変数が設定されていません:")
+        print("\n".join(missing_vars))
+        print("\n⚠️  アプリケーションを起動できません")
+        sys.exit(1)
+    
+    # オプション変数の警告
+    missing_optional = []
+    for var, description in OPTIONAL_ENV_VARS.items():
+        value = os.getenv(var)
+        if not value:
+            missing_optional.append(f"  ⚠️  {var}: {description}")
+        else:
+            print(f"  ✅ {var}: 設定済み")
+    
+    if missing_optional:
+        print("\n⚠️  以下のオプション環境変数が未設定です（一部機能が制限されます）:")
+        print("\n".join(missing_optional))
+    
+    # セキュリティチェック
+    admin_password = os.getenv("ADMIN_PASSWORD", "")
+    if len(admin_password) < 8:
+        print("\n⚠️  セキュリティ警告: ADMIN_PASSWORDは8文字以上を推奨します")
+    
+    # 環境チェック
+    environment = os.getenv("ENVIRONMENT", "development")
+    if environment == "production":
+        print("\n🚀 本番環境モードで起動します")
+        if not os.getenv("BASE_URL"):
+            print("  ⚠️  BASE_URLが未設定です（通知機能で問題が起きる可能性があります）")
+    else:
+        print("\n🔧 開発環境モードで起動します")
+    
+    print("\n✅ 環境変数のバリデーション完了\n")
+
+# アプリケーション起動時に実行
+validate_env_vars()
+
+# DATABASE_URLを取得（バリデーション後なので安全）
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 app = FastAPI()
 security = HTTPBasic()
+
+# 環境変数から設定を取得
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")  # production or development
+IS_PRODUCTION = ENVIRONMENT == "production"
+
+# 本番環境の場合、信頼できるホストのみ許可
+if IS_PRODUCTION:
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=[
+            "salon-booking-k54d.onrender.com",
+            "*.onrender.com",
+            "localhost"  # 開発時用
+        ]
+    )
+    
+# Limiterの初期化
+limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ディレクトリの存在確認と作成
 templates_dir = "templates"
@@ -39,9 +136,29 @@ SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
 LINE_USER_ID = os.getenv("LINE_USER_ID")
 
-# 管理者認証情報（環境変数から取得、デフォルト値あり）
+# 管理者認証情報（環境変数から取得）
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "salon2025")
+
+# 後方互換性: ADMIN_PASSWORD_HASHがあればそれを使用、なければADMIN_PASSWORDを使用
+ADMIN_PASSWORD_HASH = os.getenv("ADMIN_PASSWORD_HASH")
+ADMIN_PASSWORD_PLAIN = os.getenv("ADMIN_PASSWORD")  # 後方互換性用
+
+if not ADMIN_PASSWORD_HASH and not ADMIN_PASSWORD_PLAIN:
+    print("⚠️  警告: ADMIN_PASSWORD_HASHもADMIN_PASSWORDも設定されていません")
+
+    # パスワード系の特別チェック
+    has_hash = os.getenv("ADMIN_PASSWORD_HASH")
+    has_plain = os.getenv("ADMIN_PASSWORD")
+    
+    if not has_hash and not has_plain:
+        missing_vars.append(f"  ❌ ADMIN_PASSWORD または ADMIN_PASSWORD_HASH: 管理者パスワード")
+    elif has_hash:
+        print(f"  ✅ ADMIN_PASSWORD_HASH: 設定済み（推奨）")
+        if has_plain:
+            print(f"  ⚠️  ADMIN_PASSWORDも設定されていますが、ADMIN_PASSWORD_HASHが優先されます")
+    elif has_plain:
+        print(f"  ⚠️  ADMIN_PASSWORD: 設定済み（非推奨・平文）")
+        print(f"      → bcryptハッシュ化への移行を強く推奨します")    
 
 # セッション管理用（本番環境では Redis などを推奨）
 active_sessions = {}
@@ -50,25 +167,52 @@ def hash_password(password: str) -> str:
     """パスワードをハッシュ化"""
     return hashlib.sha256(password.encode()).hexdigest()
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """パスワードを検証"""
-    return hash_password(plain_password) == hashed_password
+ddef verify_password(plain_password: str, username: str) -> bool:
+    """
+    パスワードを検証
+    - ADMIN_PASSWORD_HASHがあればbcryptで検証
+    - なければ平文比較（後方互換性のため、非推奨）
+    """
+    if ADMIN_PASSWORD_HASH:
+        # bcryptで検証（推奨）
+        try:
+            return bcrypt.checkpw(
+                plain_password.encode('utf-8'),
+                ADMIN_PASSWORD_HASH.encode('utf-8')
+            )
+        except Exception as e:
+            print(f"bcrypt検証エラー: {e}")
+            return False
+    elif ADMIN_PASSWORD_PLAIN:
+        # 平文比較（非推奨・後方互換性用）
+        print("⚠️  警告: 平文パスワード比較を使用中。ADMIN_PASSWORD_HASHへの移行を推奨します")
+        return plain_password == ADMIN_PASSWORD_PLAIN
+    else:
+        return False
 
 def create_session_token() -> str:
     """セッショントークンを生成"""
     return secrets.token_urlsafe(32)
 
 def verify_admin_session(session_token: str = Cookie(None)) -> bool:
-    """セッショントークンを検証"""
+    """セッショントークンを検証（タイムアウトチェック追加）"""
     if not session_token:
         return False
-    return session_token in active_sessions
-
-async def get_current_admin(session_token: str = Cookie(None)):
-    """管理者認証チェック"""
-    if not verify_admin_session(session_token):
-        return None
-    return active_sessions.get(session_token)
+    
+    if session_token not in active_sessions:
+        return False
+    
+    # セッションのタイムアウトチェック（24時間）
+    session_data = active_sessions[session_token]
+    login_time = session_data.get('login_time')
+    
+    if login_time:
+        elapsed = datetime.now() - login_time
+        if elapsed.total_seconds() > 86400:  # 24時間経過
+            del active_sessions[session_token]
+            return False
+    
+    return True
 
 def send_gmail_notification(booking_data):
     """SendGrid経由でメール通知を送信"""
@@ -633,29 +777,37 @@ threading.Thread(target=run_scheduler, daemon=True).start()
 # ========== 認証エンドポイント ==========
 
 @app.get("/admin/login", response_class=HTMLResponse)
+@limiter.limit("20/minute")  # 1分間に20回まで
 def admin_login_page(request: Request):
     """管理画面ログインページ"""
     return templates.TemplateResponse("admin_login.html", {"request": request})
 
 @app.post("/admin/login")
-async def admin_login(response: Response, username: str = Form(...), password: str = Form(...)):
+@limiter.limit("5/minute")  # 1分間に5回まで（ブルートフォース対策）
+async def admin_login(
+    request: Request,
+    response: Response,
+    username: str = Form(...),
+    password: str = Form(...)
+):
+    
     """管理画面ログイン処理"""
-    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        # セッショントークンを生成
+    if username == ADMIN_USERNAME and verify_password(password, username):
         session_token = create_session_token()
         active_sessions[session_token] = {
             'username': username,
             'login_time': datetime.now()
         }
         
-        # クッキーにセッショントークンを設定
         redirect_response = RedirectResponse(url="/admin", status_code=303)
         redirect_response.set_cookie(
             key="session_token",
             value=session_token,
             httponly=True,
-            max_age=86400,  # 24時間
-            samesite="lax"
+            secure=IS_PRODUCTION,
+            samesite="lax",
+            max_age=86400,
+            path="/"
         )
         return redirect_response
     else:
@@ -668,7 +820,13 @@ async def admin_logout(response: Response, session_token: str = Cookie(None)):
         del active_sessions[session_token]
     
     redirect_response = RedirectResponse(url="/admin/login", status_code=303)
-    redirect_response.delete_cookie(key="session_token")
+    # Cookieを完全に削除
+    redirect_response.delete_cookie(
+        key="session_token",
+        path="/",
+        secure=IS_PRODUCTION,
+        samesite="lax"
+    )
     return redirect_response
 
 # ========== ページ表示のエンドポイント ==========
@@ -966,10 +1124,18 @@ async def delete_time_slot(slot_id: int, session_token: str = Cookie(None)):
 # ========== 予約API（ユーザー用） ==========
 
 @app.post("/book")
-def book_service(customer_name: str = Form(...), phone_number: str = Form(...),
-                 service_name: str = Form(...), booking_date: str = Form(...),
-                 booking_time: str = Form(...), notes: str = Form(default="")):
+@limiter.limit("10/minute")  # 1分間に10回まで
+def book_service(
+    request: Request,
+    customer_name: str = Form(...),
+    phone_number: str = Form(...),
+    service_name: str = Form(...),
+    booking_date: str = Form(...),
+    booking_time: str = Form(...),
+    notes: str = Form(default="")
+):
     """予約を登録"""
+    # 既存のコード
     try:
         with get_db_connection() as conn:
             with conn.cursor() as c:
@@ -1011,7 +1177,8 @@ def book_service(customer_name: str = Form(...), phone_number: str = Form(...),
         return RedirectResponse("/?error=system", status_code=303)
 
 @app.get("/bookings")
-def get_bookings():
+@limiter.limit("60/minute")
+def get_bookings(request: Request):
     """予約一覧を取得"""
     with get_db_connection() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as c:
@@ -1024,6 +1191,7 @@ def get_bookings():
 # ========== 予約管理API（管理者用） ==========
 
 @app.post("/admin/bookings")
+@limiter.limit("30/minute")
 async def create_booking_admin(request: Request, session_token: str = Cookie(None)):
     """予約を追加（管理者用）"""
     if not verify_admin_session(session_token):
