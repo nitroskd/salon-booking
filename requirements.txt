@@ -7,3 +7,4 @@ python-dotenv
 requests
 schedule
 bcrypt
+slowapi==0.1.9
