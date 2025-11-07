@@ -167,7 +167,7 @@ def hash_password(password: str) -> str:
     """パスワードをハッシュ化"""
     return hashlib.sha256(password.encode()).hexdigest()
 
-ddef verify_password(plain_password: str, username: str) -> bool:
+def verify_password(plain_password: str, username: str) -> bool:
     """
     パスワードを検証
     - ADMIN_PASSWORD_HASHがあればbcryptで検証
