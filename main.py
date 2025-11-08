@@ -113,17 +113,6 @@ security = HTTPBasic()
 # 環境変数から設定を取得
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")  # production or development
 IS_PRODUCTION = ENVIRONMENT == "production"
-
-# 本番環境の場合、信頼できるホストのみ許可
-if IS_PRODUCTION:
-    app.add_middleware(
-    TrustedHostMiddleware,
-        allowed_hosts=[
-            "salon-booking-k54d.onrender.com",
-            "*.onrender.com",
-            "localhost"  # 開発時用
-        ]
-    )
     
 # Limiterの初期化
 limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
