@@ -699,28 +699,32 @@ function showDayDetails(dateStr, isPast, isClosed) {
       const isBooked = bookedTimes.includes(slot.value);
       const isDisabled = disabledTimes.includes(slot.value);
       
-      let statusText, statusColor, bgColor;
-      if (isBooked) {
-        statusText = '予約済';
-        statusColor = '#ef4444';
-        bgColor = '#fee2e2';
-      } else if (isDisabled) {
-        statusText = '受付停止';
-        statusColor = '#94a3b8';
-        bgColor = '#f1f5f9';
-      } else {
-        statusText = '予約可能';
-        statusColor = '#22c55e';
-        bgColor = '#dcfce7';
-        hasAvailable = true;
-      }
-      
-      html += `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: ${bgColor}; border-radius: 8px; border: 2px solid ${statusColor};">
-          <span style="font-weight: 600; font-size: 1.05em;">${slot.label}</span>
-          <span style="color: ${statusColor}; font-weight: 700; font-size: 0.95em;">⚫ ${statusText}</span>
-        </div>
-      `;
+      let statusText, statusColor, bgColor, statusIcon;
+
+if (isBooked) {
+  statusText = '予約済';
+  statusColor = '#ef4444';
+  bgColor = '#fee2e2';
+  statusIcon = '❌'; // 予約済
+} else if (isDisabled) {
+  statusText = '受付停止';
+  statusColor = '#94a3b8';
+  bgColor = '#f1f5f9';
+  statusIcon = '⛔'; // 受付停止
+} else {
+  statusText = '予約可能';
+  statusColor = '#22c55e';
+  bgColor = '#dcfce7';
+  statusIcon = '🟢'; // 予約可能
+  hasAvailable = true;
+}
+
+html += `
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: ${bgColor}; border-radius: 8px; border: 2px solid ${statusColor};">
+    <span style="font-weight: 600; font-size: 1.05em;">${slot.label}</span>
+    <span style="color: ${statusColor}; font-weight: 700; font-size: 0.95em;">${statusIcon} ${statusText}</span>
+  </div>
+`;
     });
     
     html += '</div>';
