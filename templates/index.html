@@ -193,6 +193,462 @@
     <h1>ご予約フォーム</h1>
     <a href="/home" class="back-link">← ホームに戻る</a>
   </div>
+  <!-- index.html の<form>タグの直前に追加 -->
+
+<!-- 予約状況確認ボタン -->
+<div style="max-width: 500px; margin: 0 auto 20px; text-align: center;">
+  <button type="button" onclick="openCalendarModal()" style="
+    padding: 14px 30px;
+    background: linear-gradient(135deg, #5da3d5 0%, #4a8fc7 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(93, 163, 213, 0.3);
+    transition: 0.3s;
+    font-family: 'Noto Sans JP', sans-serif;
+    width: 100%;
+    max-width: 300px;
+  ">
+    📅 予約状況を確認する
+  </button>
+</div>
+
+<!-- 予約状況カレンダーモーダル -->
+<div id="calendarModal" style="
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.6);
+  overflow-y: auto;
+  padding: 20px;
+">
+  <div style="
+    background: white;
+    margin: 0 auto;
+    padding: 25px 20px;
+    border-radius: 16px;
+    max-width: 600px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  ">
+    <!-- ヘッダー -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="color: #6a8f66; font-size: 1.4em; margin: 0;">📅 予約状況</h2>
+      <span onclick="closeCalendarModal()" style="
+        font-size: 28px;
+        font-weight: bold;
+        color: #aaa;
+        cursor: pointer;
+        line-height: 1;
+      ">&times;</span>
+    </div>
+
+    <!-- 月切り替え -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <button onclick="changeMonth(-1)" style="
+        padding: 8px 16px;
+        background: #a3b18a;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.95em;
+      ">◀ 前月</button>
+      <div id="currentMonth" style="font-size: 1.2em; font-weight: 600; color: #6a8f66;"></div>
+      <button onclick="changeMonth(1)" style="
+        padding: 8px 16px;
+        background: #a3b18a;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.95em;
+      ">次月 ▶</button>
+    </div>
+
+    <!-- 凡例 -->
+    <div style="
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 0.85em;
+    ">
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <div style="width: 20px; height: 20px; background: #4caf50; border-radius: 4px;"></div>
+        <span>空きあり</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <div style="width: 20px; height: 20px; background: #ffc107; border-radius: 4px;"></div>
+        <span>残りわずか</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <div style="width: 20px; height: 20px; background: #f44336; border-radius: 4px;"></div>
+        <span>満席</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <div style="width: 20px; height: 20px; background: #999; border-radius: 4px;"></div>
+        <span>定休日</span>
+      </div>
+    </div>
+
+    <!-- カレンダー -->
+    <div id="calendarGrid"></div>
+
+    <!-- 詳細表示エリア -->
+    <div id="dayDetails" style="
+      margin-top: 20px;
+      padding: 15px;
+      background: #f8f6f2;
+      border-radius: 10px;
+      display: none;
+    ">
+      <h3 style="color: #6a8f66; font-size: 1.1em; margin-bottom: 10px;" id="detailDate"></h3>
+      <div id="detailContent" style="font-size: 0.9em; line-height: 1.8;"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+.calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+
+.calendar-table th {
+  padding: 10px 5px;
+  text-align: center;
+  font-weight: 600;
+  color: #6a8f66;
+  font-size: 0.9em;
+  border-bottom: 2px solid #e8e4dc;
+}
+
+.calendar-table td {
+  padding: 0;
+  text-align: center;
+  border: 1px solid #e8e4dc;
+  height: 60px;
+  position: relative;
+}
+
+.calendar-day {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+  background: white;
+  border: none;
+  font-family: 'Noto Sans JP', sans-serif;
+  padding: 5px;
+}
+
+.calendar-day:hover:not(.disabled) {
+  background: #f8f6f2;
+  transform: scale(1.05);
+}
+
+.calendar-day.disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+  color: #ccc;
+}
+
+.calendar-day.past {
+  background: #fafafa;
+  color: #999;
+  cursor: default;
+}
+
+.calendar-day .day-number {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.calendar-day .status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 2px;
+}
+
+.status-available {
+  background: #4caf50;
+}
+
+.status-partial {
+  background: #ffc107;
+}
+
+.status-full {
+  background: #f44336;
+}
+
+.status-closed {
+  background: #999;
+}
+
+@media (max-width: 480px) {
+  .calendar-table th,
+  .calendar-table td {
+    padding: 5px 2px;
+    font-size: 0.85em;
+  }
+  
+  .calendar-day {
+    height: 50px;
+  }
+  
+  .calendar-day .day-number {
+    font-size: 0.95em;
+  }
+}
+</style>
+
+<script>
+// グローバル変数
+let currentCalendarYear = new Date().getFullYear();
+let currentCalendarMonth = new Date().getMonth() + 1;
+let calendarBookingData = {};
+let calendarClosedDates = [];
+let calendarDisabledSlots = {};
+let calendarTimeSlots = [];
+
+// モーダルを開く
+async function openCalendarModal() {
+  // 予約データを取得
+  await fetchCalendarData();
+  
+  // カレンダーを描画
+  renderCalendar();
+  
+  // モーダルを表示
+  document.getElementById('calendarModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+// モーダルを閉じる
+function closeCalendarModal() {
+  document.getElementById('calendarModal').style.display = 'none';
+  document.body.style.overflow = 'auto';
+  document.getElementById('dayDetails').style.display = 'none';
+}
+
+// 月を変更
+function changeMonth(delta) {
+  currentCalendarMonth += delta;
+  
+  if (currentCalendarMonth > 12) {
+    currentCalendarMonth = 1;
+    currentCalendarYear++;
+  } else if (currentCalendarMonth < 1) {
+    currentCalendarMonth = 12;
+    currentCalendarYear--;
+  }
+  
+  renderCalendar();
+}
+
+// カレンダーデータを取得
+async function fetchCalendarData() {
+  try {
+    // 既存のページデータを使用
+    calendarBookingData = bookedData || {};
+    calendarClosedDates = closedDates || [];
+    calendarDisabledSlots = disabledSlots || {};
+    calendarTimeSlots = timeSlots || [];
+  } catch (error) {
+    console.error('カレンダーデータ取得エラー:', error);
+  }
+}
+
+// カレンダーを描画
+function renderCalendar() {
+  const year = currentCalendarYear;
+  const month = currentCalendarMonth;
+  
+  // 月のタイトル
+  document.getElementById('currentMonth').textContent = `${year}年${month}月`;
+  
+  // カレンダーグリッド
+  const firstDay = new Date(year, month - 1, 1).getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  let html = '<table class="calendar-table"><thead><tr>';
+  const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+  weekdays.forEach(day => {
+    html += `<th>${day}</th>`;
+  });
+  html += '</tr></thead><tbody><tr>';
+  
+  // 最初の週の空白
+  for (let i = 0; i < firstDay; i++) {
+    html += '<td></td>';
+  }
+  
+  // 各日付
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const currentDate = new Date(year, month - 1, day);
+    const isPast = currentDate < today;
+    
+    // ステータスを判定
+    const status = getDateStatus(dateStr, isPast);
+    
+    // セルのクラス
+    let cellClass = 'calendar-day';
+    if (isPast) cellClass += ' past';
+    if (status.isClosed) cellClass += ' disabled';
+    
+    html += `<td><button class="${cellClass}" onclick="showDayDetails('${dateStr}', ${isPast}, ${status.isClosed})">`;
+    html += `<div class="day-number">${day}</div>`;
+    
+    // ステータスインジケーター
+    if (!isPast && !status.isClosed) {
+      html += `<div class="status-indicator status-${status.statusClass}"></div>`;
+    } else if (status.isClosed) {
+      html += `<div class="status-indicator status-closed"></div>`;
+    }
+    
+    html += '</button></td>';
+    
+    // 土曜日で改行
+    if ((firstDay + day) % 7 === 0 && day < daysInMonth) {
+      html += '</tr><tr>';
+    }
+  }
+  
+  // 最後の週の空白
+  const lastDay = (firstDay + daysInMonth) % 7;
+  if (lastDay !== 0) {
+    for (let i = lastDay; i < 7; i++) {
+      html += '<td></td>';
+    }
+  }
+  
+  html += '</tr></tbody></table>';
+  
+  document.getElementById('calendarGrid').innerHTML = html;
+}
+
+// 日付のステータスを取得
+function getDateStatus(dateStr, isPast) {
+  if (isPast) {
+    return { statusClass: '', isClosed: false };
+  }
+  
+  // 定休日チェック
+  if (calendarClosedDates.includes(dateStr)) {
+    return { statusClass: 'closed', isClosed: true };
+  }
+  
+  // 予約状況をチェック
+  const bookedTimes = calendarBookingData[dateStr] || [];
+  const disabledTimes = calendarDisabledSlots[dateStr] || [];
+  
+  // 利用可能な時間枠をカウント
+  let availableCount = 0;
+  let totalCount = 0;
+  
+  calendarTimeSlots.forEach(slot => {
+    totalCount++;
+    if (!bookedTimes.includes(slot.value) && !disabledTimes.includes(slot.value)) {
+      availableCount++;
+    }
+  });
+  
+  // ステータスを決定
+  if (availableCount === 0) {
+    return { statusClass: 'full', isClosed: false };
+  } else if (availableCount <= Math.floor(totalCount / 3)) {
+    return { statusClass: 'partial', isClosed: false };
+  } else {
+    return { statusClass: 'available', isClosed: false };
+  }
+}
+
+// 日付の詳細を表示
+function showDayDetails(dateStr, isPast, isClosed) {
+  const detailsDiv = document.getElementById('dayDetails');
+  const dateDiv = document.getElementById('detailDate');
+  const contentDiv = document.getElementById('detailContent');
+  
+  // 日付を表示
+  const date = new Date(dateStr + 'T00:00:00');
+  const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+  dateDiv.textContent = `${date.getMonth() + 1}月${date.getDate()}日(${weekdays[date.getDay()]})`;
+  
+  // 詳細を表示
+  let html = '';
+  
+  if (isPast) {
+    html = '<p style="color: #999;">過去の日付です</p>';
+  } else if (isClosed) {
+    html = '<p style="color: #c66; font-weight: 600;">定休日</p>';
+  } else {
+    const bookedTimes = calendarBookingData[dateStr] || [];
+    const disabledTimes = calendarDisabledSlots[dateStr] || [];
+    
+    html += '<div style="display: flex; flex-direction: column; gap: 8px;">';
+    
+    calendarTimeSlots.forEach(slot => {
+      const isBooked = bookedTimes.includes(slot.value);
+      const isDisabled = disabledTimes.includes(slot.value);
+      
+      let statusText, statusColor;
+      if (isBooked) {
+        statusText = '予約済';
+        statusColor = '#f44336';
+      } else if (isDisabled) {
+        statusText = '受付停止';
+        statusColor = '#999';
+      } else {
+        statusText = '予約可能';
+        statusColor = '#4caf50';
+      }
+      
+      html += `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: white; border-radius: 8px; border: 1px solid #e8e4dc;">
+          <span style="font-weight: 600;">${slot.label}</span>
+          <span style="color: ${statusColor}; font-weight: 600; font-size: 0.9em;">⚫ ${statusText}</span>
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+  }
+  
+  contentDiv.innerHTML = html;
+  detailsDiv.style.display = 'block';
+}
+
+// モーダル外クリックで閉じる
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('calendarModal');
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeCalendarModal();
+      }
+    });
+  }
+});
+</script>
 
   <form action="/book" method="post" onsubmit="return validateForm()">
     <div id="error-message" class="error-message"></div>
