@@ -94,14 +94,21 @@ validate_env_vars()
 # DATABASE_URLを取得（バリデーション後なので安全）
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+# ✅ FastAPI初期化
 app = FastAPI()
 
-# 許可するドメインを指定
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
+# ✅ 本番・開発問わずすべて許可したいホストをまとめる
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["saloncoeur.jp", "www.saloncoeur.jp", "*.onrender.com"]
+    allowed_hosts=[
+        "salon-booking-k54d.onrender.com",  # RenderのURL
+        "*.onrender.com",
+        "salon-coeur.jp",
+        "www.salon-coeur.jp",
+        "localhost"  # 開発用
+    ]
 )
 security = HTTPBasic()
 
@@ -112,7 +119,6 @@ IS_PRODUCTION = ENVIRONMENT == "production"
 # 本番環境の場合、信頼できるホストのみ許可
 if IS_PRODUCTION:
     app.add_middleware(
-        TrustedHostMiddleware,
         allowed_hosts=[
             "salon-booking-k54d.onrender.com",
             "*.onrender.com",
