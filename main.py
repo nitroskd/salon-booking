@@ -97,16 +97,14 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 # ✅ FastAPI初期化
 app = FastAPI()
 
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
-
 # ✅ 本番・開発問わずすべて許可したいホストをまとめる
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=[
         "salon-booking-k54d.onrender.com",  # RenderのURL
         "*.onrender.com",
-        "salon-coeur.jp",
-        "www.salon-coeur.jp",
+        "salon-couer.jp",
+        "www.salon-couer.jp",
         "localhost"  # 開発用
     ]
 )
