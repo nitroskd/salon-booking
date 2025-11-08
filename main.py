@@ -95,6 +95,14 @@ validate_env_vars()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 app = FastAPI()
+
+# 許可するドメインを指定
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["saloncoeur.jp", "www.saloncoeur.jp", "*.onrender.com"]
+)
 security = HTTPBasic()
 
 # 環境変数から設定を取得
