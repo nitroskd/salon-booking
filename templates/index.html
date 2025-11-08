@@ -194,6 +194,8 @@
     <a href="/home" class="back-link">← ホームに戻る</a>
   </div>
 
+<!-- index.html の<form>タグの直前に追加 -->
+
 <!-- 予約状況確認ボタン -->
 <div style="max-width: 500px; margin: 0 auto 20px; text-align: center;">
   <button type="button" onclick="openCalendarModal()" style="
@@ -258,38 +260,48 @@
     </div>
 
     <!-- 月切り替え -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px;">
-      <button onclick="changeMonth(-1)" style="
-        padding: 10px 18px;
-        background: #a3b18a;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 0.95em;
-        font-weight: 500;
-        white-space: nowrap;
-        flex-shrink: 0;
-      ">◀ 前月</button>
-      <div id="currentMonth" style="
-        font-size: 1.15em;
-        font-weight: 600;
-        color: #6a8f66;
-        text-align: center;
-        flex-grow: 1;
-      "></div>
-      <button onclick="changeMonth(1)" style="
-        padding: 10px 18px;
-        background: #a3b18a;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 0.95em;
-        font-weight: 500;
-        white-space: nowrap;
-        flex-shrink: 0;
-      ">次月 ▶</button>
+    <div style="margin-bottom: 15px;">
+      <!-- 年月表示 -->
+      <div style="text-align: center; margin-bottom: 12px;">
+        <div id="currentYear" style="
+          font-size: 1.1em;
+          font-weight: 600;
+          color: #6a8f66;
+          line-height: 1.3;
+        "></div>
+        <div id="currentMonth" style="
+          font-size: 1.3em;
+          font-weight: 700;
+          color: #6a8f66;
+          line-height: 1.3;
+        "></div>
+      </div>
+      
+      <!-- 切り替えボタン -->
+      <div style="display: flex; justify-content: center; gap: 15px;">
+        <button onclick="changeMonth(-1)" style="
+          padding: 10px 24px;
+          background: #a3b18a;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 0.95em;
+          font-weight: 500;
+          min-width: 100px;
+        ">◀ 前月</button>
+        <button onclick="changeMonth(1)" style="
+          padding: 10px 24px;
+          background: #a3b18a;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 0.95em;
+          font-weight: 500;
+          min-width: 100px;
+        ">次月 ▶</button>
+      </div>
     </div>
 
     <!-- 凡例 -->
@@ -385,13 +397,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   cursor: pointer;
   transition: 0.2s;
   background: white;
   border: none;
   font-family: 'Noto Sans JP', sans-serif;
-  padding: 6px 4px;
+  padding: 8px 4px 4px 4px;
   position: relative;
   border-radius: 4px;
 }
@@ -415,8 +427,9 @@
 .calendar-day .day-number {
   font-size: 1.1em;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   color: #333;
+  line-height: 1;
 }
 
 .calendar-day.past .day-number {
@@ -433,14 +446,17 @@
   font-size: 0.7em;
   font-weight: 700;
   color: white;
-  margin-top: 2px;
+  margin-top: 4px;
+  flex-shrink: 0;
 }
 
 .calendar-day .available-count {
   font-size: 0.65em;
   color: #666;
-  margin-top: 2px;
+  margin-top: 3px;
   font-weight: 500;
+  line-height: 1;
+  min-height: 12px;
 }
 
 .status-available {
@@ -463,7 +479,7 @@
   box-shadow: 0 2px 6px rgba(148, 163, 184, 0.3);
 }
 
-@media (max-width: 480px) {
+  @media (max-width: 480px) {
   .calendar-table th {
     padding: 6px 2px;
     font-size: 0.75em;
@@ -475,21 +491,25 @@
   }
   
   .calendar-day {
-    padding: 4px 2px;
+    padding: 6px 2px 4px 2px;
   }
   
   .calendar-day .day-number {
     font-size: 1em;
+    margin-bottom: 4px;
   }
   
   .calendar-day .status-badge {
     width: 24px;
     height: 24px;
     font-size: 0.65em;
+    margin-top: 3px;
   }
   
   .calendar-day .available-count {
     font-size: 0.6em;
+    margin-top: 2px;
+    min-height: 10px;
   }
 }
 </style>
@@ -553,7 +573,8 @@ function renderCalendar() {
   const year = currentCalendarYear;
   const month = currentCalendarMonth;
   
-  document.getElementById('currentMonth').textContent = `${year}年${month}月`;
+  document.getElementById('currentYear').textContent = `${year}年`;
+  document.getElementById('currentMonth').textContent = `${month}月`;
   
   const firstDay = new Date(year, month - 1, 1).getDay();
   const daysInMonth = new Date(year, month, 0).getDate();
