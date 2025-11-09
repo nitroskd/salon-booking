@@ -694,7 +694,7 @@ def init_db():
                 print(f"カラム追加スキップ: {e}")
                             
             # デフォルトカテゴリーを追加
-            default_categories = ['スキンケア', 'アロマ', 'ヘアケア', 'ボディケア']
+            default_categories = ['スキンケア']
             for idx, cat in enumerate(default_categories):
                 try:
                     c.execute("""
