@@ -976,8 +976,8 @@ def read_form(request: Request):
                     ORDER BY display_order, slot_time
                 """)
                 available_slots = c.fetchall()
-
-                 # サービス一覧を取得（データベースから）
+                
+                # サービス一覧を取得
                 c.execute("""
                     SELECT id, service_name, description, price, duration, icon, is_popular
                     FROM services
@@ -1024,7 +1024,7 @@ def read_form(request: Request):
             "booked": booked_dict,
             "closed_dates": closed_dates,
             "disabled_slots": disabled_slots,
-            "time_slots": time_slots
+            "time_slots": time_slots,
             "services": services
         })
     except Exception as e:
@@ -1041,7 +1041,7 @@ def read_form(request: Request):
                 {"value": "10:00", "label": "10:00"},
                 {"value": "14:00", "label": "14:00"},
                 {"value": "17:00", "label": "17:00"}
-            ]
+            ],
             "services": []
         })
 
