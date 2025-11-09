@@ -797,22 +797,30 @@ window.addEventListener('click', function(e) {
       <!-- 隠しフィールド（実際の送信値） -->
       <input type="hidden" name="service_name" id="service_name_hidden" required>
       
-      <!-- 表示用ボタン -->
-      <button type="button" onclick="openServiceModal()" id="service_display_btn" style="
-        width: 100%;
-        padding: 14px;
-        border: 1px solid #d9d6ce;
-        border-radius: 10px;
-        font-size: 16px;
-        background-color: #fcfaf4;
-        font-family: 'Noto Sans JP', sans-serif;
-        text-align: left;
-        color: #999;
-        cursor: pointer;
-        transition: 0.3s;
-      ">
-        サービスを選択してください
-      </button>
+<!-- 表示用ボタン -->
+<button
+  type="button"
+  onclick="openServiceModal()"
+  id="service_display_btn"
+  style="
+    width: 100%;
+    padding: 14px 18px;
+    border: 1.5px solid #d5d0c6;
+    border-radius: 12px;
+    font-size: 16px;
+    background-color: #fcfaf4;
+    font-family: 'Noto Sans JP', sans-serif;
+    text-align: left;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  "
+  onmouseover="this.style.backgroundColor='#f5f2ea'; this.style.boxShadow='0 3px 6px rgba(0,0,0,0.1)';"
+  onmouseout="this.style.backgroundColor='#fcfaf4'; this.style.boxShadow='0 1px 2px rgba(0,0,0,0.05)';"
+>
+  サービスを選択してください
+</button>
     </div>
 
 <!-- サービス選択モーダル -->
