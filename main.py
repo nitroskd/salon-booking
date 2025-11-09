@@ -684,7 +684,7 @@ def init_db():
                     UNIQUE(date, slot_time)
                 )
             """)
-
+            
             # servicesテーブル（サービス管理）
             c.execute("""
                 CREATE TABLE IF NOT EXISTS services (
@@ -721,23 +721,6 @@ def init_db():
                     """, (cat, idx))
                 except Exception as e:
                     print(f"デフォルトカテゴリー追加エラー: {e}")
-
-                    # デフォルトサービスを追加
-            c.execute("SELECT COUNT(*) FROM services")
-            if c.fetchone()[0] == 0:
-                default_services = [
-                    ('シミケア', 'お肌のシミを集中ケア。美白効果の高いトリートメントで透明感のある肌へ。', 8000, '60分', '✨', True, 1),
-                    ('フェイシャルWAX', '顔の産毛を丁寧に除去。ワントーン明るい透明肌に仕上げます。', 5000, '40分', '💆', False, 2),
-                    ('脳洗浄', 'ヘッドスパで頭皮と心をリフレッシュ。深いリラクゼーションを体験。', 7000, '50分', '🧘', True, 3),
-                    ('ピーリング', '古い角質を優しく除去し、つるんとしたなめらか肌へ導きます。', 6000, '45分', '🌟', False, 4),
-                    ('ハーブサウナ', '天然ハーブの蒸気で全身デトックス。代謝アップと美肌効果。', 9000, '70分', '🌿', False, 5)
-                ]
-                
-                for service in default_services:
-                    c.execute("""
-                        INSERT INTO services (service_name, description, price, duration, icon, is_popular, display_order)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    """, service)
                
             # デフォルト予約時間枠を追加
             default_slots = [
@@ -755,6 +738,23 @@ def init_db():
                 except Exception as e:
                     print(f"デフォルト時間枠追加エラー: {e}")
             
+            # デフォルトサービスを追加
+            c.execute("SELECT COUNT(*) FROM services")
+            if c.fetchone()[0] == 0:
+                default_services = [
+                    ('シミケア', 'お肌のシミを集中ケア。美白効果の高いトリートメントで透明感のある肌へ。', 8000, '60分', '✨', True, 1),
+                    ('フェイシャルWAX', '顔の産毛を丁寧に除去。ワントーン明るい透明肌に仕上げます。', 5000, '40分', '💆', False, 2),
+                    ('脳洗浄', 'ヘッドスパで頭皮と心をリフレッシュ。深いリラクゼーションを体験。', 7000, '50分', '🧘', True, 3),
+                    ('ピーリング', '古い角質を優しく除去し、つるんとしたなめらか肌へ導きます。', 6000, '45分', '🌟', False, 4),
+                    ('ハーブサウナ', '天然ハーブの蒸気で全身デトックス。代謝アップと美肌効果。', 9000, '70分', '🌿', False, 5)
+                ]
+                
+                for service in default_services:
+                    c.execute("""
+                        INSERT INTO services (service_name, description, price, duration, icon, is_popular, display_order)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """, service)
+            
             # インデックス作成
             c.execute("CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(booking_date)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_reminders_date ON reminders(booking_date)")
@@ -762,10 +762,6 @@ def init_db():
             c.execute("CREATE INDEX IF NOT EXISTS idx_slot_availability_date ON slot_availability(date)")
             try:
                 c.execute("CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)")
-            except:
-                pass
-
-             try:
                 c.execute("CREATE INDEX IF NOT EXISTS idx_services_active ON services(is_active)")
                 c.execute("CREATE INDEX IF NOT EXISTS idx_services_order ON services(display_order)")
             except:

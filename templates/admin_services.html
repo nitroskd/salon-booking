@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>サービス管理 | Salon Coeur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #fefbf5;
+      color: #444;
+      padding: 15px;
+      padding-bottom: 40px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .logo {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    
+    h1 {
+      color: #6a8f66;
+      font-size: 1.6em;
+      font-weight: 500;
+      margin-bottom: 15px;
+    }
+    
+    nav {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    nav a {
+      padding: 8px 15px;
+      background: #a3b18a;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.85em;
+      transition: 0.3s;
+      white-space: nowrap;
+    }
+    
+    nav a:active {
+      transform: scale(0.98);
+    }
+    
+    .btn-logout {
+      background: #d9534f;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    
+    .add-button {
+      width: 100%;
+      max-width: 300px;
+      padding: 14px;
+      background: #6a8f66;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 500;
+      margin: 0 auto 20px;
+      display: block;
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    
+    .add-button:active {
+      transform: scale(0.98);
+    }
+    
+    .services-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .service-card {
+      background: #fcfaf4;
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid #e8e4dc;
+      position: relative;
+    }
+    
+    .popular-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.7em;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(255, 107, 107, 0.3);
+    }
+    
+    .service-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    
+    .service-icon {
+      font-size: 2.5em;
+      flex-shrink: 0;
+    }
+    
+    .service-info {
+      flex: 1;
+    }
+    
+    .service-name {
+      font-weight: 600;
+      color: #333;
+      font-size: 1.1em;
+      margin-bottom: 4px;
+    }
+    
+    .service-meta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    
+    .service-duration {
+      background: #a3b18a;
+      color: white;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 0.75em;
+      font-weight: 600;
+    }
+    
+    .service-price {
+      color: #6a8f66;
+      font-size: 1.2em;
+      font-weight: 600;
+    }
+    
+    .service-description {
+      color: #666;
+      font-size: 0.9em;
+      line-height: 1.6;
+      margin: 8px 0;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .btn-edit, .btn-delete {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9em;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+      touch-action: manipulation;
+    }
+    
+    .btn-edit {
+      background: #5da3d5;
+      color: white;
+    }
+    
+    .btn-delete {
+      background: #d9534f;
+      color: white;
+    }
+    
+    .btn-edit:active, .btn-delete:active {
+      opacity: 0.8;
+    }
+    
+    /* モーダル */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      overflow-y: auto;
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 20px auto;
+      padding: 25px 20px;
+      border-radius: 12px;
+      width: calc(100% - 40px);
+      max-width: 500px;
+    }
+    
+    .close {
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      color: #aaa;
+      cursor: pointer;
+      line-height: 1;
+    }
+    
+    .modal h2 {
+      color: #6a8f66;
+      margin-bottom: 20px;
+      font-size: 1.3em;
+      clear: both;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #555;
+      font-size: 0.95em;
+    }
+    
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d9d6ce;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    
+    .form-group textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      transform: scale(1.3);
+      cursor: pointer;
+    }
+    
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .btn-save, .btn-cancel {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    
+    .btn-save {
+      background: #6a8f66;
+      color: white;
+    }
+    
+    .btn-cancel {
+      background: #999;
+      color: white;
+    }
+    
+    .loading, .no-data {
+      text-align: center;
+      color: #999;
+      padding: 40px;
+      font-size: 0.95em;
+    }
+    
+    footer {
+      text-align: center;
+      color: #888;
+      margin-top: 30px;
+      font-size: 0.85em;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">🌿</div>
+    <h1>サービス管理</h1>
+  </div>
+  
+  <nav>
+    <a href="/">ホーム</a>
+    <a href="/admin">予約管理</a>
+    <a href="/admin/calendar">📅 カレンダー管理</a>
+    <a href="/admin/products">商品管理</a>
+    <a href="/admin/logout" class="btn-logout">ログアウト</a>
+  </nav>
+
+  <div class="container">
+    <button class="add-button" onclick="openAddModal()">+ 新規サービス追加</button>
+    
+    <div id="services-container">
+      <div class="loading">読み込み中...</div>
+    </div>
+  </div>
+
+  <!-- モーダル -->
+  <div id="serviceModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2 id="modal-title">サービス追加</h2>
+      <form id="serviceForm">
+        <input type="hidden" id="service-id">
+        
+        <div class="form-group">
+          <label>サービス名 *</label>
+          <input type="text" id="service-name" required>
+        </div>
+        
+        <div class="form-group">
+          <label>アイコン（絵文字）*</label>
+          <input type="text" id="service-icon" value="💆" required maxlength="2" placeholder="💆">
+          <small style="color: #888; font-size: 0.85em;">
+            例: ✨ 💆 🧘 🌟 🌿
+          </small>
+        </div>
+        
+        <div class="form-group">
+          <label>価格（円）*</label>
+          <input type="number" id="service-price" min="0" step="100" required>
+        </div>
+        
+        <div class="form-group">
+          <label>所要時間</label>
+          <input type="text" id="service-duration" placeholder="例: 60分">
+        </div>
+        
+        <div class="form-group">
+          <label>説明</label>
+          <textarea id="service-description" placeholder="サービスの説明を入力"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>表示順</label>
+          <input type="number" id="service-order" min="0" value="0">
+          <small style="color: #888; font-size: 0.85em;">
+            数字が小さいほど上に表示されます
+          </small>
+        </div>
+        
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="service-popular">
+            <label for="service-popular" style="margin: 0; cursor: pointer;">🔥 人気サービスとして表示</label>
+          </div>
+        </div>
+        
+        <div class="modal-buttons">
+          <button type="button" class="btn-cancel" onclick="closeModal()">キャンセル</button>
+          <button type="submit" class="btn-save">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>© 2025 Salon Coeur</footer>
+
+  <script>
+    let services = [];
+
+    async function loadServices() {
+      try {
+        const response = await fetch('/services?active_only=false');
+        const data = await response.json();
+        services = data.services || [];
+        displayServices();
+      } catch (error) {
+        document.getElementById('services-container').innerHTML = 
+          '<div class="no-data">データの読み込みに失敗しました</div>';
+      }
+    }
+
+    function displayServices() {
+      const container = document.getElementById('services-container');
+      
+      if (services.length === 0) {
+        container.innerHTML = '<div class="no-data">サービスがありません</div>';
+        return;
+      }
+
+      const html = '<div class="services-list">' + services.map(s => `
+        <div class="service-card">
+          ${s.is_popular ? '<div class="popular-badge">🔥 人気</div>' : ''}
+          <div class="service-header">
+            <div class="service-icon">${s.icon}</div>
+            <div class="service-info">
+              <div class="service-name">${s.service_name}</div>
+              <div class="service-meta">
+                ${s.duration ? `<span class="service-duration">${s.duration}</span>` : ''}
+                <span class="service-price">¥${Number(s.price).toLocaleString()}</span>
+              </div>
+              ${s.description ? `<div class="service-description">${s.description}</div>` : ''}
+              <div style="font-size: 0.8em; color: #999;">表示順: ${s.display_order}</div>
+            </div>
+          </div>
+          <div class="action-buttons">
+            <button class="btn-edit" onclick="openEditModal(${s.id})">編集</button>
+            <button class="btn-delete" onclick="deleteService(${s.id}, '${s.service_name}')">削除</button>
+          </div>
+        </div>
+      `).join('') + '</div>';
+      
+      container.innerHTML = html;
+    }
+
+    function openAddModal() {
+      document.getElementById('modal-title').textContent = 'サービス追加';
+      document.getElementById('serviceForm').reset();
+      document.getElementById('service-id').value = '';
+      document.getElementById('service-icon').value = '💆';
+      document.getElementById('service-order').value = '0';
+      document.getElementById('serviceModal').style.display = 'block';
+    }
+
+    function openEditModal(id) {
+      const service = services.find(s => s.id === id);
+      if (!service) return;
+
+      document.getElementById('modal-title').textContent = 'サービス編集';
+      document.getElementById('service-id').value = service.id;
+      document.getElementById('service-name').value = service.service_name;
+      document.getElementById('service-icon').value = service.icon || '💆';
+      document.getElementById('service-price').value = service.price;
+      document.getElementById('service-duration').value = service.duration || '';
+      document.getElementById('service-description').value = service.description || '';
+      document.getElementById('service-order').value = service.display_order || 0;
+      document.getElementById('service-popular').checked = service.is_popular || false;
+      document.getElementById('serviceModal').style.display = 'block';
+    }
+
+    function closeModal() {
+      document.getElementById('serviceModal').style.display = 'none';
+    }
+
+    document.getElementById('serviceForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const id = document.getElementById('service-id').value;
+      const data = {
+        service_name: document.getElementById('service-name').value,
+        icon: document.getElementById('service-icon').value,
+        price: parseFloat(document.getElementById('service-price').value),
+        duration: document.getElementById('service-duration').value,
+        description: document.getElementById('service-description').value,
+        display_order: parseInt(document.getElementById('service-order').value),
+        is_popular: document.getElementById('service-popular').checked
+      };
+
+      try {
+        const url = id ? `/admin/services/${id}` : '/admin/services';
+        const method = id ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          closeModal();
+          loadServices();
+          alert(id ? 'サービスを更新しました' : 'サービスを追加しました');
+        } else if (response.status === 401) {
+          alert('セッションが切れました。再度ログインしてください。');
+          window.location.href = '/admin/login';
+        } else {
+          alert('エラーが発生しました');
+        }
+      } catch (error) {
+        alert('エラーが発生しました');
+      }
+    });
+
+    async function deleteService(id, name) {
+      if (!confirm(`「${name}」を削除しますか?`)) return;
+
+      try {
+        const response = await fetch(`/admin/services/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+          loadServices();
+          alert('サービスを削除しました');
+        } else if (response.status === 401) {
+          alert('セッションが切れました。再度ログインしてください。');
+          window.location.href = '/admin/login';
+        } else {
+          alert('削除に失敗しました');
+        }
+      } catch (error) {
+        alert('エラーが発生しました');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadServices);
+    
+    window.onclick = function(event) {
+      const modal = document.getElementById('serviceModal');
+      if (event.target == modal) closeModal();
+    }
+  </script>
+</body>
+</html>
