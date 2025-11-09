@@ -834,12 +834,18 @@ async def admin_logout(response: Response, session_token: str = Cookie(None)):
 
 # ========== ページ表示のエンドポイント ==========
 
-@app.get("/home", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse)
 def home_page(request: Request):
-    """ホームページを表示"""
+    """ホームページを表示（トップページ）"""
     track_page_view('home')
     return templates.TemplateResponse("home.html", {"request": request})
 
+@app.get("/home", response_class=HTMLResponse)
+def home_page_redirect(request: Request):
+    """/home でもホームページを表示"""
+    track_page_view('home')
+    return templates.TemplateResponse("home.html", {"request": request})
+    
 @app.get("/shop", response_class=HTMLResponse)
 def shop_page(request: Request):
     """商品一覧ページを表示"""
@@ -894,9 +900,9 @@ def complete_page(request: Request, customer_name: str = "", phone_number: str =
         "notes": notes
     })
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/booking", response_class=HTMLResponse)
 def read_form(request: Request):
-    """予約フォームを表示（カレンダー設定反映版）"""
+    """予約フォームを表示（/booking に移動）"""
     track_page_view('booking_form')
     
     try:
