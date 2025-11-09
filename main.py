@@ -684,6 +684,23 @@ def init_db():
                     UNIQUE(date, slot_time)
                 )
             """)
+
+            # servicesテーブル（サービス管理）
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS services (
+                    id SERIAL PRIMARY KEY,
+                    service_name VARCHAR(100) NOT NULL,
+                    description TEXT,
+                    price DECIMAL(10, 2) NOT NULL,
+                    duration VARCHAR(20),
+                    icon VARCHAR(10) DEFAULT '💆',
+                    is_popular BOOLEAN DEFAULT FALSE,
+                    display_order INTEGER DEFAULT 0,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
             
             # 既存テーブルにカラム追加
             try:
@@ -704,6 +721,23 @@ def init_db():
                     """, (cat, idx))
                 except Exception as e:
                     print(f"デフォルトカテゴリー追加エラー: {e}")
+
+                    # デフォルトサービスを追加
+            c.execute("SELECT COUNT(*) FROM services")
+            if c.fetchone()[0] == 0:
+                default_services = [
+                    ('シミケア', 'お肌のシミを集中ケア。美白効果の高いトリートメントで透明感のある肌へ。', 8000, '60分', '✨', True, 1),
+                    ('フェイシャルWAX', '顔の産毛を丁寧に除去。ワントーン明るい透明肌に仕上げます。', 5000, '40分', '💆', False, 2),
+                    ('脳洗浄', 'ヘッドスパで頭皮と心をリフレッシュ。深いリラクゼーションを体験。', 7000, '50分', '🧘', True, 3),
+                    ('ピーリング', '古い角質を優しく除去し、つるんとしたなめらか肌へ導きます。', 6000, '45分', '🌟', False, 4),
+                    ('ハーブサウナ', '天然ハーブの蒸気で全身デトックス。代謝アップと美肌効果。', 9000, '70分', '🌿', False, 5)
+                ]
+                
+                for service in default_services:
+                    c.execute("""
+                        INSERT INTO services (service_name, description, price, duration, icon, is_popular, display_order)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """, service)
                
             # デフォルト予約時間枠を追加
             default_slots = [
@@ -728,6 +762,12 @@ def init_db():
             c.execute("CREATE INDEX IF NOT EXISTS idx_slot_availability_date ON slot_availability(date)")
             try:
                 c.execute("CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)")
+            except:
+                pass
+
+             try:
+                c.execute("CREATE INDEX IF NOT EXISTS idx_services_active ON services(is_active)")
+                c.execute("CREATE INDEX IF NOT EXISTS idx_services_order ON services(display_order)")
             except:
                 pass
             
@@ -940,6 +980,15 @@ def read_form(request: Request):
                     ORDER BY display_order, slot_time
                 """)
                 available_slots = c.fetchall()
+
+                 # サービス一覧を取得（データベースから）
+                c.execute("""
+                    SELECT id, service_name, description, price, duration, icon, is_popular
+                    FROM services
+                    WHERE is_active = TRUE
+                    ORDER BY display_order, service_name
+                """)
+                services = c.fetchall()
         
         # 予約済み時間を辞書形式に変換
         booked_dict = {}
@@ -980,6 +1029,7 @@ def read_form(request: Request):
             "closed_dates": closed_dates,
             "disabled_slots": disabled_slots,
             "time_slots": time_slots
+            "services": services
         })
     except Exception as e:
         print(f"予約フォーム表示エラー: {e}")
@@ -996,6 +1046,7 @@ def read_form(request: Request):
                 {"value": "14:00", "label": "14:00"},
                 {"value": "17:00", "label": "17:00"}
             ]
+            "services": []
         })
 
 @app.get("/admin/services", response_class=HTMLResponse)
@@ -1511,6 +1562,110 @@ async def set_reminder(request: Request):
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+# ========== サービス管理API ==========
+
+@app.get("/services")
+def get_services(active_only: bool = True):
+    """サービス一覧を取得"""
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as c:
+            if active_only:
+                c.execute("""
+                    SELECT * FROM services 
+                    WHERE is_active = TRUE
+                    ORDER BY display_order, service_name
+                """)
+            else:
+                c.execute("SELECT * FROM services ORDER BY display_order, service_name")
+            services = c.fetchall()
+    return {"services": services}
+
+@app.post("/admin/services")
+async def create_service(request: Request, session_token: str = Cookie(None)):
+    """サービスを追加（管理者用）"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
+    try:
+        data = await request.json()
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("""
+                    INSERT INTO services (service_name, description, price, duration, icon, is_popular, display_order)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id
+                """, (
+                    data['service_name'],
+                    data.get('description', ''),
+                    data['price'],
+                    data.get('duration', ''),
+                    data.get('icon', '💆'),
+                    data.get('is_popular', False),
+                    data.get('display_order', 0)
+                ))
+                service_id = c.fetchone()[0]
+                conn.commit()
+        
+        return {"success": True, "id": service_id, "message": "サービスを追加しました"}
+    except Exception as e:
+        print(f"サービス追加エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.put("/admin/services/{service_id}")
+async def update_service(service_id: int, request: Request, session_token: str = Cookie(None)):
+    """サービスを更新（管理者用）"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
+    try:
+        data = await request.json()
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("""
+                    UPDATE services 
+                    SET service_name=%s, description=%s, price=%s, duration=%s, 
+                        icon=%s, is_popular=%s, display_order=%s, updated_at=CURRENT_TIMESTAMP
+                    WHERE id=%s
+                """, (
+                    data['service_name'],
+                    data.get('description', ''),
+                    data['price'],
+                    data.get('duration', ''),
+                    data.get('icon', '💆'),
+                    data.get('is_popular', False),
+                    data.get('display_order', 0),
+                    service_id
+                ))
+                conn.commit()
+        
+        return {"success": True, "message": "サービスを更新しました"}
+    except Exception as e:
+        print(f"サービス更新エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.delete("/admin/services/{service_id}")
+async def delete_service(service_id: int, session_token: str = Cookie(None)):
+    """サービスを削除（管理者用）"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("DELETE FROM services WHERE id = %s", (service_id,))
+                conn.commit()
+        
+        return {"success": True, "message": "サービスを削除しました"}
+    except Exception as e:
+        print(f"サービス削除エラー: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    
 # ========== Ontime robot API ==========
 
 @app.get("/", include_in_schema=False)
