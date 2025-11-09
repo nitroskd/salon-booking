@@ -636,19 +636,12 @@
 
 function formatDateTime(dateTimeStr) {
   if (!dateTimeStr) return '';
-  
-  // UTCとして解釈してJSTに変換
-  const dt = new Date(dateTimeStr + 'Z'); // Zを付けてUTCとして扱う
-  
-  // 日本時間に変換
-    const jstDate = new Date(dt.getTime();
-  
-  const year = jstDate.getFullYear();
-  const month = String(jstDate.getMonth() + 1).padStart(2, '0');
-  const day = String(jstDate.getDate()).padStart(2, '0');
-  const hours = String(jstDate.getHours()).padStart(2, '0');
-  const minutes = String(jstDate.getMinutes()).padStart(2, '0');
-  
+  const dt = new Date(dateTimeStr);
+  const year = dt.getFullYear();
+  const month = String(dt.getMonth() + 1).padStart(2, '0');
+  const day = String(dt.getDate()).padStart(2, '0');
+  const hours = String(dt.getHours()).padStart(2, '0');
+  const minutes = String(dt.getMinutes()).padStart(2, '0');
   return `${year}/${month}/${day} ${hours}:${minutes}`;
 }
 
