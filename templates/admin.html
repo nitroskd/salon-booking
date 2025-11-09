@@ -641,7 +641,7 @@ function formatDateTime(dateTimeStr) {
   const dt = new Date(dateTimeStr + 'Z'); // Zを付けてUTCとして扱う
   
   // 日本時間に変換
-  const jstDate = new Date(dt.getTime() + (9 * 60 * 60 * 1000));
+    const jstDate = new Date(dt.getTime();
   
   const year = jstDate.getFullYear();
   const month = String(jstDate.getMonth() + 1).padStart(2, '0');
