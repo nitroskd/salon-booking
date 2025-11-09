@@ -998,6 +998,13 @@ def read_form(request: Request):
             ]
         })
 
+@app.get("/admin/services", response_class=HTMLResponse)
+async def admin_services_page(request: Request, session_token: str = Cookie(None)):
+    """管理画面 - サービス管理ページを表示"""
+    if not verify_admin_session(session_token):
+        return RedirectResponse(url="/admin/login", status_code=303)
+    return templates.TemplateResponse("admin_services.html", {"request": request})
+    
 # ========== 予約時間枠管理API ==========
 
 @app.get("/available-slots")
