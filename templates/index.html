@@ -789,17 +789,244 @@ window.addEventListener('click', function(e) {
       <input type="tel" name="phone_number" placeholder="090-1234-5678" pattern="[0-9\-]+" required>
     </div>
 
+<!-- index.html のサービス選択部分を以下に置き換え -->
+
     <div class="form-group">
       <label>サービス内容 *</label>
-      <select name="service_name" required>
-        <option value="">選択してください</option>
-        <option value="シミケア">シミケア</option>
-        <option value="フェイシャルWAX">フェイシャルWAX</option>
-        <option value="脳洗浄">脳洗浄</option>
-        <option value="ピーリング">ピーリング</option>
-        <option value="ハーブサウナ">ハーブサウナ</option>
-      </select>
+      
+      <!-- 隠しフィールド（実際の送信値） -->
+      <input type="hidden" name="service_name" id="service_name_hidden" required>
+      
+      <!-- 表示用ボタン -->
+      <button type="button" onclick="openServiceModal()" id="service_display_btn" style="
+        width: 100%;
+        padding: 14px;
+        border: 1px solid #d9d6ce;
+        border-radius: 10px;
+        font-size: 16px;
+        background-color: #fcfaf4;
+        font-family: 'Noto Sans JP', sans-serif;
+        text-align: left;
+        color: #999;
+        cursor: pointer;
+        transition: 0.3s;
+      ">
+        サービスを選択してください
+      </button>
     </div>
+
+<!-- サービス選択モーダル -->
+<div id="serviceModal" style="
+  display: none;
+  position: fixed;
+  z-index: 3000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.7);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+">
+  <div style="
+    background: white;
+    margin: 20px auto;
+    padding: 25px 20px;
+    border-radius: 16px;
+    max-width: 700px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+  ">
+    <!-- ヘッダー -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: sticky; top: 0; background: white; z-index: 1; padding-bottom: 10px; border-bottom: 2px solid #e8e4dc;">
+      <h2 style="color: #6a8f66; font-size: 1.4em; margin: 0;">💆 サービスを選択</h2>
+      <span onclick="closeServiceModal()" style="
+        font-size: 32px;
+        font-weight: bold;
+        color: #999;
+        cursor: pointer;
+        line-height: 1;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: 0.2s;
+      ">&times;</span>
+    </div>
+
+    <!-- サービス一覧 -->
+    <div id="serviceList" style="display: flex; flex-direction: column; gap: 15px;">
+      {% for service in services %}
+      <div class="service-card" onclick="selectService('{{ service.service_name }}', {{ service.price }})" style="
+        background: linear-gradient(135deg, #fcfaf4 0%, #f8f6f2 100%);
+        border: 2px solid #e8e4dc;
+        border-radius: 12px;
+        padding: 20px;
+        cursor: pointer;
+        transition: 0.3s;
+        position: relative;
+        overflow: hidden;
+      ">
+        {% if service.is_popular %}
+        <!-- 人気バッジ -->
+        <div style="
+          position: absolute;
+          top: 12px;
+          right: 12px;
+          background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+          color: white;
+          padding: 5px 12px;
+          border-radius: 20px;
+          font-size: 0.75em;
+          font-weight: 700;
+          box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+          z-index: 2;
+        ">🔥 人気</div>
+        {% endif %}
+        
+        <!-- アイコン背景 -->
+        <div style="
+          position: absolute;
+          right: -20px;
+          top: -20px;
+          font-size: 120px;
+          opacity: 0.05;
+        ">{{ service.icon }}</div>
+        
+        <!-- コンテンツ -->
+        <div style="position: relative; z-index: 1;">
+          <!-- ヘッダー -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="font-size: 2em;">{{ service.icon }}</div>
+              <div>
+                <h3 style="color: #6a8f66; font-size: 1.2em; margin: 0 0 4px 0; font-weight: 600;">
+                  {{ service.service_name }}
+                </h3>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  {% if service.duration %}
+                  <span style="
+                    background: #a3b18a;
+                    color: white;
+                    padding: 3px 10px;
+                    border-radius: 12px;
+                    font-size: 0.75em;
+                    font-weight: 600;
+                  ">{{ service.duration }}</span>
+                  {% endif %}
+                  <span style="
+                    color: #6a8f66;
+                    font-size: 1.3em;
+                    font-weight: 700;
+                  ">¥{{ "{:,}".format(service.price|int) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 説明 -->
+          {% if service.description %}
+          <p style="
+            color: #666;
+            line-height: 1.7;
+            font-size: 0.95em;
+            margin: 0;
+          ">{{ service.description }}</p>
+          {% endif %}
+          
+          <!-- 選択アイコン -->
+          <div style="
+            margin-top: 12px;
+            text-align: right;
+            color: #a3b18a;
+            font-size: 0.9em;
+            font-weight: 600;
+          ">選択する →</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<style>
+.service-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(106, 143, 102, 0.2);
+  border-color: #a3b18a;
+}
+
+.service-card:active {
+  transform: translateY(-1px);
+}
+
+#service_display_btn.selected {
+  border-color: #a3b18a;
+  background: #f0f8f0;
+  color: #333;
+  font-weight: 500;
+}
+
+@media (max-width: 480px) {
+  .service-card {
+    padding: 16px;
+  }
+  
+  .service-card h3 {
+    font-size: 1.1em;
+  }
+  
+  .service-card p {
+    font-size: 0.9em;
+  }
+}
+</style>
+
+<script>
+let selectedServiceName = '';
+let selectedServicePrice = 0;
+
+// サービスモーダルを開く
+function openServiceModal() {
+  document.getElementById('serviceModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+// サービスモーダルを閉じる
+function closeServiceModal() {
+  document.getElementById('serviceModal').style.display = 'none';
+  document.body.style.overflow = 'auto';
+}
+
+// サービスを選択
+function selectService(serviceName, servicePrice) {
+  selectedServiceName = serviceName;
+  selectedServicePrice = servicePrice;
+  
+  // 隠しフィールドに値を設定
+  document.getElementById('service_name_hidden').value = serviceName;
+  
+  // 表示ボタンのテキストを更新
+  const displayBtn = document.getElementById('service_display_btn');
+  displayBtn.textContent = `${serviceName} - ¥${servicePrice.toLocaleString()}`;
+  displayBtn.classList.add('selected');
+  displayBtn.style.color = '#333';
+  
+  // モーダルを閉じる
+  closeServiceModal();
+}
+
+// モーダル外クリックで閉じる
+window.addEventListener('click', function(e) {
+  const modal = document.getElementById('serviceModal');
+  if (e.target === modal) {
+    closeServiceModal();
+  }
+});
+</script>
 
     <div class="form-group">
       <label>予約日 *</label>
