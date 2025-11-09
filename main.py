@@ -573,19 +573,19 @@ def init_db():
     with get_db_connection() as conn:
         with conn.cursor() as c:
             # bookingsテーブル
-            c.execute("""
-                CREATE TABLE IF NOT EXISTS bookings (
-                    id SERIAL PRIMARY KEY,
-                    customer_name VARCHAR(100) NOT NULL,
-                    phone_number VARCHAR(20) NOT NULL,
-                    service_name VARCHAR(100) NOT NULL,
-                    booking_date DATE NOT NULL,
-                    booking_time TIME NOT NULL,
-                    notes TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    UNIQUE(booking_date, booking_time)
-                )
-            """)
+c.execute("""
+    CREATE TABLE IF NOT EXISTS bookings (
+        id SERIAL PRIMARY KEY,
+        customer_name VARCHAR(100) NOT NULL,
+        phone_number VARCHAR(20) NOT NULL,
+        service_name VARCHAR(100) NOT NULL,
+        booking_date DATE NOT NULL,
+        booking_time TIME NOT NULL,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Tokyo'),
+        UNIQUE(booking_date, booking_time)
+    )
+""")
             
             # productsテーブル
             c.execute("""
