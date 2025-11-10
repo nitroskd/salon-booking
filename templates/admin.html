@@ -440,7 +440,7 @@
   </div>
   
   <nav>
-    <a href="/">ホーム</a>
+    <a href="/home">ホーム</a>
     <a href="/admin/calendar" class="btn-calendar">📅 カレンダー管理</a>
     <a href="/admin/services">サービス管理</a>
     <a href="/admin/products">商品管理</a>
@@ -634,39 +634,26 @@
       });
     }
 
-function formatDateTime(dateTimeStr) {
-  if (!dateTimeStr) return '';
-  
-  try {
-    // PostgreSQLから返されるタイムスタンプ（UTC）を解析
-    const dt = new Date(dateTimeStr);
-    
-    // 日本時間（JST = UTC+9）に変換
-    const options = {
-      timeZone: 'Asia/Tokyo',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    };
-    
-    const formatter = new Intl.DateTimeFormat('ja-JP', options);
-    const parts = formatter.formatToParts(dt);
-    
-    const year = parts.find(p => p.type === 'year').value;
-    const month = parts.find(p => p.type === 'month').value;
-    const day = parts.find(p => p.type === 'day').value;
-    const hour = parts.find(p => p.type === 'hour').value;
-    const minute = parts.find(p => p.type === 'minute').value;
-    
-    return `${year}/${month}/${day} ${hour}:${minute}`;
-  } catch (error) {
-    console.error('日時変換エラー:', error);
-    return dateTimeStr;
-  }
-}
+    function formatDateTime(dateTimeStr) {
+      if (!dateTimeStr) return '';
+      
+      try {
+        // PostgreSQLからのタイムスタンプを日本時間として解釈
+        // データベースが日本時間で保存しているため、直接パースする
+        const dt = new Date(dateTimeStr);
+        
+        const year = dt.getFullYear();
+        const month = String(dt.getMonth() + 1).padStart(2, '0');
+        const day = String(dt.getDate()).padStart(2, '0');
+        const hour = String(dt.getHours()).padStart(2, '0');
+        const minute = String(dt.getMinutes()).padStart(2, '0');
+        
+        return `${year}/${month}/${day} ${hour}:${minute}`;
+      } catch (error) {
+        console.error('日時変換エラー:', error);
+        return dateTimeStr;
+      }
+    }
 
     function displayBookings() {
       const container = document.getElementById('bookings-container');
