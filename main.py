@@ -524,15 +524,6 @@ def send_line_notification(booking_data):
         traceback.print_exc()
         return False
 
-@contextmanager
-def get_db_connection():
-    """データベース接続を安全に管理"""
-    conn = psycopg2.connect(DATABASE_URL)
-    try:
-        yield conn
-    finally:
-        conn.close()
-
 def track_page_view(page_name: str):
     """ページビューを記録"""
     try:
@@ -1242,6 +1233,8 @@ async def delete_time_slot(slot_id: int, session_token: str = Cookie(None)):
 
 # ========== 予約API（ユーザー用） ==========
 
+# ========== /book エンドポイントの修正版 ==========
+
 @app.post("/book")
 @limiter.limit("10/minute")  # 1分間に10回まで
 def book_service(
@@ -1257,8 +1250,8 @@ def book_service(
     try:
         # 現在の日本時間を取得
         created_at = get_jst_now()
-    
-    with get_db_connection() as conn:
+        
+        with get_db_connection() as conn:
             with conn.cursor() as c:
                 c.execute("SELECT id FROM bookings WHERE booking_date = %s AND booking_time = %s",
                          (booking_date, booking_time))
@@ -1295,7 +1288,7 @@ def book_service(
         params = urlencode({'customer_name': customer_name, 'phone_number': phone_number,
                            'service_name': service_name, 'booking_date': booking_date,
                            'booking_time': booking_time, 'notes': notes or ''})
-       return RedirectResponse(f"/complete?{params}", status_code=303)
+        return RedirectResponse(f"/complete?{params}", status_code=303)
     except Exception as e:
         print(f"予約エラー: {e}")
         import traceback
