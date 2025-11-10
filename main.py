@@ -572,7 +572,7 @@ def init_db():
     """データベースとテーブルを初期化"""
     with get_db_connection() as conn:
         with conn.cursor() as c:
-            # bookingsテーブル
+            # bookingsテーブル - created_atを日本時間で保存
             c.execute("""
                 CREATE TABLE IF NOT EXISTS bookings (
                     id SERIAL PRIMARY KEY,
@@ -582,7 +582,7 @@ def init_db():
                     booking_date DATE NOT NULL,
                     booking_time TIME NOT NULL,
                     notes TEXT,
-                    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Tokyo'),
+                    created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'Asia/Tokyo'),
                     UNIQUE(booking_date, booking_time)
                 )
             """)
@@ -600,8 +600,8 @@ def init_db():
                     stock_quantity INTEGER DEFAULT 0,
                     image_data TEXT,
                     is_active BOOLEAN DEFAULT TRUE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'Asia/Tokyo'),
+                    updated_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'Asia/Tokyo')
                 )
             """)
             
@@ -611,7 +611,7 @@ def init_db():
                     id SERIAL PRIMARY KEY,
                     category_name VARCHAR(50) UNIQUE NOT NULL,
                     display_order INTEGER DEFAULT 0,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'Asia/Tokyo')
                 )
             """)
             
@@ -620,7 +620,7 @@ def init_db():
                 CREATE TABLE IF NOT EXISTS brands (
                     id SERIAL PRIMARY KEY,
                     brand_name VARCHAR(100) UNIQUE NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'Asia/Tokyo')
                 )
             """)
             
@@ -634,7 +634,7 @@ def init_db():
                     customer_name VARCHAR(100) NOT NULL,
                     service_name VARCHAR(100) NOT NULL,
                     sent BOOLEAN DEFAULT FALSE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'Asia/Tokyo')
                 )
             """)
             
@@ -645,7 +645,7 @@ def init_db():
                     page_name VARCHAR(100) NOT NULL,
                     view_date DATE NOT NULL,
                     view_count INTEGER DEFAULT 0,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'Asia/Tokyo'),
                     UNIQUE(page_name, view_date)
                 )
             """)
@@ -658,7 +658,7 @@ def init_db():
                     slot_label VARCHAR(20) NOT NULL,
                     is_active BOOLEAN DEFAULT TRUE,
                     display_order INTEGER DEFAULT 0,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'Asia/Tokyo')
                 )
             """)
             
@@ -668,7 +668,7 @@ def init_db():
                     id SERIAL PRIMARY KEY,
                     date DATE NOT NULL UNIQUE,
                     is_open BOOLEAN DEFAULT TRUE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'Asia/Tokyo')
                 )
             """)
             
@@ -679,8 +679,8 @@ def init_db():
                     date DATE NOT NULL,
                     slot_time TIME NOT NULL,
                     is_available BOOLEAN DEFAULT TRUE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'Asia/Tokyo'),
+                    updated_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'Asia/Tokyo'),
                     UNIQUE(date, slot_time)
                 )
             """)
@@ -697,8 +697,8 @@ def init_db():
                     is_popular BOOLEAN DEFAULT FALSE,
                     display_order INTEGER DEFAULT 0,
                     is_active BOOLEAN DEFAULT TRUE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'Asia/Tokyo'),
+                    updated_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'Asia/Tokyo')
                 )
             """)
             
