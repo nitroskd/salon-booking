@@ -98,6 +98,43 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 # ✅ FastAPI初期化
 app = FastAPI()
 
+# ========== 起動時：servicesテーブルのカラムを自動追加 ==========
+
+def get_db_connection():
+    return psycopg2.connect(DATABASE_URL, sslmode="require")
+
+try:
+    with get_db_connection() as conn:
+        with conn.cursor() as c:
+            print("🧩 カラム構成チェック中...")
+
+            # 🔸 サービス用カラム追加
+            c.execute("""
+                ALTER TABLE services 
+                ADD COLUMN IF NOT EXISTS campaign_price NUMERIC;
+            """)
+            c.execute("""
+                ALTER TABLE services 
+                ADD COLUMN IF NOT EXISTS is_campaign BOOLEAN DEFAULT false;
+            """)
+
+            # 🔸 （任意）productsにも他のカラムを補完したい場合
+            c.execute("""
+                ALTER TABLE products ADD COLUMN IF NOT EXISTS image_data TEXT;
+            """)
+            c.execute("""
+                ALTER TABLE products ADD COLUMN IF NOT EXISTS original_price DECIMAL(10, 2);
+            """)
+            c.execute("""
+                ALTER TABLE products ADD COLUMN IF NOT EXISTS brand VARCHAR(100);
+            """)
+
+            conn.commit()
+            print("✅ カラムチェック・追加完了")
+
+except Exception as e:
+    print(f"⚠️ カラム追加スキップ: {e}")
+
 # ✅ 本番・開発問わずすべて許可したいホストをまとめる
 app.add_middleware(
     TrustedHostMiddleware,
@@ -1647,28 +1684,31 @@ async def create_service(request: Request, session_token: str = Cookie(None)):
         with get_db_connection() as conn:
             with conn.cursor() as c:
                 c.execute("""
-                    INSERT INTO services (service_name, description, price, duration, icon, is_popular, display_order)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    INSERT INTO services 
+                        (service_name, description, price, campaign_price, duration, icon, is_popular, is_campaign, display_order)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                     RETURNING id
                 """, (
                     data['service_name'],
                     data.get('description', ''),
                     data['price'],
+                    data.get('campaign_price'),   # ← キャンペーン価格
                     data.get('duration', ''),
                     data.get('icon', '💆'),
                     data.get('is_popular', False),
+                    data.get('is_campaign', False),  # ← キャンペーン中フラグ
                     data.get('display_order', 0)
                 ))
                 service_id = c.fetchone()[0]
                 conn.commit()
         
         return {"success": True, "id": service_id, "message": "サービスを追加しました"}
+    
     except Exception as e:
         print(f"サービス追加エラー: {e}")
         import traceback
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
-
 
 @app.put("/admin/services/{service_id}")
 async def update_service(service_id: int, request: Request, session_token: str = Cookie(None)):
@@ -1682,28 +1722,38 @@ async def update_service(service_id: int, request: Request, session_token: str =
             with conn.cursor() as c:
                 c.execute("""
                     UPDATE services 
-                    SET service_name=%s, description=%s, price=%s, duration=%s, 
-                        icon=%s, is_popular=%s, display_order=%s, updated_at=CURRENT_TIMESTAMP
+                    SET service_name=%s,
+                        description=%s,
+                        price=%s,
+                        campaign_price=%s,
+                        duration=%s,
+                        icon=%s,
+                        is_popular=%s,
+                        is_campaign=%s,
+                        display_order=%s,
+                        updated_at=CURRENT_TIMESTAMP
                     WHERE id=%s
                 """, (
                     data['service_name'],
                     data.get('description', ''),
                     data['price'],
+                    data.get('campaign_price'),    # ← キャンペーン価格
                     data.get('duration', ''),
                     data.get('icon', '💆'),
                     data.get('is_popular', False),
+                    data.get('is_campaign', False),  # ← キャンペーン中フラグ
                     data.get('display_order', 0),
                     service_id
                 ))
                 conn.commit()
         
         return {"success": True, "message": "サービスを更新しました"}
+    
     except Exception as e:
         print(f"サービス更新エラー: {e}")
         import traceback
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
-
 
 @app.delete("/admin/services/{service_id}")
 async def delete_service(service_id: int, session_token: str = Cookie(None)):
