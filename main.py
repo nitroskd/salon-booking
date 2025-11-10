@@ -15,6 +15,7 @@ import os
 import json
 import requests
 from datetime import datetime, timedelta, date
+import pytz
 import schedule
 import threading
 import time
@@ -132,6 +133,25 @@ templates = Jinja2Templates(directory=templates_dir)
 
 # データベース接続情報
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+# 日本時間のタイムゾーンを定義
+JST = pytz.timezone('Asia/Tokyo')
+
+def get_jst_now():
+    """現在の日本時間を取得"""
+    return datetime.now(JST)
+
+@contextmanager
+def get_db_connection():
+    """データベース接続を安全に管理（日本時間設定付き）"""
+    conn = psycopg2.connect(DATABASE_URL)
+    try:
+        # 接続時に日本時間に設定
+        with conn.cursor() as c:
+            c.execute("SET TIME ZONE 'Asia/Tokyo'")
+        yield conn
+    finally:
+        conn.close()
 
 # 通知設定
 GMAIL_USER = os.getenv("GMAIL_USER")
@@ -1233,19 +1253,24 @@ def book_service(
     booking_time: str = Form(...),
     notes: str = Form(default="")
 ):
-    """予約を登録"""
-    # 既存のコード
+ """予約を登録"""
     try:
+        # 現在の日本時間を取得
+        created_at = get_jst_now()
+        
         with get_db_connection() as conn:
             with conn.cursor() as c:
                 c.execute("SELECT id FROM bookings WHERE booking_date = %s AND booking_time = %s",
                          (booking_date, booking_time))
                 if c.fetchone():
-                    return RedirectResponse("/?error=already_booked", status_code=303)
+                    return RedirectResponse("/booking?error=already_booked", status_code=303)
                 
-                c.execute("""INSERT INTO bookings (customer_name, phone_number, service_name, booking_date, booking_time, notes)
-                            VALUES (%s, %s, %s, %s, %s, %s)""",
-                         (customer_name, phone_number, service_name, booking_date, booking_time, notes))
+                # 明示的にcreated_atを指定してINSERT
+                c.execute("""
+                    INSERT INTO bookings 
+                    (customer_name, phone_number, service_name, booking_date, booking_time, notes, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (customer_name, phone_number, service_name, booking_date, booking_time, notes, created_at))
                 conn.commit()
         
         booking_data = {
@@ -1270,10 +1295,12 @@ def book_service(
         params = urlencode({'customer_name': customer_name, 'phone_number': phone_number,
                            'service_name': service_name, 'booking_date': booking_date,
                            'booking_time': booking_time, 'notes': notes or ''})
-        return RedirectResponse(f"/complete?{params}", status_code=303)
+       return RedirectResponse(f"/complete?{params}", status_code=303)
     except Exception as e:
         print(f"予約エラー: {e}")
-        return RedirectResponse("/?error=system", status_code=303)
+        import traceback
+        traceback.print_exc()
+        return RedirectResponse("/booking?error=system", status_code=303)
 
 @app.get("/bookings")
 @limiter.limit("60/minute")
@@ -1298,18 +1325,22 @@ async def create_booking_admin(request: Request, session_token: str = Cookie(Non
     
     data = await request.json()
     try:
+        created_at = get_jst_now()
+        
         with get_db_connection() as conn:
             with conn.cursor() as c:
-                c.execute("""INSERT INTO bookings (customer_name, phone_number, service_name, booking_date, booking_time, notes)
-                            VALUES (%s, %s, %s, %s, %s, %s)""",
-                         (data['customer_name'], data['phone_number'], data['service_name'],
-                          data['booking_date'], data['booking_time'], data.get('notes', '')))
+                c.execute("""
+                    INSERT INTO bookings 
+                    (customer_name, phone_number, service_name, booking_date, booking_time, notes, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (data['customer_name'], data['phone_number'], data['service_name'],
+                      data['booking_date'], data['booking_time'], data.get('notes', ''), created_at))
                 conn.commit()
         return {"success": True, "message": "予約を追加しました"}
     except Exception as e:
         print(f"予約追加エラー: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
-
+    
 @app.put("/admin/bookings/{booking_id}")
 async def update_booking_admin(booking_id: int, request: Request, session_token: str = Cookie(None)):
     """予約を更新（管理者用）"""
