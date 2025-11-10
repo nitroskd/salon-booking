@@ -810,6 +810,42 @@ def run_scheduler():
 # データベース初期化
 init_db()
 
+def migrate_to_jst():
+    """既存のテーブルのタイムスタンプを日本時間に移行"""
+    print("🔧 データベースを日本時間に移行中...")
+    
+    with get_db_connection() as conn:
+        with conn.cursor() as c:
+            # 各テーブルのcreated_atカラムのデフォルト値を変更
+            tables_and_columns = [
+                ('bookings', ['created_at']),
+                ('products', ['created_at', 'updated_at']),
+                ('categories', ['created_at']),
+                ('brands', ['created_at']),
+                ('reminders', ['created_at']),
+                ('page_views', ['created_at']),
+                ('available_slots', ['created_at']),
+                ('business_hours', ['created_at']),
+                ('slot_availability', ['created_at', 'updated_at']),
+                ('services', ['created_at', 'updated_at'])
+            ]
+            
+            for table, columns in tables_and_columns:
+                for column in columns:
+                    try:
+                        c.execute(f"""
+                            ALTER TABLE {table} 
+                            ALTER COLUMN {column} 
+                            SET DEFAULT (NOW() AT TIME ZONE 'Asia/Tokyo')
+                        """)
+                        print(f"  ✅ {table}.{column} を日本時間に設定")
+                    except Exception as e:
+                        print(f"  ⚠️  {table}.{column} のスキップ: {e}")
+            
+            conn.commit()
+    
+    print("✅ 移行完了！")
+
 # スケジューラーをバックグラウンドで起動
 threading.Thread(target=run_scheduler, daemon=True).start()
 
