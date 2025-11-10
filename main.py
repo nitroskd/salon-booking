@@ -1259,7 +1259,6 @@ try:
     created_at = get_jst_now()
     
     with get_db_connection() as conn:
-
             with conn.cursor() as c:
                 c.execute("SELECT id FROM bookings WHERE booking_date = %s AND booking_time = %s",
                          (booking_date, booking_time))
