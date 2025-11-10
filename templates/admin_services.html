@@ -120,6 +120,19 @@
       font-weight: 600;
       box-shadow: 0 2px 6px rgba(255, 107, 107, 0.3);
     }
+
+    .campaign-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.7em;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(251, 191, 36, 0.3);
+}
     
     .service-header {
       display: flex;
@@ -372,6 +385,19 @@
           <label>価格（円）*</label>
           <input type="number" id="service-price" min="0" step="100" required>
         </div>
+
+        <div class="form-group">
+            <label>キャンペーン価格（円）</label>
+            <input type="number" id="service-campaign-price" min="0" step="100" placeholder="割引価格を入力">
+          </div>
+          
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="service-campaign">
+              <label for="service-campaign" style="margin: 0; cursor: pointer;">🎉 キャンペーン中として表示</label>
+            </div>
+          </div>
+          
         
         <div class="form-group">
           <label>所要時間</label>
@@ -432,27 +458,36 @@
       }
 
       const html = '<div class="services-list">' + services.map(s => `
-        <div class="service-card">
-          ${s.is_popular ? '<div class="popular-badge">🔥 人気</div>' : ''}
-          <div class="service-header">
-            <div class="service-icon">${s.icon}</div>
-            <div class="service-info">
-              <div class="service-name">${s.service_name}</div>
-              <div class="service-meta">
-                ${s.duration ? `<span class="service-duration">${s.duration}</span>` : ''}
-                <span class="service-price">¥${Number(s.price).toLocaleString()}</span>
-              </div>
-              ${s.description ? `<div class="service-description">${s.description}</div>` : ''}
-              <div style="font-size: 0.8em; color: #999;">表示順: ${s.display_order}</div>
-            </div>
-          </div>
-          <div class="action-buttons">
-            <button class="btn-edit" onclick="openEditModal(${s.id})">編集</button>
-            <button class="btn-delete" onclick="deleteService(${s.id}, '${s.service_name}')">削除</button>
-          </div>
+  <div class="service-card">
+    ${s.is_popular ? '<div class="popular-badge">🔥 人気</div>' : ''}
+    ${s.is_campaign ? '<div class="campaign-badge">🎉 キャンペーン</div>' : ''}
+
+    <div class="service-header">
+      <div class="service-icon">${s.icon}</div>
+      <div class="service-info">
+        <div class="service-name">${s.service_name}</div>
+        <div class="service-meta">
+          ${s.duration ? `<span class="service-duration">${s.duration}</span>` : ''}
+
+          ${s.is_campaign && s.campaign_price
+            ? `<span class="service-price"><s style="color:#999; font-size:0.9em;">¥${Number(s.price).toLocaleString()}</s> 
+               <span style="color:#ef4444;">→ ¥${Number(s.campaign_price).toLocaleString()}</span></span>`
+            : `<span class="service-price">¥${Number(s.price).toLocaleString()}</span>`
+          }
         </div>
-      `).join('') + '</div>';
-      
+
+        ${s.description ? `<div class="service-description">${s.description}</div>` : ''}
+        <div style="font-size: 0.8em; color: #999;">表示順: ${s.display_order}</div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn-edit" onclick="openEditModal(${s.id})">編集</button>
+      <button class="btn-delete" onclick="deleteService(${s.id}, '${s.service_name}')">削除</button>
+    </div>
+  </div>
+`).join('') + '</div>';
+
       container.innerHTML = html;
     }
 
@@ -479,6 +514,9 @@
       document.getElementById('service-order').value = service.display_order || 0;
       document.getElementById('service-popular').checked = service.is_popular || false;
       document.getElementById('serviceModal').style.display = 'block';
+      document.getElementById('service-campaign-price').value = service.campaign_price || '';
+      document.getElementById('service-campaign').checked = service.is_campaign || false;
+
     }
 
     function closeModal() {
@@ -490,14 +528,16 @@
       
       const id = document.getElementById('service-id').value;
       const data = {
-        service_name: document.getElementById('service-name').value,
-        icon: document.getElementById('service-icon').value,
-        price: parseFloat(document.getElementById('service-price').value),
-        duration: document.getElementById('service-duration').value,
-        description: document.getElementById('service-description').value,
-        display_order: parseInt(document.getElementById('service-order').value),
-        is_popular: document.getElementById('service-popular').checked
-      };
+  service_name: document.getElementById('service-name').value,
+  icon: document.getElementById('service-icon').value,
+  price: parseFloat(document.getElementById('service-price').value),
+  campaign_price: parseFloat(document.getElementById('service-campaign-price').value) || null,
+  duration: document.getElementById('service-duration').value,
+  description: document.getElementById('service-description').value,
+  display_order: parseInt(document.getElementById('service-order').value),
+  is_popular: document.getElementById('service-popular').checked,
+  is_campaign: document.getElementById('service-campaign').checked
+};
 
       try {
         const url = id ? `/admin/services/${id}` : '/admin/services';
