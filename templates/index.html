@@ -822,7 +822,6 @@ window.addEventListener('click', function(e) {
   💆‍♀️サービスを選択してください
 </button>
 
-
 <!-- サービス選択モーダル -->
 <div id="serviceModal" style="
   display: none;
@@ -868,7 +867,8 @@ window.addEventListener('click', function(e) {
     <!-- サービス一覧 -->
     <div id="serviceList" style="display: flex; flex-direction: column; gap: 15px;">
       {% for service in services %}
-      <div class="service-card" onclick="selectService('{{ service.service_name }}', {{ service.price }})" style="
+      <div class="service-card" onclick="selectService('{{ service.service_name }}', {{ service.campaign_price or service.price }})" style="
+        position: relative;
         background: linear-gradient(135deg, #fcfaf4 0%, #f8f6f2 100%);
         border: 2px solid #e8e4dc;
         border-radius: 12px;
@@ -876,27 +876,8 @@ window.addEventListener('click', function(e) {
         cursor: pointer;
         transition: 0.3s;
       ">
-        <h3 style="font-size: 1.2em; color: #333; margin-bottom: 6px;">
-          {{ service.service_name }}
-        </h3>
-    
-        <!-- 通常価格 -->
-        <p style="margin: 0; color: #777; font-size: 0.95em;">
-          通常価格：<span style="text-decoration: line-through;">¥{{ "{:,}".format(service.price) }}</span>
-        </p>
-    
-        <!-- キャンペーン価格 -->
-        {% if service.campaign_price %}
-        <p style="margin: 5px 0 0; color: #e63946; font-weight: 700; font-size: 1.05em;">
-          🎉 キャンペーン価格：¥{{ "{:,}".format(service.campaign_price) }}
-        </p>
-        {% endif %}
-      </div>
-      {% endfor %}
-    </div>
-    
-        {% if service.is_popular %}
         <!-- 人気バッジ -->
+        {% if service.is_popular %}
         <div style="
           position: absolute;
           top: 12px;
@@ -911,7 +892,7 @@ window.addEventListener('click', function(e) {
           z-index: 2;
         ">🔥 人気</div>
         {% endif %}
-        
+
         <!-- アイコン背景 -->
         <div style="
           position: absolute;
@@ -920,48 +901,54 @@ window.addEventListener('click', function(e) {
           font-size: 120px;
           opacity: 0.05;
         ">{{ service.icon }}</div>
-        
+
         <!-- コンテンツ -->
         <div style="position: relative; z-index: 1;">
-          <!-- ヘッダー -->
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <div style="font-size: 2em;">{{ service.icon }}</div>
-              <div>
-                <h3 style="color: #6a8f66; font-size: 1.2em; margin: 0 0 4px 0; font-weight: 600;">
-                  {{ service.service_name }}
-                </h3>
-                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                  {% if service.duration %}
-                  <span style="
-                    background: #a3b18a;
-                    color: white;
-                    padding: 3px 10px;
-                    border-radius: 12px;
-                    font-size: 0.75em;
-                    font-weight: 600;
-                  ">{{ service.duration }}</span>
-                  {% endif %}
-                  <span style="
-                    color: #6a8f66;
-                    font-size: 1.3em;
-                    font-weight: 700;
-                  ">¥{{ "{:,}".format(service.price|int) }}</span>
-                </div>
+          <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px;">
+            <div style="font-size: 2em;">{{ service.icon }}</div>
+            <div>
+              <h3 style="color: #6a8f66; font-size: 1.2em; margin: 0 0 4px 0; font-weight: 600;">
+                {{ service.service_name }}
+              </h3>
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                {% if service.duration %}
+                <span style="
+                  background: #a3b18a;
+                  color: white;
+                  padding: 3px 10px;
+                  border-radius: 12px;
+                  font-size: 0.75em;
+                  font-weight: 600;
+                ">{{ service.duration }}</span>
+                {% endif %}
               </div>
             </div>
           </div>
-          
+
+          <!-- 価格表示 -->
+          {% if service.campaign_price %}
+            <p style="margin: 0; color: #777; font-size: 0.95em;">
+              通常価格：<span style="text-decoration: line-through;">¥{{ "{:,}".format(service.price) }}</span>
+            </p>
+            <p style="margin: 5px 0 0; color: #e63946; font-weight: 700; font-size: 1.05em;">
+              🎉 キャンペーン価格：¥{{ "{:,}".format(service.campaign_price) }}
+            </p>
+          {% else %}
+            <p style="margin: 0; color: #6a8f66; font-size: 1.05em; font-weight: 700;">
+              ¥{{ "{:,}".format(service.price) }}
+            </p>
+          {% endif %}
+
           <!-- 説明 -->
           {% if service.description %}
           <p style="
             color: #666;
             line-height: 1.7;
             font-size: 0.95em;
-            margin: 0;
+            margin: 10px 0 0;
           ">{{ service.description }}</p>
           {% endif %}
-          
+
           <!-- 選択アイコン -->
           <div style="
             margin-top: 12px;
@@ -1025,6 +1012,7 @@ function closeServiceModal() {
   document.getElementById('serviceModal').style.display = 'none';
   document.body.style.overflow = 'auto';
 }
+</script>
 
 // サービスを選択
 function selectService(serviceName, servicePrice) {
