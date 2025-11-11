@@ -141,7 +141,6 @@
       font-size: 0.85em;
     }
 
-    /* 日時選択ボタン */
     .datetime-select-btn {
       width: 100%;
       padding: 18px;
@@ -177,6 +176,29 @@
     .datetime-select-btn .arrow {
       font-size: 1.2em;
     }
+
+    .calendar-table { width: 100%; border-collapse: collapse; min-width: 320px; }
+    .calendar-table th { padding: 8px 4px; text-align: center; font-weight: 600; color: #6a8f66; font-size: 0.85em; border-bottom: 2px solid #e8e4dc; background: #fafafa; }
+    .calendar-table td { padding: 2px; text-align: center; border: 1px solid #e8e4dc; height: 70px; position: relative; background: white; }
+    .calendar-day { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; cursor: pointer; transition: 0.2s; background: white; border: none; font-family: 'Noto Sans JP', sans-serif; padding: 8px 4px; border-radius: 4px; }
+    .calendar-day:active { transform: scale(0.95); }
+    .calendar-day.disabled { background: #f5f5f5; cursor: not-allowed; color: #ccc; }
+    .calendar-day.past { background: #fafafa; color: #bbb; cursor: default; }
+    .calendar-day .day-number { font-size: 1.1em; font-weight: 600; margin-bottom: 6px; color: #333; }
+    .calendar-day.past .day-number { color: #bbb; }
+    .calendar-day .status-badge { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7em; font-weight: 700; color: white; margin-top: 4px; }
+    .status-available { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
+    .status-partial { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+    .status-full { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    .status-closed { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%); }
+
+    .time-slot-btn { width: 100%; padding: 16px; background: white; border: 2px solid #e8e4dc; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; font-family: 'Noto Sans JP', sans-serif; font-size: 1em; }
+    .time-slot-btn:hover:not(.disabled) { border-color: #a3b18a; background: #f8f6f2; }
+    .time-slot-btn.disabled { background: #f5f5f5; cursor: not-allowed; opacity: 0.6; }
+    .time-slot-btn .time-label { font-size: 1.2em; font-weight: 700; color: #333; }
+    .time-slot-btn .status-label { font-size: 0.9em; font-weight: 600; }
+    .time-slot-btn .status-label.available { color: #22c55e; }
+    .time-slot-btn .status-label.unavailable { color: #ef4444; }
     
     @media (max-width: 480px) {
       body {
@@ -222,7 +244,6 @@
       </button>
     </div>
 
-    <!-- 統合された日時選択 -->
     <div class="form-group">
       <label>予約日時 *</label>
       <input type="hidden" name="booking_date" id="booking_date" required>
@@ -245,372 +266,352 @@
     <p>© 2025 Salon Coeur</p>
   </footer>
 
-<!-- サービス選択モーダル -->
-<div id="serviceModal" style="display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); overflow-y: auto;">
-  <div style="background: white; margin: 20px auto; padding: 25px 20px; border-radius: 16px; max-width: 700px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-height: calc(100vh - 40px); overflow-y: auto;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: sticky; top: 0; background: white; z-index: 1; padding-bottom: 10px; border-bottom: 2px solid #e8e4dc;">
-      <h2 style="color: #6a8f66; font-size: 1.4em; margin: 0;">💆 サービスを選択</h2>
-      <span onclick="closeServiceModal()" style="font-size: 32px; font-weight: bold; color: #999; cursor: pointer; line-height: 1; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">&times;</span>
-    </div>
-    <div id="serviceList" style="display: flex; flex-direction: column; gap: 15px;">
-      <!-- JavaScriptで動的に生成 -->
+  <!-- サービス選択モーダル -->
+  <div id="serviceModal" style="display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); overflow-y: auto;">
+    <div style="background: white; margin: 20px auto; padding: 25px 20px; border-radius: 16px; max-width: 700px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-height: calc(100vh - 40px); overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: sticky; top: 0; background: white; z-index: 1; padding-bottom: 10px; border-bottom: 2px solid #e8e4dc;">
+        <h2 style="color: #6a8f66; font-size: 1.4em; margin: 0;">💆 サービスを選択</h2>
+        <span onclick="closeServiceModal()" style="font-size: 32px; font-weight: bold; color: #999; cursor: pointer; line-height: 1; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">&times;</span>
+      </div>
+      <div id="serviceList" style="display: flex; flex-direction: column; gap: 15px;"></div>
     </div>
   </div>
-</div>
 
-<script>
-  const bookedData = {{ booked | tojson }};
-  const closedDates = {{ closed_dates | tojson }};
-  const disabledSlots = {{ disabled_slots | tojson }};
-  const timeSlots = {{ time_slots | tojson }};
-  
-  let currentCalendarYear = new Date().getFullYear();
-  let currentCalendarMonth = new Date().getMonth() + 1;
-  let selectedDate = null;
-  let selectedTime = null;
-  let servicesData = [];
+  <!-- 日時選択モーダル -->
+  <div id="dateTimeModal" style="display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); overflow-y: auto;">
+    <div style="background: white; margin: 20px auto; padding: 20px 15px; border-radius: 16px; max-width: 600px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-height: calc(100vh - 40px); overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2 style="color: #6a8f66; font-size: 1.3em; margin: 0;">📅 日時を選択</h2>
+        <span onclick="closeDateTimeModal()" style="font-size: 32px; font-weight: bold; color: #999; cursor: pointer;">&times;</span>
+      </div>
 
-  // ページロード時にサービスを取得
-  async function loadServices() {
-    try {
-      const response = await fetch('/services?active_only=true');
-      const data = await response.json();
-      servicesData = data.services || [];
-      console.log('サービスデータを読み込みました:', servicesData);
-    } catch (error) {
-      console.error('サービスデータの読み込みエラー:', error);
-      servicesData = [];
-    }
-  }
+      <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 20px;">
+        <div id="step1Indicator" style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: #e8f5e9; border-radius: 20px; font-size: 0.9em; font-weight: 600; color: #22c55e;">
+          <span>1</span><span>日付選択</span>
+        </div>
+        <div id="step2Indicator" style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: #f5f5f5; border-radius: 20px; font-size: 0.9em; font-weight: 600; color: #999;">
+          <span>2</span><span>時間選択</span>
+        </div>
+      </div>
 
-  // サービス選択
-  function openServiceModal() {
-    renderServiceList();
-    document.getElementById('serviceModal').style.display = 'block';
-    document.body.style.overflow = 'hidden';
-  }
+      <div id="step1Content" style="display: block;">
+        <div style="margin-bottom: 15px;">
+          <div style="text-align: center; margin-bottom: 12px;">
+            <div id="currentYear" style="font-size: 1.1em; font-weight: 600; color: #6a8f66;"></div>
+            <div id="currentMonth" style="font-size: 1.3em; font-weight: 700; color: #6a8f66;"></div>
+          </div>
+          <div style="display: flex; justify-content: center; gap: 15px;">
+            <button type="button" onclick="changeMonth(-1)" style="padding: 10px 24px; background: #a3b18a; color: white; border: none; border-radius: 8px; cursor: pointer;">◀ 前月</button>
+            <button type="button" onclick="changeMonth(1)" style="padding: 10px 24px; background: #a3b18a; color: white; border: none; border-radius: 8px; cursor: pointer;">次月 ▶</button>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 15px; font-size: 0.8em;">
+          <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 18px; height: 18px; background: #22c55e; border-radius: 4px;"></div><span>空きあり</span></div>
+          <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 18px; height: 18px; background: #f59e0b; border-radius: 4px;"></div><span>残りわずか</span></div>
+          <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 18px; height: 18px; background: #ef4444; border-radius: 4px;"></div><span>満席</span></div>
+          <div style="display: flex; align-items: center; gap: 6px;"><div style="width: 18px; height: 18px; background: #94a3b8; border-radius: 4px;"></div><span>定休日</span></div>
+        </div>
+        <div id="calendarGrid"></div>
+      </div>
 
-  function closeServiceModal() {
-    document.getElementById('serviceModal').style.display = 'none';
-    document.body.style.overflow = 'auto';
-  }
+      <div id="step2Content" style="display: none;">
+        <div style="margin-bottom: 20px; text-align: center;">
+          <div style="font-size: 1.2em; font-weight: 600; color: #6a8f66; margin-bottom: 8px;" id="selectedDateDisplay"></div>
+          <button type="button" onclick="backToDateSelection()" style="padding: 8px 20px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9em;">← 日付を変更</button>
+        </div>
+        <div id="timeSlotsList" style="display: flex; flex-direction: column; gap: 12px;"></div>
+      </div>
+    </div>
+  </div>
 
-  function renderServiceList() {
-    const listContainer = document.getElementById('serviceList');
+  <script>
+    const bookedData = {{ booked | tojson }};
+    const closedDates = {{ closed_dates | tojson }};
+    const disabledSlots = {{ disabled_slots | tojson }};
+    const timeSlots = {{ time_slots | tojson }};
     
-    if (servicesData.length === 0) {
-      listContainer.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">サービスが登録されていません</p>';
-      return;
+    let currentCalendarYear = new Date().getFullYear();
+    let currentCalendarMonth = new Date().getMonth() + 1;
+    let selectedDate = null;
+    let selectedTime = null;
+    let servicesData = [];
+
+    async function loadServices() {
+      try {
+        const response = await fetch('/services?active_only=true');
+        const data = await response.json();
+        servicesData = data.services || [];
+      } catch (error) {
+        console.error('サービス読み込みエラー:', error);
+        servicesData = [];
+      }
     }
 
-    let html = '';
-    servicesData.forEach(service => {
-      const displayPrice = service.is_campaign && service.campaign_price 
-        ? service.campaign_price 
-        : service.price;
+    function openServiceModal() {
+      renderServiceList();
+      document.getElementById('serviceModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeServiceModal() {
+      document.getElementById('serviceModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    function renderServiceList() {
+      const listContainer = document.getElementById('serviceList');
       
-      html += `
-        <div onclick="selectService('${service.service_name.replace(/'/g, "\\'")}', ${displayPrice})" 
-             style="background: linear-gradient(135deg, #fcfaf4 0%, #f8f6f2 100%); 
-                    border: 2px solid #e8e4dc; 
-                    border-radius: 12px; 
-                    padding: 20px; 
-                    cursor: pointer; 
-                    transition: 0.3s; 
-                    position: relative;">
-          
-          ${service.is_popular ? `
-            <div style="position: absolute; 
-                        top: 12px; 
-                        right: 12px; 
-                        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); 
-                        color: white; 
-                        padding: 5px 12px; 
-                        border-radius: 20px; 
-                        font-size: 0.75em; 
-                        font-weight: 700;">
-              🔥 人気
-            </div>
-          ` : ''}
-          
-          ${service.is_campaign ? `
-            <div style="position: absolute; 
-                        top: ${service.is_popular ? '45px' : '12px'}; 
-                        right: 12px; 
-                        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); 
-                        color: white; 
-                        padding: 5px 12px; 
-                        border-radius: 20px; 
-                        font-size: 0.75em; 
-                        font-weight: 700;">
-              🎉 キャンペーン
-            </div>
-          ` : ''}
-          
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-            <div style="font-size: 2em;">${service.icon || '💆'}</div>
-            <div>
-              <h3 style="color: #6a8f66; font-size: 1.2em; margin: 0 0 4px 0; font-weight: 600;">
-                ${service.service_name}
-              </h3>
-              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                ${service.duration ? `
-                  <span style="background: #a3b18a; 
-                               color: white; 
-                               padding: 3px 10px; 
-                               border-radius: 12px; 
-                               font-size: 0.75em; 
-                               font-weight: 600;">
-                    ${service.duration}
-                  </span>
-                ` : ''}
-                
-                ${service.is_campaign && service.campaign_price ? `
-                  <span style="color: #6a8f66; font-size: 1.1em; font-weight: 700;">
-                    <s style="color: #999; font-size: 0.85em; font-weight: 400;">¥${Number(service.price).toLocaleString()}</s>
-                    <span style="color: #ef4444; margin-left: 6px;">→ ¥${Number(service.campaign_price).toLocaleString()}</span>
-                  </span>
-                ` : `
-                  <span style="color: #6a8f66; font-size: 1.3em; font-weight: 700;">
-                    ¥${Number(service.price).toLocaleString()}
-                  </span>
-                `}
+      if (servicesData.length === 0) {
+        listContainer.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">サービスが登録されていません</p>';
+        return;
+      }
+
+      let html = '';
+      servicesData.forEach(service => {
+        const displayPrice = service.is_campaign && service.campaign_price 
+          ? service.campaign_price 
+          : service.price;
+        
+        html += `
+          <div onclick="selectService('${service.service_name.replace(/'/g, "\\'")}', ${displayPrice})" 
+               style="background: linear-gradient(135deg, #fcfaf4 0%, #f8f6f2 100%); border: 2px solid #e8e4dc; border-radius: 12px; padding: 20px; cursor: pointer; transition: 0.3s; position: relative;">
+            ${service.is_popular ? '<div style="position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.75em; font-weight: 700;">🔥 人気</div>' : ''}
+            ${service.is_campaign ? '<div style="position: absolute; top: ' + (service.is_popular ? '45px' : '12px') + '; right: 12px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.75em; font-weight: 700;">🎉 キャンペーン</div>' : ''}
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+              <div style="font-size: 2em;">${service.icon || '💆'}</div>
+              <div>
+                <h3 style="color: #6a8f66; font-size: 1.2em; margin: 0 0 4px 0; font-weight: 600;">${service.service_name}</h3>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  ${service.duration ? '<span style="background: #a3b18a; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: 600;">' + service.duration + '</span>' : ''}
+                  ${service.is_campaign && service.campaign_price 
+                    ? '<span style="color: #6a8f66; font-size: 1.1em; font-weight: 700;"><s style="color: #999; font-size: 0.85em; font-weight: 400;">¥' + Number(service.price).toLocaleString() + '</s><span style="color: #ef4444; margin-left: 6px;">→ ¥' + Number(service.campaign_price).toLocaleString() + '</span></span>'
+                    : '<span style="color: #6a8f66; font-size: 1.3em; font-weight: 700;">¥' + Number(service.price).toLocaleString() + '</span>'}
+                </div>
               </div>
             </div>
+            ${service.description ? '<p style="color: #666; line-height: 1.7; font-size: 0.95em; margin: 0;">' + service.description + '</p>' : ''}
           </div>
-          
-          ${service.description ? `
-            <p style="color: #666; line-height: 1.7; font-size: 0.95em; margin: 0;">
-              ${service.description}
-            </p>
-          ` : ''}
-        </div>
-      `;
-    });
+        `;
+      });
 
-    listContainer.innerHTML = html;
-  }
-
-  function selectService(name, price) {
-    document.getElementById('service_name_hidden').value = name;
-    const btn = document.getElementById('service_display_btn');
-    btn.innerHTML = `<span><span class="icon">💆</span> ${name} - ¥${price.toLocaleString()}</span><span class="arrow">✓</span>`;
-    btn.classList.add('selected');
-    closeServiceModal();
-  }
-
-  // 日時選択モーダル
-  function openDateTimeModal() {
-    renderCalendar();
-    document.getElementById('dateTimeModal').style.display = 'block';
-    document.body.style.overflow = 'hidden';
-    showStep1();
-  }
-  function closeDateTimeModal() {
-    document.getElementById('dateTimeModal').style.display = 'none';
-    document.body.style.overflow = 'auto';
-  }
-
-  function showStep1() {
-    document.getElementById('step1Content').style.display = 'block';
-    document.getElementById('step2Content').style.display = 'none';
-    document.getElementById('step1Indicator').style.background = '#e8f5e9';
-    document.getElementById('step1Indicator').style.color = '#22c55e';
-    document.getElementById('step2Indicator').style.background = '#f5f5f5';
-    document.getElementById('step2Indicator').style.color = '#999';
-  }
-
-  function showStep2(dateStr) {
-    selectedDate = dateStr;
-    const date = new Date(dateStr + 'T00:00:00');
-    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
-    document.getElementById('selectedDateDisplay').textContent = 
-      `${date.getMonth() + 1}月${date.getDate()}日(${weekdays[date.getDay()]})`;
-    
-    renderTimeSlots(dateStr);
-    
-    document.getElementById('step1Content').style.display = 'none';
-    document.getElementById('step2Content').style.display = 'block';
-    document.getElementById('step1Indicator').style.background = '#f5f5f5';
-    document.getElementById('step1Indicator').style.color = '#999';
-    document.getElementById('step2Indicator').style.background = '#e8f5e9';
-    document.getElementById('step2Indicator').style.color = '#22c55e';
-  }
-
-  function backToDateSelection() {
-    showStep1();
-  }
-
-  function changeMonth(delta) {
-    currentCalendarMonth += delta;
-    if (currentCalendarMonth > 12) {
-      currentCalendarMonth = 1;
-      currentCalendarYear++;
-    } else if (currentCalendarMonth < 1) {
-      currentCalendarMonth = 12;
-      currentCalendarYear--;
+      listContainer.innerHTML = html;
     }
-    renderCalendar();
-  }
 
-  function renderCalendar() {
-    const year = currentCalendarYear;
-    const month = currentCalendarMonth;
-    
-    document.getElementById('currentYear').textContent = `${year}年`;
-    document.getElementById('currentMonth').textContent = `${month}月`;
-    
-    const firstDay = new Date(year, month - 1, 1).getDay();
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    let html = '<table class="calendar-table"><thead><tr>';
-    ['日', '月', '火', '水', '木', '金', '土'].forEach(day => {
-      html += `<th>${day}</th>`;
-    });
-    html += '</tr></thead><tbody><tr>';
-    
-    for (let i = 0; i < firstDay; i++) {
-      html += '<td></td>';
-    }
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const currentDate = new Date(year, month - 1, day);
-      const isPast = currentDate < today;
-      const status = getDateStatus(dateStr, isPast);
-      
-      let cellClass = 'calendar-day';
-      if (isPast) cellClass += ' past';
-      if (status.isClosed) cellClass += ' disabled';
-      
-      const onclick = !isPast && !status.isClosed && status.availableCount > 0 
-        ? `onclick="showStep2('${dateStr}')"` : '';
-      
-      html += `<td><button class="${cellClass}" ${onclick}>`;
-      html += `<div class="day-number">${day}</div>`;
-      
-      if (!isPast && !status.isClosed) {
-        html += `<div class="status-badge status-${status.statusClass}">${status.availableCount}</div>`;
-      } else if (status.isClosed) {
-        html += `<div class="status-badge status-closed">休</div>`;
-      }
-      
-      html += '</button></td>';
-      
-      if ((firstDay + day) % 7 === 0 && day < daysInMonth) {
-        html += '</tr><tr>';
-      }
-    }
-    
-    html += '</tr></tbody></table>';
-    document.getElementById('calendarGrid').innerHTML = html;
-  }
-
-  function getDateStatus(dateStr, isPast) {
-    if (isPast) return { statusClass: '', isClosed: false, availableCount: 0 };
-    if (closedDates.includes(dateStr)) return { statusClass: 'closed', isClosed: true, availableCount: 0 };
-    
-    const bookedTimes = bookedData[dateStr] || [];
-    const disabledTimes = disabledSlots[dateStr] || [];
-    let availableCount = 0;
-    
-    timeSlots.forEach(slot => {
-      if (!bookedTimes.includes(slot.value) && !disabledTimes.includes(slot.value)) {
-        availableCount++;
-      }
-    });
-    
-    if (availableCount === 0) return { statusClass: 'full', isClosed: false, availableCount: 0 };
-    if (availableCount <= Math.floor(timeSlots.length / 3)) return { statusClass: 'partial', isClosed: false, availableCount };
-    return { statusClass: 'available', isClosed: false, availableCount };
-  }
-
-  function renderTimeSlots(dateStr) {
-    const bookedTimes = bookedData[dateStr] || [];
-    const disabledTimes = disabledSlots[dateStr] || [];
-    
-    let html = '';
-    timeSlots.forEach(slot => {
-      const isBooked = bookedTimes.includes(slot.value);
-      const isDisabled = disabledTimes.includes(slot.value);
-      const available = !isBooked && !isDisabled;
-      
-      const btnClass = available ? 'time-slot-btn' : 'time-slot-btn disabled';
-      const onclick = available ? `onclick="selectDateTime('${dateStr}', '${slot.value}')"` : '';
-      const statusIcon = available ? '✅' : (isBooked ? '❌' : '⛔');
-      const statusText = available ? '予約可能' : (isBooked ? '予約済' : '受付停止');
-      const statusClass = available ? 'available' : 'unavailable';
-      
-      html += `
-        <button class="${btnClass}" ${onclick}>
-          <span class="time-label">${slot.label}</span>
-          <span class="status-label ${statusClass}">${statusIcon} ${statusText}</span>
-        </button>
-      `;
-    });
-    
-    document.getElementById('timeSlotsList').innerHTML = html;
-  }
-
-  function selectDateTime(date, time) {
-    selectedDate = date;
-    selectedTime = time;
-    
-    document.getElementById('booking_date').value = date;
-    document.getElementById('booking_time').value = time;
-    
-    const dateObj = new Date(date + 'T00:00:00');
-    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
-    const displayText = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日(${weekdays[dateObj.getDay()]}) ${time}`;
-    
-    const btn = document.getElementById('datetime_display_btn');
-    btn.innerHTML = `<span><span class="icon">📅</span> ${displayText}</span><span class="arrow">✓</span>`;
-    btn.classList.add('selected');
-    
-    closeDateTimeModal();
-  }
-
-  function validateForm() {
-    const service = document.getElementById('service_name_hidden').value;
-    const date = document.getElementById('booking_date').value;
-    const time = document.getElementById('booking_time').value;
-    
-    if (!service) {
-      alert('サービスを選択してください');
-      return false;
-    }
-    if (!date || !time) {
-      alert('予約日時を選択してください');
-      return false;
-    }
-    return true;
-  }
-
-  // モーダル外クリックで閉じる
-  window.addEventListener('click', function(e) {
-    if (e.target === document.getElementById('serviceModal')) {
+    function selectService(name, price) {
+      document.getElementById('service_name_hidden').value = name;
+      const btn = document.getElementById('service_display_btn');
+      btn.innerHTML = '<span><span class="icon">💆</span> ' + name + ' - ¥' + price.toLocaleString() + '</span><span class="arrow">✓</span>';
+      btn.classList.add('selected');
       closeServiceModal();
     }
-    if (e.target === document.getElementById('dateTimeModal')) {
+
+    function openDateTimeModal() {
+      renderCalendar();
+      document.getElementById('dateTimeModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      showStep1();
+    }
+
+    function closeDateTimeModal() {
+      document.getElementById('dateTimeModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    function showStep1() {
+      document.getElementById('step1Content').style.display = 'block';
+      document.getElementById('step2Content').style.display = 'none';
+      document.getElementById('step1Indicator').style.background = '#e8f5e9';
+      document.getElementById('step1Indicator').style.color = '#22c55e';
+      document.getElementById('step2Indicator').style.background = '#f5f5f5';
+      document.getElementById('step2Indicator').style.color = '#999';
+    }
+
+    function showStep2(dateStr) {
+      selectedDate = dateStr;
+      const date = new Date(dateStr + 'T00:00:00');
+      const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+      document.getElementById('selectedDateDisplay').textContent = 
+        date.getMonth() + 1 + '月' + date.getDate() + '日(' + weekdays[date.getDay()] + ')';
+      
+      renderTimeSlots(dateStr);
+      
+      document.getElementById('step1Content').style.display = 'none';
+      document.getElementById('step2Content').style.display = 'block';
+      document.getElementById('step1Indicator').style.background = '#f5f5f5';
+      document.getElementById('step1Indicator').style.color = '#999';
+      document.getElementById('step2Indicator').style.background = '#e8f5e9';
+      document.getElementById('step2Indicator').style.color = '#22c55e';
+    }
+
+    function backToDateSelection() {
+      showStep1();
+    }
+
+    function changeMonth(delta) {
+      currentCalendarMonth += delta;
+      if (currentCalendarMonth > 12) {
+        currentCalendarMonth = 1;
+        currentCalendarYear++;
+      } else if (currentCalendarMonth < 1) {
+        currentCalendarMonth = 12;
+        currentCalendarYear--;
+      }
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const year = currentCalendarYear;
+      const month = currentCalendarMonth;
+      
+      document.getElementById('currentYear').textContent = year + '年';
+      document.getElementById('currentMonth').textContent = month + '月';
+      
+      const firstDay = new Date(year, month - 1, 1).getDay();
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      let html = '<table class="calendar-table"><thead><tr>';
+      ['日', '月', '火', '水', '木', '金', '土'].forEach(day => {
+        html += '<th>' + day + '</th>';
+      });
+      html += '</tr></thead><tbody><tr>';
+      
+      for (let i = 0; i < firstDay; i++) {
+        html += '<td></td>';
+      }
+      
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+        const currentDate = new Date(year, month - 1, day);
+        const isPast = currentDate < today;
+        const status = getDateStatus(dateStr, isPast);
+        
+        let cellClass = 'calendar-day';
+        if (isPast) cellClass += ' past';
+        if (status.isClosed) cellClass += ' disabled';
+        
+        const onclick = !isPast && !status.isClosed && status.availableCount > 0 
+          ? 'onclick="showStep2(\'' + dateStr + '\')"' : '';
+        
+        html += '<td><button class="' + cellClass + '" ' + onclick + '>';
+        html += '<div class="day-number">' + day + '</div>';
+        
+        if (!isPast && !status.isClosed) {
+          html += '<div class="status-badge status-' + status.statusClass + '">' + status.availableCount + '</div>';
+        } else if (status.isClosed) {
+          html += '<div class="status-badge status-closed">休</div>';
+        }
+        
+        html += '</button></td>';
+        
+        if ((firstDay + day) % 7 === 0 && day < daysInMonth) {
+          html += '</tr><tr>';
+        }
+      }
+      
+      html += '</tr></tbody></table>';
+      document.getElementById('calendarGrid').innerHTML = html;
+    }
+
+    function getDateStatus(dateStr, isPast) {
+      if (isPast) return { statusClass: '', isClosed: false, availableCount: 0 };
+      if (closedDates.includes(dateStr)) return { statusClass: 'closed', isClosed: true, availableCount: 0 };
+      
+      const bookedTimes = bookedData[dateStr] || [];
+      const disabledTimes = disabledSlots[dateStr] || [];
+      let availableCount = 0;
+      
+      timeSlots.forEach(slot => {
+        if (!bookedTimes.includes(slot.value) && !disabledTimes.includes(slot.value)) {
+          availableCount++;
+        }
+      });
+      
+      if (availableCount === 0) return { statusClass: 'full', isClosed: false, availableCount: 0 };
+      if (availableCount <= Math.floor(timeSlots.length / 3)) return { statusClass: 'partial', isClosed: false, availableCount };
+      return { statusClass: 'available', isClosed: false, availableCount };
+    }
+
+    function renderTimeSlots(dateStr) {
+      const bookedTimes = bookedData[dateStr] || [];
+      const disabledTimes = disabledSlots[dateStr] || [];
+      
+      let html = '';
+      timeSlots.forEach(slot => {
+        const isBooked = bookedTimes.includes(slot.value);
+        const isDisabled = disabledTimes.includes(slot.value);
+        const available = !isBooked && !isDisabled;
+        
+        const btnClass = available ? 'time-slot-btn' : 'time-slot-btn disabled';
+        const onclick = available ? 'onclick="selectDateTime(\'' + dateStr + '\', \'' + slot.value + '\')"' : '';
+        const statusIcon = available ? '✅' : (isBooked ? '❌' : '⛔');
+        const statusText = available ? '予約可能' : (isBooked ? '予約済' : '受付停止');
+        const statusClass = available ? 'available' : 'unavailable';
+        
+        html += '<button class="' + btnClass + '" ' + onclick + '>';
+        html += '<span class="time-label">' + slot.label + '</span>';
+        html += '<span class="status-label ' + statusClass + '">' + statusIcon + ' ' + statusText + '</span>';
+        html += '</button>';
+      });
+      
+      document.getElementById('timeSlotsList').innerHTML = html;
+    }
+
+    function selectDateTime(date, time) {
+      selectedDate = date;
+      selectedTime = time;
+      
+      document.getElementById('booking_date').value = date;
+      document.getElementById('booking_time').value = time;
+      
+      const dateObj = new Date(date + 'T00:00:00');
+      const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+      const displayText = (dateObj.getMonth() + 1) + '月' + dateObj.getDate() + '日(' + weekdays[dateObj.getDay()] + ') ' + time;
+      
+      const btn = document.getElementById('datetime_display_btn');
+      btn.innerHTML = '<span><span class="icon">📅</span> ' + displayText + '</span><span class="arrow">✓</span>';
+      btn.classList.add('selected');
+      
       closeDateTimeModal();
     }
-  });
 
-  // URLパラメータからエラーを確認
-  const urlParams = new URLSearchParams(window.location.search);
-  const errorMessage = document.getElementById('error-message');
-  if (urlParams.get('error') === 'already_booked') {
-    errorMessage.textContent = '⚠️ 選択された日時は既に予約済みです。別の日時をお選びください。';
-    errorMessage.style.display = 'block';
-  } else if (urlParams.get('error') === 'system') {
-    errorMessage.textContent = '⚠️ システムエラーが発生しました。もう一度お試しください。';
-    errorMessage.style.display = 'block';
-  }
+    function validateForm() {
+      const service = document.getElementById('service_name_hidden').value;
+      const date = document.getElementById('booking_date').value;
+      const time = document.getElementById('booking_time').value;
+      
+      if (!service) {
+        alert('サービスを選択してください');
+        return false;
+      }
+      if (!date || !time) {
+        alert('予約日時を選択してください');
+        return false;
+      }
+      return true;
+    }
 
-  // ページロード時にサービスをロード
-  document.addEventListener('DOMContentLoaded', loadServices);
-</script>
+    window.addEventListener('click', function(e) {
+      if (e.target === document.getElementById('serviceModal')) {
+        closeServiceModal();
+      }
+      if (e.target === document.getElementById('dateTimeModal')) {
+        closeDateTimeModal();
+      }
+    });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorMessage = document.getElementById('error-message');
+    if (urlParams.get('error') === 'already_booked') {
+      errorMessage.textContent = '⚠️ 選択された日時は既に予約済みです。別の日時をお選びください。';
+      errorMessage.style.display = 'block';
+    } else if (urlParams.get('error') === 'system') {
+      errorMessage.textContent = '⚠️ システムエラーが発生しました。もう一度お試しください。';
+      errorMessage.style.display = 'block';
+    }
+
+    document.addEventListener('DOMContentLoaded', loadServices);
+  </script>
 </body>
 </html>
