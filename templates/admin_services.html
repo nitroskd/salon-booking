@@ -449,47 +449,71 @@
       }
     }
 
-    function displayServices() {
-      const container = document.getElementById('services-container');
-      
-      if (services.length === 0) {
-        container.innerHTML = '<div class="no-data">サービスがありません</div>';
-        return;
-      }
+    <!-- displayServices()関数の中のservice-card生成部分を修正 -->
 
-      const html = '<div class="services-list">' + services.map(s => `
-  <div class="service-card">
-    ${s.is_popular ? '<div class="popular-badge">🔥 人気</div>' : ''}
-    ${s.is_campaign ? '<div class="campaign-badge">🎉 キャンペーン</div>' : ''}
+<script>
+function displayServices() {
+  const container = document.getElementById('services-container');
+  
+  if (services.length === 0) {
+    container.innerHTML = '<div class="no-data">サービスがありません</div>';
+    return;
+  }
 
-    <div class="service-header">
-      <div class="service-icon">${s.icon}</div>
-      <div class="service-info">
-        <div class="service-name">${s.service_name}</div>
-        <div class="service-meta">
-          ${s.duration ? `<span class="service-duration">${s.duration}</span>` : ''}
-
-          ${s.is_campaign && s.campaign_price
-            ? `<span class="service-price"><s style="color:#999; font-size:0.9em;">¥${Number(s.price).toLocaleString()}</s> 
-               <span style="color:#ef4444;">→ ¥${Number(s.campaign_price).toLocaleString()}</span></span>`
-            : `<span class="service-price">¥${Number(s.price).toLocaleString()}</span>`
-          }
-        </div>
-
-        ${s.description ? `<div class="service-description">${s.description}</div>` : ''}
-        <div style="font-size: 0.8em; color: #999;">表示順: ${s.display_order}</div>
-      </div>
-    </div>
-
-    <div class="action-buttons">
-      <button class="btn-edit" onclick="openEditModal(${s.id})">編集</button>
-      <button class="btn-delete" onclick="deleteService(${s.id}, '${s.service_name}')">削除</button>
-    </div>
-  </div>
-`).join('') + '</div>';
-
-      container.innerHTML = html;
+  const html = '<div class="services-list">' + services.map(s => {
+    // 人気バッジとキャンペーンバッジの位置を調整
+    let badges = '';
+    if (s.is_popular && s.is_campaign) {
+      // 両方ある場合は縦に並べる
+      badges = `
+        <div class="popular-badge" style="top: 10px;">🔥 人気</div>
+        <div class="campaign-badge" style="top: 43px;">🎉 キャンペーン</div>
+      `;
+    } else if (s.is_popular) {
+      badges = '<div class="popular-badge">🔥 人気</div>';
+    } else if (s.is_campaign) {
+      badges = '<div class="campaign-badge">🎉 キャンペーン</div>';
     }
+
+    // 価格表示の決定
+    let priceDisplay = '';
+    if (s.is_campaign && s.campaign_price) {
+      priceDisplay = `
+        <span class="service-price">
+          <s style="color:#999; font-size:0.9em;">¥${Number(s.price).toLocaleString()}</s> 
+          <span style="color:#ef4444;">→ ¥${Number(s.campaign_price).toLocaleString()}</span>
+        </span>
+      `;
+    } else {
+      priceDisplay = `<span class="service-price">¥${Number(s.price).toLocaleString()}</span>`;
+    }
+
+    return `
+      <div class="service-card">
+        ${badges}
+        <div class="service-header">
+          <div class="service-icon">${s.icon}</div>
+          <div class="service-info">
+            <div class="service-name">${s.service_name}</div>
+            <div class="service-meta">
+              ${s.duration ? `<span class="service-duration">${s.duration}</span>` : ''}
+              ${priceDisplay}
+            </div>
+            ${s.description ? `<div class="service-description">${s.description}</div>` : ''}
+            <div style="font-size: 0.8em; color: #999;">表示順: ${s.display_order}</div>
+          </div>
+        </div>
+        <div class="action-buttons">
+          <button class="btn-edit" onclick="openEditModal(${s.id})">編集</button>
+          <button class="btn-delete" onclick="deleteService(${s.id}, '${s.service_name}')">削除</button>
+        </div>
+      </div>
+    `;
+  }).join('') + '</div>';
+
+  container.innerHTML = html;
+}
+</script>
 
     function openAddModal() {
       document.getElementById('modal-title').textContent = 'サービス追加';

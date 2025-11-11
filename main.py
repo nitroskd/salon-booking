@@ -1664,12 +1664,23 @@ def get_services(active_only: bool = True):
         with conn.cursor(cursor_factory=RealDictCursor) as c:
             if active_only:
                 c.execute("""
-                    SELECT * FROM services 
+                    SELECT 
+                        id, service_name, description, price, duration, icon, 
+                        is_popular, display_order, campaign_price, is_campaign,
+                        created_at, updated_at
+                    FROM services 
                     WHERE is_active = TRUE
                     ORDER BY display_order, service_name
                 """)
             else:
-                c.execute("SELECT * FROM services ORDER BY display_order, service_name")
+                c.execute("""
+                    SELECT 
+                        id, service_name, description, price, duration, icon, 
+                        is_popular, display_order, campaign_price, is_campaign,
+                        created_at, updated_at
+                    FROM services 
+                    ORDER BY display_order, service_name
+                """)
             services = c.fetchall()
     return {"services": services}
 
@@ -1698,7 +1709,7 @@ async def create_service(request: Request, session_token: str = Cookie(None)):
                     data.get('icon', '💆'),
                     data.get('is_popular', False),
                     data.get('display_order', 0),
-                    data.get('campaign_price', None),
+                    data.get('campaign_price'),
                     data.get('is_campaign', False),
                 ))
                 service_id = c.fetchone()[0]
@@ -1737,7 +1748,7 @@ async def update_service(service_id: int, request: Request, session_token: str =
                     data.get('icon', '💆'),
                     data.get('is_popular', False),
                     data.get('display_order', 0),
-                    data.get('campaign_price', None),
+                    data.get('campaign_price'),
                     data.get('is_campaign', False),
                     service_id
                 ))
@@ -1746,6 +1757,25 @@ async def update_service(service_id: int, request: Request, session_token: str =
         return {"success": True, "message": "サービスを更新しました"}
     except Exception as e:
         print(f"サービス更新エラー: {e}")
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.delete("/admin/services/{service_id}")
+async def delete_service(service_id: int, session_token: str = Cookie(None)):
+    """サービスを削除（管理者用）"""
+    if not verify_admin_session(session_token):
+        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as c:
+                c.execute("DELETE FROM services WHERE id = %s", (service_id,))
+                conn.commit()
+        
+        return {"success": True, "message": "サービスを削除しました"}
+    except Exception as e:
+        print(f"サービス削除エラー: {e}")
         import traceback
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
