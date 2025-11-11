@@ -1684,31 +1684,33 @@ async def create_service(request: Request, session_token: str = Cookie(None)):
         with get_db_connection() as conn:
             with conn.cursor() as c:
                 c.execute("""
-                    INSERT INTO services 
-                        (service_name, description, price, campaign_price, duration, icon, is_popular, is_campaign, display_order)
+                    INSERT INTO services (
+                        service_name, description, price, duration, icon, 
+                        is_popular, display_order, campaign_price, is_campaign
+                    )
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                     RETURNING id
                 """, (
                     data['service_name'],
                     data.get('description', ''),
                     data['price'],
-                    data.get('campaign_price'),   # ← キャンペーン価格
                     data.get('duration', ''),
                     data.get('icon', '💆'),
                     data.get('is_popular', False),
-                    data.get('is_campaign', False),  # ← キャンペーン中フラグ
-                    data.get('display_order', 0)
+                    data.get('display_order', 0),
+                    data.get('campaign_price', None),
+                    data.get('is_campaign', False),
                 ))
                 service_id = c.fetchone()[0]
                 conn.commit()
         
         return {"success": True, "id": service_id, "message": "サービスを追加しました"}
-    
     except Exception as e:
         print(f"サービス追加エラー: {e}")
         import traceback
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
+
 
 @app.put("/admin/services/{service_id}")
 async def update_service(service_id: int, request: Request, session_token: str = Cookie(None)):
@@ -1722,54 +1724,30 @@ async def update_service(service_id: int, request: Request, session_token: str =
             with conn.cursor() as c:
                 c.execute("""
                     UPDATE services 
-                    SET service_name=%s,
-                        description=%s,
-                        price=%s,
-                        campaign_price=%s,
-                        duration=%s,
-                        icon=%s,
-                        is_popular=%s,
-                        is_campaign=%s,
-                        display_order=%s,
+                    SET service_name=%s, description=%s, price=%s, duration=%s, 
+                        icon=%s, is_popular=%s, display_order=%s,
+                        campaign_price=%s, is_campaign=%s, 
                         updated_at=CURRENT_TIMESTAMP
                     WHERE id=%s
                 """, (
                     data['service_name'],
                     data.get('description', ''),
                     data['price'],
-                    data.get('campaign_price'),    # ← キャンペーン価格
                     data.get('duration', ''),
                     data.get('icon', '💆'),
                     data.get('is_popular', False),
-                    data.get('is_campaign', False),  # ← キャンペーン中フラグ
                     data.get('display_order', 0),
+                    data.get('campaign_price', None),
+                    data.get('is_campaign', False),
                     service_id
                 ))
                 conn.commit()
         
         return {"success": True, "message": "サービスを更新しました"}
-    
     except Exception as e:
         print(f"サービス更新エラー: {e}")
         import traceback
         traceback.print_exc()
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-@app.delete("/admin/services/{service_id}")
-async def delete_service(service_id: int, session_token: str = Cookie(None)):
-    """サービスを削除（管理者用）"""
-    if not verify_admin_session(session_token):
-        return JSONResponse(status_code=401, content={"error": "認証が必要です"})
-    
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor() as c:
-                c.execute("DELETE FROM services WHERE id = %s", (service_id,))
-                conn.commit()
-        
-        return {"success": True, "message": "サービスを削除しました"}
-    except Exception as e:
-        print(f"サービス削除エラー: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
     
 # ========== Ontime robot API ==========

@@ -875,9 +875,26 @@ window.addEventListener('click', function(e) {
         padding: 20px;
         cursor: pointer;
         transition: 0.3s;
-        position: relative;
-        overflow: hidden;
       ">
+        <h3 style="font-size: 1.2em; color: #333; margin-bottom: 6px;">
+          {{ service.service_name }}
+        </h3>
+    
+        <!-- 通常価格 -->
+        <p style="margin: 0; color: #777; font-size: 0.95em;">
+          通常価格：<span style="text-decoration: line-through;">¥{{ "{:,}".format(service.price) }}</span>
+        </p>
+    
+        <!-- キャンペーン価格 -->
+        {% if service.campaign_price %}
+        <p style="margin: 5px 0 0; color: #e63946; font-weight: 700; font-size: 1.05em;">
+          🎉 キャンペーン価格：¥{{ "{:,}".format(service.campaign_price) }}
+        </p>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    
         {% if service.is_popular %}
         <!-- 人気バッジ -->
         <div style="
