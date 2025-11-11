@@ -845,118 +845,92 @@ window.addEventListener('click', function(e) {
     max-height: calc(100vh - 40px);
     overflow-y: auto;
   ">
+
     <!-- ヘッダー -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: sticky; top: 0; background: white; z-index: 1; padding-bottom: 10px; border-bottom: 2px solid #e8e4dc;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #e8e4dc;">
       <h2 style="color: #6a8f66; font-size: 1.4em; margin: 0;">💆 サービスを選択</h2>
       <span onclick="closeServiceModal()" style="
-        font-size: 32px;
-        font-weight: bold;
+        font-size: 28px;
         color: #999;
         cursor: pointer;
-        line-height: 1;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        transition: 0.2s;
+        user-select: none;
       ">&times;</span>
     </div>
 
     <!-- サービス一覧 -->
     <div id="serviceList" style="display: flex; flex-direction: column; gap: 15px;">
       {% for service in services %}
-      <div class="service-card" onclick="selectService('{{ service.service_name }}', {{ service.campaign_price or service.price }})" style="
-        position: relative;
-        background: linear-gradient(135deg, #fcfaf4 0%, #f8f6f2 100%);
-        border: 2px solid #e8e4dc;
-        border-radius: 12px;
-        padding: 20px;
-        cursor: pointer;
-        transition: 0.3s;
-      ">
+      <div class="service-card"
+        onclick="selectService('{{ service.service_name }}', {{ service.campaign_price or service.price }})"
+        style="
+          position: relative;
+          background: #fcfaf4;
+          border: 2px solid #e8e4dc;
+          border-radius: 12px;
+          padding: 20px;
+          cursor: pointer;
+          transition: 0.3s;
+        ">
+
         <!-- 人気バッジ -->
         {% if service.is_popular %}
         <div style="
           position: absolute;
-          top: 12px;
-          right: 12px;
-          background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+          top: 10px;
+          right: 10px;
+          background: #e85d5d;
           color: white;
-          padding: 5px 12px;
-          border-radius: 20px;
-          font-size: 0.75em;
-          font-weight: 700;
-          box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
-          z-index: 2;
-        ">🔥 人気</div>
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 0.8em;
+          font-weight: bold;
+        ">人気</div>
         {% endif %}
 
-        <!-- アイコン背景 -->
-        <div style="
-          position: absolute;
-          right: -20px;
-          top: -20px;
-          font-size: 120px;
-          opacity: 0.05;
-        ">{{ service.icon }}</div>
-
-        <!-- コンテンツ -->
-        <div style="position: relative; z-index: 1;">
-          <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px;">
-            <div style="font-size: 2em;">{{ service.icon }}</div>
-            <div>
-              <h3 style="color: #6a8f66; font-size: 1.2em; margin: 0 0 4px 0; font-weight: 600;">
-                {{ service.service_name }}
-              </h3>
-              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                {% if service.duration %}
-                <span style="
-                  background: #a3b18a;
-                  color: white;
-                  padding: 3px 10px;
-                  border-radius: 12px;
-                  font-size: 0.75em;
-                  font-weight: 600;
-                ">{{ service.duration }}</span>
-                {% endif %}
-              </div>
-            </div>
+        <!-- アイコンとタイトル -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+          <div style="font-size: 1.8em;">{{ service.icon }}</div>
+          <div style="flex: 1;">
+            <h3 style="margin: 0; color: #6a8f66; font-size: 1.2em; font-weight: 600;">
+              {{ service.service_name }}
+            </h3>
+            {% if service.duration %}
+            <span style="
+              background: #a3b18a;
+              color: white;
+              padding: 2px 8px;
+              border-radius: 10px;
+              font-size: 0.75em;
+              font-weight: 500;
+            ">{{ service.duration }}</span>
+            {% endif %}
           </div>
+        </div>
 
-          <!-- 価格表示 -->
-          {% if service.campaign_price %}
-            <p style="margin: 0; color: #777; font-size: 0.95em;">
-              通常価格：<span style="text-decoration: line-through;">¥{{ "{:,}".format(service.price) }}</span>
-            </p>
-            <p style="margin: 5px 0 0; color: #e63946; font-weight: 700; font-size: 1.05em;">
-              🎉 キャンペーン価格：¥{{ "{:,}".format(service.campaign_price) }}
-            </p>
-          {% else %}
-            <p style="margin: 0; color: #6a8f66; font-size: 1.05em; font-weight: 700;">
-              ¥{{ "{:,}".format(service.price) }}
-            </p>
-          {% endif %}
+        <!-- 価格 -->
+        {% if service.campaign_price %}
+        <p style="margin: 0; color: #777;">
+          通常：<span style="text-decoration: line-through;">¥{{ "{:,}".format(service.price) }}</span>
+        </p>
+        <p style="margin: 2px 0 0; color: #e63946; font-weight: bold;">
+          🎉 キャンペーン：¥{{ "{:,}".format(service.campaign_price) }}
+        </p>
+        {% else %}
+        <p style="margin: 0; color: #333; font-weight: 600;">
+          ¥{{ "{:,}".format(service.price) }}
+        </p>
+        {% endif %}
 
-          <!-- 説明 -->
-          {% if service.description %}
-          <p style="
-            color: #666;
-            line-height: 1.7;
-            font-size: 0.95em;
-            margin: 10px 0 0;
-          ">{{ service.description }}</p>
-          {% endif %}
+        <!-- 説明 -->
+        {% if service.description %}
+        <p style="color: #666; line-height: 1.6; font-size: 0.9em; margin-top: 8px;">
+          {{ service.description }}
+        </p>
+        {% endif %}
 
-          <!-- 選択アイコン -->
-          <div style="
-            margin-top: 12px;
-            text-align: right;
-            color: #a3b18a;
-            font-size: 0.9em;
-            font-weight: 600;
-          ">選択する →</div>
+        <!-- 選択する -->
+        <div style="text-align: right; color: #a3b18a; font-size: 0.9em; font-weight: 600; margin-top: 10px;">
+          選択する →
         </div>
       </div>
       {% endfor %}
@@ -967,47 +941,20 @@ window.addEventListener('click', function(e) {
 <style>
 .service-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(106, 143, 102, 0.2);
+  box-shadow: 0 6px 18px rgba(106, 143, 102, 0.15);
   border-color: #a3b18a;
 }
-
-.service-card:active {
-  transform: translateY(-1px);
-}
-
-#service_display_btn.selected {
-  border-color: #a3b18a;
-  background: #f0f8f0;
-  color: #333;
-  font-weight: 500;
-}
-
 @media (max-width: 480px) {
-  .service-card {
-    padding: 16px;
-  }
-  
-  .service-card h3 {
-    font-size: 1.1em;
-  }
-  
-  .service-card p {
-    font-size: 0.9em;
-  }
+  .service-card { padding: 16px; }
+  .service-card h3 { font-size: 1.05em; }
 }
 </style>
 
 <script>
-let selectedServiceName = '';
-let selectedServicePrice = 0;
-
-// サービスモーダルを開く
 function openServiceModal() {
   document.getElementById('serviceModal').style.display = 'block';
   document.body.style.overflow = 'hidden';
 }
-
-// サービスモーダルを閉じる
 function closeServiceModal() {
   document.getElementById('serviceModal').style.display = 'none';
   document.body.style.overflow = 'auto';
