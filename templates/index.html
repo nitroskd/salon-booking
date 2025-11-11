@@ -959,32 +959,28 @@ function closeServiceModal() {
   document.getElementById('serviceModal').style.display = 'none';
   document.body.style.overflow = 'auto';
 }
-</script>
-
-// サービスを選択
+<script>
+// サービスを選択したとき
 function selectService(serviceName, servicePrice) {
-  selectedServiceName = serviceName;
-  selectedServicePrice = servicePrice;
-  
-  // 隠しフィールドに値を設定
+  // 値を変数にセット
   document.getElementById('service_name_hidden').value = serviceName;
-  
-  // 表示ボタンのテキストを更新
+  document.getElementById('service_price_hidden').value = servicePrice;
+
+  // ボタンに反映
   const displayBtn = document.getElementById('service_display_btn');
   displayBtn.textContent = `${serviceName} - ¥${servicePrice.toLocaleString()}`;
-  displayBtn.classList.add('selected');
+  displayBtn.style.backgroundColor = '#e8e4dc';
   displayBtn.style.color = '#333';
-  
+  displayBtn.classList.add('selected');
+
   // モーダルを閉じる
   closeServiceModal();
 }
 
-// モーダル外クリックで閉じる
-window.addEventListener('click', function(e) {
+// モーダルを外側クリックで閉じる
+window.addEventListener('click', (e) => {
   const modal = document.getElementById('serviceModal');
-  if (e.target === modal) {
-    closeServiceModal();
-  }
+  if (e.target === modal) closeServiceModal();
 });
 </script>
 
