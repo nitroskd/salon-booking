@@ -434,9 +434,11 @@
 
   <footer>© 2025 Salon Coeur</footer>
 
-  <script>
-    let services = [];
+  <!-- admin_services.html の<script>タグ全体を以下に置き換えてください -->
 
+<script>
+    let services = [];
+  
     async function loadServices() {
       try {
         const response = await fetch('/services?active_only=false');
@@ -444,77 +446,73 @@
         services = data.services || [];
         displayServices();
       } catch (error) {
+        console.error('データ読み込みエラー:', error);
         document.getElementById('services-container').innerHTML = 
           '<div class="no-data">データの読み込みに失敗しました</div>';
       }
     }
-
-    <!-- displayServices()関数の中のservice-card生成部分を修正 -->
-
-<script>
-function displayServices() {
-  const container = document.getElementById('services-container');
   
-  if (services.length === 0) {
-    container.innerHTML = '<div class="no-data">サービスがありません</div>';
-    return;
-  }
-
-  const html = '<div class="services-list">' + services.map(s => {
-    // 人気バッジとキャンペーンバッジの位置を調整
-    let badges = '';
-    if (s.is_popular && s.is_campaign) {
-      // 両方ある場合は縦に並べる
-      badges = `
-        <div class="popular-badge" style="top: 10px;">🔥 人気</div>
-        <div class="campaign-badge" style="top: 43px;">🎉 キャンペーン</div>
-      `;
-    } else if (s.is_popular) {
-      badges = '<div class="popular-badge">🔥 人気</div>';
-    } else if (s.is_campaign) {
-      badges = '<div class="campaign-badge">🎉 キャンペーン</div>';
-    }
-
-    // 価格表示の決定
-    let priceDisplay = '';
-    if (s.is_campaign && s.campaign_price) {
-      priceDisplay = `
-        <span class="service-price">
-          <s style="color:#999; font-size:0.9em;">¥${Number(s.price).toLocaleString()}</s> 
-          <span style="color:#ef4444;">→ ¥${Number(s.campaign_price).toLocaleString()}</span>
-        </span>
-      `;
-    } else {
-      priceDisplay = `<span class="service-price">¥${Number(s.price).toLocaleString()}</span>`;
-    }
-
-    return `
-      <div class="service-card">
-        ${badges}
-        <div class="service-header">
-          <div class="service-icon">${s.icon}</div>
-          <div class="service-info">
-            <div class="service-name">${s.service_name}</div>
-            <div class="service-meta">
-              ${s.duration ? `<span class="service-duration">${s.duration}</span>` : ''}
-              ${priceDisplay}
+    function displayServices() {
+      const container = document.getElementById('services-container');
+      
+      if (services.length === 0) {
+        container.innerHTML = '<div class="no-data">サービスがありません</div>';
+        return;
+      }
+  
+      const html = '<div class="services-list">' + services.map(s => {
+        // 人気バッジとキャンペーンバッジの位置を調整
+        let badges = '';
+        if (s.is_popular && s.is_campaign) {
+          badges = `
+            <div class="popular-badge" style="top: 10px;">🔥 人気</div>
+            <div class="campaign-badge" style="top: 43px;">🎉 キャンペーン</div>
+          `;
+        } else if (s.is_popular) {
+          badges = '<div class="popular-badge">🔥 人気</div>';
+        } else if (s.is_campaign) {
+          badges = '<div class="campaign-badge">🎉 キャンペーン</div>';
+        }
+  
+        // 価格表示の決定
+        let priceDisplay = '';
+        if (s.is_campaign && s.campaign_price) {
+          priceDisplay = `
+            <span class="service-price">
+              <s style="color:#999; font-size:0.9em;">¥${Number(s.price).toLocaleString()}</s> 
+              <span style="color:#ef4444;">→ ¥${Number(s.campaign_price).toLocaleString()}</span>
+            </span>
+          `;
+        } else {
+          priceDisplay = `<span class="service-price">¥${Number(s.price).toLocaleString()}</span>`;
+        }
+  
+        return `
+          <div class="service-card">
+            ${badges}
+            <div class="service-header">
+              <div class="service-icon">${s.icon || '💆'}</div>
+              <div class="service-info">
+                <div class="service-name">${s.service_name}</div>
+                <div class="service-meta">
+                  ${s.duration ? `<span class="service-duration">${s.duration}</span>` : ''}
+                  ${priceDisplay}
+                </div>
+                ${s.description ? `<div class="service-description">${s.description}</div>` : ''}
+                <div style="font-size: 0.8em; color: #999;">表示順: ${s.display_order || 0}</div>
+              </div>
             </div>
-            ${s.description ? `<div class="service-description">${s.description}</div>` : ''}
-            <div style="font-size: 0.8em; color: #999;">表示順: ${s.display_order}</div>
+            <div class="action-buttons">
+              <button class="btn-edit" onclick="openEditModal(${s.id})">編集</button>
+              <button class="btn-delete" onclick="deleteService(${s.id}, '${s.service_name.replace(/'/g, "\\'")}')">削除</button>
+            </div>
           </div>
-        </div>
-        <div class="action-buttons">
-          <button class="btn-edit" onclick="openEditModal(${s.id})">編集</button>
-          <button class="btn-delete" onclick="deleteService(${s.id}, '${s.service_name}')">削除</button>
-        </div>
-      </div>
-    `;
-  }).join('') + '</div>';
-
-  container.innerHTML = html;
-}
-</script>
-
+        `;
+      }).join('') + '</div>';
+  
+      container.innerHTML = html;
+    }
+  
     function openAddModal() {
       document.getElementById('modal-title').textContent = 'サービス追加';
       document.getElementById('serviceForm').reset();
@@ -523,46 +521,45 @@ function displayServices() {
       document.getElementById('service-order').value = '0';
       document.getElementById('serviceModal').style.display = 'block';
     }
-
+  
     function openEditModal(id) {
       const service = services.find(s => s.id === id);
       if (!service) return;
-
+  
       document.getElementById('modal-title').textContent = 'サービス編集';
       document.getElementById('service-id').value = service.id;
       document.getElementById('service-name').value = service.service_name;
       document.getElementById('service-icon').value = service.icon || '💆';
       document.getElementById('service-price').value = service.price;
+      document.getElementById('service-campaign-price').value = service.campaign_price || '';
+      document.getElementById('service-campaign').checked = service.is_campaign || false;
       document.getElementById('service-duration').value = service.duration || '';
       document.getElementById('service-description').value = service.description || '';
       document.getElementById('service-order').value = service.display_order || 0;
       document.getElementById('service-popular').checked = service.is_popular || false;
       document.getElementById('serviceModal').style.display = 'block';
-      document.getElementById('service-campaign-price').value = service.campaign_price || '';
-      document.getElementById('service-campaign').checked = service.is_campaign || false;
-
     }
-
+  
     function closeModal() {
       document.getElementById('serviceModal').style.display = 'none';
     }
-
+  
     document.getElementById('serviceForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       
       const id = document.getElementById('service-id').value;
       const data = {
-  service_name: document.getElementById('service-name').value,
-  icon: document.getElementById('service-icon').value,
-  price: parseFloat(document.getElementById('service-price').value),
-  campaign_price: parseFloat(document.getElementById('service-campaign-price').value) || null,
-  duration: document.getElementById('service-duration').value,
-  description: document.getElementById('service-description').value,
-  display_order: parseInt(document.getElementById('service-order').value),
-  is_popular: document.getElementById('service-popular').checked,
-  is_campaign: document.getElementById('service-campaign').checked
-};
-
+        service_name: document.getElementById('service-name').value,
+        icon: document.getElementById('service-icon').value,
+        price: parseFloat(document.getElementById('service-price').value),
+        campaign_price: parseFloat(document.getElementById('service-campaign-price').value) || null,
+        duration: document.getElementById('service-duration').value,
+        description: document.getElementById('service-description').value,
+        display_order: parseInt(document.getElementById('service-order').value),
+        is_popular: document.getElementById('service-popular').checked,
+        is_campaign: document.getElementById('service-campaign').checked
+      };
+  
       try {
         const url = id ? `/admin/services/${id}` : '/admin/services';
         const method = id ? 'PUT' : 'POST';
@@ -572,7 +569,7 @@ function displayServices() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
-
+  
         if (response.ok) {
           closeModal();
           loadServices();
@@ -584,13 +581,14 @@ function displayServices() {
           alert('エラーが発生しました');
         }
       } catch (error) {
+        console.error('保存エラー:', error);
         alert('エラーが発生しました');
       }
     });
-
+  
     async function deleteService(id, name) {
       if (!confirm(`「${name}」を削除しますか?`)) return;
-
+  
       try {
         const response = await fetch(`/admin/services/${id}`, { method: 'DELETE' });
         if (response.ok) {
@@ -603,10 +601,11 @@ function displayServices() {
           alert('削除に失敗しました');
         }
       } catch (error) {
+        console.error('削除エラー:', error);
         alert('エラーが発生しました');
       }
     }
-
+  
     document.addEventListener('DOMContentLoaded', loadServices);
     
     window.onclick = function(event) {
