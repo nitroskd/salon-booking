@@ -179,9 +179,8 @@
       margin-bottom: 20px;
     }
     
-    .week-view {
-      display: flex;
-      flex-direction: column;
+    .calendar-grid.week-view {
+      grid-template-columns: 1fr;
       gap: 12px;
     }
     
@@ -189,7 +188,7 @@
       background: white;
       border: 2px solid #e8e4dc;
       border-radius: 12px;
-      padding: 16px;
+      padding: 15px;
       transition: 0.3s;
     }
     
@@ -198,21 +197,22 @@
       box-shadow: 0 4px 12px rgba(163, 177, 138, 0.2);
     }
     
+    .week-day-card.past {
+      background: #fafafa;
+      opacity: 0.6;
+    }
+    
     .week-day-card.closed {
       background: linear-gradient(135deg, #ffe6e6 0%, #fff0f0 100%);
       border-color: #ffcccc;
-    }
-    
-    .week-day-card.past {
-      opacity: 0.6;
     }
     
     .week-day-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 12px;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
       border-bottom: 2px solid #e8e4dc;
     }
     
@@ -225,47 +225,29 @@
     .week-day-number {
       font-size: 2em;
       font-weight: 700;
-      color: #6a8f66;
-    }
-    
-    .week-day-info {
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .week-day-name {
-      font-size: 0.9em;
-      color: #888;
-    }
-    
-    .week-day-full {
-      font-size: 1.1em;
-      font-weight: 600;
       color: #333;
     }
     
-    .week-stats {
+    .week-day-name {
+      font-size: 1.1em;
+      color: #888;
+    }
+    
+    .week-day-card.sunday .week-day-number { color: #d9534f; }
+    .week-day-card.saturday .week-day-number { color: #007bff; }
+    .week-day-card.closed .week-day-number { color: #c66; }
+    
+    .week-day-status {
       display: flex;
       gap: 15px;
       font-size: 0.9em;
     }
     
-    .week-stat {
+    .week-status-item {
       display: flex;
       align-items: center;
       gap: 5px;
     }
-    
-    .week-stat-label {
-      color: #888;
-    }
-    
-    .week-stat-value {
-      font-weight: 700;
-    }
-    
-    .week-stat-value.booked { color: #ef4444; }
-    .week-stat-value.available { color: #22c55e; }
     
     .week-bookings-grid {
       display: grid;
@@ -280,45 +262,45 @@
       border-radius: 8px;
     }
     
-    .week-booking-card.disabled {
-      background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
-      border-left-color: #999;
-    }
-    
     .week-booking-time {
-      font-size: 1.2em;
+      font-size: 1.1em;
       font-weight: 700;
       color: #16a34a;
       margin-bottom: 6px;
     }
     
-    .week-booking-card.disabled .week-booking-time {
-      color: #999;
-    }
-    
-    .week-booking-customer {
-      font-size: 0.95em;
+    .week-booking-info {
+      font-size: 0.9em;
       color: #555;
+      line-height: 1.6;
+    }
+    
+    .week-nav {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    
+    .week-nav button {
+      padding: 8px 16px;
+      background: #a3b18a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9em;
+      font-weight: 500;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    
+    .week-range {
+      font-size: 1.2em;
       font-weight: 600;
-      margin-bottom: 4px;
-    }
-    
-    .week-booking-service {
-      font-size: 0.85em;
-      color: #888;
-    }
-    
-    .week-booking-disabled {
-      font-size: 0.85em;
-      color: #999;
-      font-style: italic;
-    }
-    
-    .week-no-bookings {
+      color: #6a8f66;
+      min-width: 250px;
       text-align: center;
-      color: #999;
-      padding: 20px;
-      font-size: 0.95em;
     }
     
     .calendar-header {
@@ -697,39 +679,10 @@
         flex-wrap: wrap;
       }
       
-      .week-view {
-        gap: 10px;
+      .modal-booking-label {
+        min-width: 60px;
       }
-      
-      .week-day-card {
-        padding: 12px;
-      }
-      
-      .week-day-number {
-        font-size: 1.5em;
-      }
-      
-      .week-day-full {
-        font-size: 1em;
-      }
-      
-      .week-bookings-grid {
-        grid-template-columns: 1fr;
-        gap: 8px;
-      }
-      
-      .week-booking-card {
-        padding: 10px;
-      }
-      
-      .week-booking-time {
-        font-size: 1em;
-      }
-      
-      .week-stats {
-        font-size: 0.8em;
-        gap: 10px;
-      }
+    }
     
     @media (max-width: 375px) {
       .calendar-day {
@@ -778,36 +731,22 @@
 
   <div class="container">
     <div class="controls">
-      <div class="month-nav">
+      <div class="month-nav" id="month-nav">
         <button onclick="previousMonth()">◀ 前月</button>
         <div class="month-title" id="month-title">2025年11月</div>
         <button onclick="nextMonth()">次月 ▶</button>
+      </div>
+      
+      <div class="week-nav" id="week-nav" style="display: none;">
+        <button onclick="previousWeek()">◀ 前週</button>
+        <div class="week-range" id="week-range"></div>
+        <button onclick="nextWeek()">次週 ▶</button>
       </div>
       
       <div class="view-toggle">
         <button class="active" onclick="setView('month')">月表示</button>
         <button onclick="setView('week')">週表示</button>
       </div>
-    </div>
-    
-    <div class="legend">
-      <div class="legend-item">
-        <div class="legend-dot dot-booked"></div>
-        <span>予約あり</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot dot-available"></div>
-        <span>予約可能</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot dot-partial"></div>
-        <span>残りわずか</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot dot-closed"></div>
-        <span>定休日</span>
-      </div>
-    </div>
     
     <div class="calendar-grid" id="calendar-grid">
       <!-- JavaScriptで動的生成 -->
@@ -833,12 +772,12 @@
   <script>
     let currentYear = new Date().getFullYear();
     let currentMonth = new Date().getMonth() + 1;
-    let currentWeekStart = null; // 週表示用
     let currentView = 'month';
     let bookings = [];
     let timeSlots = [];
     let closedDates = [];
     let disabledSlots = {};
+    let currentWeekStart = null;
 
     async function loadData() {
       try {
@@ -883,8 +822,119 @@
       }
     }
 
+    function getWeekStart(date) {
+      const d = new Date(date);
+      const day = d.getDay();
+      const diff = d.getDate() - day;
+      return new Date(d.setDate(diff));
+    }
+
+    function renderWeekView() {
+      if (!currentWeekStart) {
+        currentWeekStart = getWeekStart(new Date());
+      }
+      
+      const grid = document.getElementById('calendar-grid');
+      grid.className = 'calendar-grid week-view';
+      
+      const weekEnd = new Date(currentWeekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      
+      const weekStartStr = `${currentWeekStart.getMonth() + 1}/${currentWeekStart.getDate()}`;
+      const weekEndStr = `${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`;
+      document.getElementById('week-range').textContent = `${weekStartStr} - ${weekEndStr}`;
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      let html = '';
+      
+      for (let i = 0; i < 7; i++) {
+        const currentDate = new Date(currentWeekStart);
+        currentDate.setDate(currentDate.getDate() + i);
+        
+        const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+        const isPast = currentDate < today;
+        const isClosed = closedDates.includes(dateStr);
+        const weekday = currentDate.getDay();
+        
+        const weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
+        
+        let cardClass = 'week-day-card';
+        if (isPast) cardClass += ' past';
+        if (isClosed) cardClass += ' closed';
+        if (weekday === 0) cardClass += ' sunday';
+        if (weekday === 6) cardClass += ' saturday';
+        
+        const dayBookings = bookings.filter(b => b.booking_date === dateStr);
+        const disabledTimes = disabledSlots[dateStr] || [];
+        const availableCount = timeSlots.length - dayBookings.length - disabledTimes.length;
+        
+        html += `<div class="${cardClass}">`;
+        html += `<div class="week-day-header">`;
+        html += `<div class="week-day-date">`;
+        html += `<div class="week-day-number">${currentDate.getDate()}</div>`;
+        html += `<div class="week-day-name">${currentDate.getMonth() + 1}月 (${weekdayNames[weekday]})</div>`;
+        html += `</div>`;
+        
+        if (isClosed) {
+          html += `<div style="background: #ff6b6b; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.9em; font-weight: 600;">定休日</div>`;
+        } else {
+          html += `<div class="week-day-status">`;
+          html += `<div class="week-status-item"><span style="color: #ef4444;">●</span> 予約: ${dayBookings.length}件</div>`;
+          html += `<div class="week-status-item"><span style="color: #22c55e;">●</span> 空き: ${availableCount}枠</div>`;
+          if (disabledTimes.length > 0) {
+            html += `<div class="week-status-item"><span style="color: #999;">●</span> 停止: ${disabledTimes.length}枠</div>`;
+          }
+          html += `</div>`;
+        }
+        
+        html += `</div>`;
+        
+        if (dayBookings.length > 0) {
+          html += `<div class="week-bookings-grid">`;
+          dayBookings.forEach(booking => {
+            const timeStr = formatTime(booking.booking_time);
+            html += `
+              <div class="week-booking-card">
+                <div class="week-booking-time">⏰ ${timeStr}</div>
+                <div class="week-booking-info">
+                  <div><strong>${booking.customer_name}</strong> 様</div>
+                  <div>📞 ${booking.phone_number}</div>
+                  <div>💆 ${booking.service_name}</div>
+                  ${booking.notes ? `<div style="margin-top: 5px; color: #888;">📝 ${booking.notes}</div>` : ''}
+                </div>
+              </div>
+            `;
+          });
+          html += `</div>`;
+        } else if (!isClosed) {
+          html += `<div style="text-align: center; padding: 30px; color: #999;">予約はありません</div>`;
+        }
+        
+        html += `</div>`;
+      }
+      
+      grid.innerHTML = html;
+    }
+
+    function previousWeek() {
+      currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+      currentYear = currentWeekStart.getFullYear();
+      currentMonth = currentWeekStart.getMonth() + 1;
+      loadData();
+    }
+
+    function nextWeek() {
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+      currentYear = currentWeekStart.getFullYear();
+      currentMonth = currentWeekStart.getMonth() + 1;
+      loadData();
+    }
+
     function renderCalendar() {
       const grid = document.getElementById('calendar-grid');
+      grid.className = 'calendar-grid';
       document.getElementById('month-title').textContent = `${currentYear}年${currentMonth}月`;
       
       const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
@@ -1062,162 +1112,7 @@
       return timeStr;
     }
 
-    function renderWeekView() {
-      const grid = document.getElementById('calendar-grid');
-      
-      // 週の開始日を設定（まだ設定されていない場合は今週）
-      if (!currentWeekStart) {
-        const today = new Date();
-        const dayOfWeek = today.getDay();
-        currentWeekStart = new Date(today);
-        currentWeekStart.setDate(today.getDate() - dayOfWeek); // 日曜日に設定
-      }
-      
-      // 週の範囲を計算
-      const weekEnd = new Date(currentWeekStart);
-      weekEnd.setDate(currentWeekStart.getDate() + 6);
-      
-      // タイトル更新
-      const startMonth = currentWeekStart.getMonth() + 1;
-      const startDay = currentWeekStart.getDate();
-      const endMonth = weekEnd.getMonth() + 1;
-      const endDay = weekEnd.getDate();
-      
-      document.getElementById('month-title').textContent = 
-        `${currentWeekStart.getFullYear()}年${startMonth}月${startDay}日 〜 ${endMonth}月${endDay}日`;
-      
-      grid.className = 'week-view';
-      
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const weekdays = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'];
-      const weekdaysShort = ['日', '月', '火', '水', '木', '金', '土'];
-      
-      let html = '';
-      
-      // 7日間をループ
-      for (let i = 0; i < 7; i++) {
-        const currentDate = new Date(currentWeekStart);
-        currentDate.setDate(currentWeekStart.getDate() + i);
-        
-        const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
-        const isPast = currentDate < today;
-        const isClosed = closedDates.includes(dateStr);
-        const isToday = currentDate.toDateString() === today.toDateString();
-        
-        const dayBookings = bookings.filter(b => b.booking_date === dateStr);
-        const disabledTimes = disabledSlots[dateStr] || [];
-        const availableCount = timeSlots.length - dayBookings.length - disabledTimes.length;
-        
-        let cardClass = 'week-day-card';
-        if (isPast) cardClass += ' past';
-        if (isClosed) cardClass += ' closed';
-        
-        html += `<div class="${cardClass}">`;
-        html += '<div class="week-day-header">';
-        html += '<div class="week-day-date">';
-        html += `<div class="week-day-number" style="color: ${i === 0 ? '#d9534f' : i === 6 ? '#007bff' : '#6a8f66'}">${currentDate.getDate()}</div>`;
-        html += '<div class="week-day-info">';
-        html += `<div class="week-day-name">${weekdaysShort[i]}</div>`;
-        html += `<div class="week-day-full">${weekdays[i]}</div>`;
-        html += '</div>';
-        html += '</div>';
-        
-        if (isClosed) {
-          html += '<div class="closed-badge">定休日</div>';
-        } else if (isToday) {
-          html += '<div style="background: #6a8f66; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600;">今日</div>';
-        }
-        
-        html += '</div>';
-        
-        if (!isClosed) {
-          html += '<div class="week-stats">';
-          html += '<div class="week-stat">';
-          html += '<span class="week-stat-label">予約:</span>';
-          html += `<span class="week-stat-value booked">${dayBookings.length}件</span>`;
-          html += '</div>';
-          html += '<div class="week-stat">';
-          html += '<span class="week-stat-label">空き:</span>';
-          html += `<span class="week-stat-value available">${availableCount}枠</span>`;
-          html += '</div>';
-          if (disabledTimes.length > 0) {
-            html += '<div class="week-stat">';
-            html += '<span class="week-stat-label">停止:</span>';
-            html += `<span class="week-stat-value" style="color: #999;">${disabledTimes.length}枠</span>`;
-            html += '</div>';
-          }
-          html += '</div>';
-        }
-        
-        html += '<div class="week-bookings-grid">';
-        
-        if (dayBookings.length > 0 || disabledTimes.length > 0) {
-          // 時間枠順に表示
-          timeSlots.forEach(slot => {
-            const slotTimeStr = formatTime(slot.slot_time);
-            const booking = dayBookings.find(b => formatTime(b.booking_time) === slotTimeStr);
-            const isDisabled = disabledTimes.some(t => formatTime(t) === slotTimeStr);
-            
-            if (booking) {
-              html += '<div class="week-booking-card">';
-              html += `<div class="week-booking-time">⏰ ${slotTimeStr}</div>`;
-              html += `<div class="week-booking-customer">${booking.customer_name} 様</div>`;
-              html += `<div class="week-booking-service">${booking.service_name}</div>`;
-              if (booking.notes) {
-                html += `<div class="week-booking-service" style="margin-top: 4px;">📝 ${booking.notes}</div>`;
-              }
-              html += '</div>';
-            } else if (isDisabled) {
-              html += '<div class="week-booking-card disabled">';
-              html += `<div class="week-booking-time">⛔ ${slotTimeStr}</div>`;
-              html += '<div class="week-booking-disabled">予約受付停止中</div>';
-              html += '</div>';
-            }
-          });
-        } else if (!isClosed) {
-          html += '<div class="week-no-bookings">予約なし</div>';
-        } else {
-          html += '<div class="week-no-bookings" style="color: #c66;">定休日</div>';
-        }
-        
-        html += '</div>';
-        html += '</div>';
-      }
-      
-      grid.innerHTML = html;
-    }
-    
-    function previousWeek() {
-      currentWeekStart.setDate(currentWeekStart.getDate() - 7);
-      
-      // 月が変わった場合、営業日データを再取得
-      const newMonth = currentWeekStart.getMonth() + 1;
-      const newYear = currentWeekStart.getFullYear();
-      if (newMonth !== currentMonth || newYear !== currentYear) {
-        currentMonth = newMonth;
-        currentYear = newYear;
-        loadData();
-      } else {
-        renderWeekView();
-      }
-    }
-    
-    function nextWeek() {
-      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
-      
-      // 月が変わった場合、営業日データを再取得
-      const newMonth = currentWeekStart.getMonth() + 1;
-      const newYear = currentWeekStart.getFullYear();
-      if (newMonth !== currentMonth || newYear !== currentYear) {
-        currentMonth = newMonth;
-        currentYear = newYear;
-        loadData();
-      } else {
-        renderWeekView();
-      }
-    }
+    function previousMonth() {
       currentMonth--;
       if (currentMonth < 1) {
         currentMonth = 12;
@@ -1243,8 +1138,17 @@
       event.target.classList.add('active');
       
       if (view === 'week') {
-        alert('週表示は今後実装予定です');
+        document.getElementById('month-nav').style.display = 'none';
+        document.getElementById('week-nav').style.display = 'flex';
+        if (!currentWeekStart) {
+          currentWeekStart = getWeekStart(new Date());
+        }
+      } else {
+        document.getElementById('month-nav').style.display = 'flex';
+        document.getElementById('week-nav').style.display = 'none';
       }
+      
+      loadData();
     }
 
     window.onclick = function(event) {
