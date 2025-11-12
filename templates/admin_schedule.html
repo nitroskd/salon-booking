@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スケジュールカレンダー | Salon Coeur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #fefbf5;
+      color: #444;
+      padding: 15px;
+      padding-bottom: 40px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .logo {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    
+    h1 {
+      color: #6a8f66;
+      font-size: 1.8em;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+    
+    nav {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    nav a {
+      padding: 8px 15px;
+      background: #a3b18a;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.85em;
+      transition: 0.3s;
+      white-space: nowrap;
+    }
+    
+    nav a.active {
+      background: #6a8f66;
+      font-weight: 600;
+    }
+    
+    nav a:active {
+      transform: scale(0.98);
+    }
+    
+    .btn-logout {
+      background: #d9534f;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .month-nav {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .month-nav button {
+      padding: 10px 20px;
+      background: #a3b18a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+      font-weight: 500;
+      transition: 0.3s;
+    }
+    
+    .month-nav button:hover {
+      background: #879f6f;
+    }
+    
+    .month-title {
+      font-size: 1.5em;
+      font-weight: 700;
+      color: #6a8f66;
+      min-width: 180px;
+      text-align: center;
+    }
+    
+    .view-toggle {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .view-toggle button {
+      padding: 8px 16px;
+      background: #e8e4dc;
+      color: #666;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: 0.3s;
+    }
+    
+    .view-toggle button.active {
+      background: #6a8f66;
+      color: white;
+      font-weight: 600;
+    }
+    
+    .legend {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      padding: 15px;
+      background: #f8f6f2;
+      border-radius: 8px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9em;
+    }
+    
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    
+    .dot-booked { background: #ef4444; }
+    .dot-available { background: #22c55e; }
+    .dot-partial { background: #f59e0b; }
+    .dot-closed { background: #94a3b8; }
+    
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .calendar-header {
+      text-align: center;
+      padding: 12px;
+      background: #6a8f66;
+      color: white;
+      font-weight: 600;
+      border-radius: 8px;
+      font-size: 0.95em;
+    }
+    
+    .calendar-day {
+      background: white;
+      border: 2px solid #e8e4dc;
+      border-radius: 10px;
+      padding: 12px;
+      min-height: 140px;
+      cursor: pointer;
+      transition: 0.3s;
+      position: relative;
+    }
+    
+    .calendar-day:hover {
+      border-color: #a3b18a;
+      box-shadow: 0 4px 12px rgba(163, 177, 138, 0.2);
+    }
+    
+    .calendar-day.past {
+      background: #fafafa;
+      opacity: 0.6;
+      cursor: default;
+    }
+    
+    .calendar-day.closed {
+      background: linear-gradient(135deg, #ffe6e6 0%, #fff0f0 100%);
+      border-color: #ffcccc;
+    }
+    
+    .calendar-day.empty {
+      background: transparent;
+      border: none;
+      cursor: default;
+    }
+    
+    .day-number {
+      font-size: 1.3em;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    
+    .calendar-day.closed .day-number {
+      color: #c66;
+    }
+    
+    .day-weekday {
+      font-size: 0.75em;
+      color: #888;
+      margin-left: 4px;
+    }
+    
+    .sunday .day-number { color: #d9534f; }
+    .saturday .day-number { color: #007bff; }
+    
+    .closed-badge {
+      display: inline-block;
+      background: #ff6b6b;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.7em;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .bookings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .booking-item {
+      background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f2 100%);
+      border-left: 3px solid #22c55e;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-size: 0.75em;
+      line-height: 1.4;
+    }
+    
+    .booking-item.disabled {
+      background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+      border-left-color: #999;
+      color: #666;
+      text-decoration: line-through;
+    }
+    
+    .booking-time {
+      font-weight: 700;
+      color: #16a34a;
+      margin-right: 4px;
+    }
+    
+    .booking-item.disabled .booking-time {
+      color: #999;
+    }
+    
+    .booking-customer {
+      color: #555;
+      font-weight: 500;
+    }
+    
+    .booking-service {
+      color: #888;
+      font-size: 0.95em;
+    }
+    
+    .no-bookings {
+      text-align: center;
+      color: #999;
+      font-size: 0.8em;
+      padding: 10px;
+    }
+    
+    /* 詳細モーダル */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      overflow-y: auto;
+    }
+    
+    .modal-content {
+      background: white;
+      margin: 40px auto;
+      padding: 30px;
+      border-radius: 16px;
+      width: calc(100% - 40px);
+      max-width: 600px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e8e4dc;
+    }
+    
+    .modal-header h2 {
+      color: #6a8f66;
+      font-size: 1.5em;
+      margin: 0;
+    }
+    
+    .close {
+      font-size: 32px;
+      font-weight: bold;
+      color: #999;
+      cursor: pointer;
+      line-height: 1;
+    }
+    
+    .modal-day-info {
+      background: #f8f6f2;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .modal-bookings {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .modal-booking-card {
+      background: white;
+      border: 2px solid #e8e4dc;
+      border-left: 4px solid #22c55e;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    
+    .modal-booking-card.disabled {
+      border-left-color: #999;
+      opacity: 0.7;
+    }
+    
+    .modal-booking-time {
+      font-size: 1.3em;
+      font-weight: 700;
+      color: #16a34a;
+      margin-bottom: 8px;
+    }
+    
+    .modal-booking-detail {
+      display: flex;
+      gap: 8px;
+      margin: 6px 0;
+      font-size: 0.95em;
+    }
+    
+    .modal-booking-label {
+      color: #888;
+      min-width: 80px;
+    }
+    
+    .modal-booking-value {
+      color: #333;
+      font-weight: 500;
+    }
+    
+    footer {
+      text-align: center;
+      color: #888;
+      margin-top: 30px;
+      font-size: 0.85em;
+    }
+    
+    @media (max-width: 1024px) {
+      .calendar-day {
+        min-height: 120px;
+        padding: 8px;
+      }
+      
+      .day-number {
+        font-size: 1.1em;
+      }
+      
+      .booking-item {
+        font-size: 0.7em;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+      
+      .calendar-grid {
+        gap: 4px;
+      }
+      
+      .calendar-day {
+        min-height: 100px;
+        padding: 6px;
+      }
+      
+      .day-number {
+        font-size: 1em;
+      }
+      
+      .booking-item {
+        font-size: 0.65em;
+        padding: 4px 6px;
+      }
+      
+      .controls {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .month-nav {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">🌿</div>
+    <h1>📅 スケジュールカレンダー</h1>
+  </div>
+  
+  <nav>
+    <a href="/">ホーム</a>
+    <a href="/admin">予約管理</a>
+    <a href="/admin/schedule" class="active">スケジュール</a>
+    <a href="/admin/calendar">カレンダー設定</a>
+    <a href="/admin/services">サービス管理</a>
+    <a href="/admin/products">商品管理</a>
+    <a href="/admin/logout" class="btn-logout">ログアウト</a>
+  </nav>
+
+  <div class="container">
+    <div class="controls">
+      <div class="month-nav">
+        <button onclick="previousMonth()">◀ 前月</button>
+        <div class="month-title" id="month-title">2025年11月</div>
+        <button onclick="nextMonth()">次月 ▶</button>
+      </div>
+      
+      <div class="view-toggle">
+        <button class="active" onclick="setView('month')">月表示</button>
+        <button onclick="setView('week')">週表示</button>
+      </div>
+    </div>
+    
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot dot-booked"></div>
+        <span>予約あり</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot dot-available"></div>
+        <span>予約可能</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot dot-partial"></div>
+        <span>残りわずか</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot dot-closed"></div>
+        <span>定休日</span>
+      </div>
+    </div>
+    
+    <div class="calendar-grid" id="calendar-grid">
+      <!-- JavaScriptで動的生成 -->
+    </div>
+  </div>
+
+  <!-- 詳細モーダル -->
+  <div id="detailModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-date-title"></h2>
+        <span class="close" onclick="closeModal()">&times;</span>
+      </div>
+      
+      <div class="modal-day-info" id="modal-day-info"></div>
+      
+      <div class="modal-bookings" id="modal-bookings"></div>
+    </div>
+  </div>
+
+  <footer>© 2025 Salon Coeur</footer>
+
+  <script>
+    let currentYear = new Date().getFullYear();
+    let currentMonth = new Date().getMonth() + 1;
+    let currentView = 'month';
+    let bookings = [];
+    let timeSlots = [];
+    let closedDates = [];
+    let disabledSlots = {};
+
+    async function loadData() {
+      try {
+        // 予約データを取得
+        const bookingsRes = await fetch('/bookings');
+        const bookingsData = await bookingsRes.json();
+        bookings = bookingsData.bookings || [];
+        
+        // 時間枠を取得
+        const slotsRes = await fetch('/available-slots');
+        const slotsData = await slotsRes.json();
+        timeSlots = slotsData.slots || [];
+        
+        // 営業日情報を取得
+        const businessRes = await fetch(`/business-hours/${currentYear}/${currentMonth}`);
+        const businessData = await businessRes.json();
+        
+        closedDates = [];
+        disabledSlots = {};
+        
+        (businessData.business_hours || []).forEach(item => {
+          if (!item.is_open) {
+            closedDates.push(item.date);
+          }
+        });
+        
+        (businessData.slot_availability || []).forEach(item => {
+          const dateStr = item.date;
+          const timeStr = item.slot_time;
+          if (!item.is_available) {
+            if (!disabledSlots[dateStr]) {
+              disabledSlots[dateStr] = [];
+            }
+            disabledSlots[dateStr].push(timeStr);
+          }
+        });
+        
+        renderCalendar();
+      } catch (error) {
+        console.error('データ読み込みエラー:', error);
+      }
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById('calendar-grid');
+      document.getElementById('month-title').textContent = `${currentYear}年${currentMonth}月`;
+      
+      const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
+      const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      let html = '';
+      
+      // 曜日ヘッダー
+      const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+      weekdays.forEach(day => {
+        html += `<div class="calendar-header">${day}</div>`;
+      });
+      
+      // 空白セル
+      for (let i = 0; i < firstDay; i++) {
+        html += '<div class="calendar-day empty"></div>';
+      }
+      
+      // 日付セル
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const currentDate = new Date(currentYear, currentMonth - 1, day);
+        const isPast = currentDate < today;
+        const isClosed = closedDates.includes(dateStr);
+        const weekday = currentDate.getDay();
+        
+        let dayClass = 'calendar-day';
+        if (isPast) dayClass += ' past';
+        if (isClosed) dayClass += ' closed';
+        if (weekday === 0) dayClass += ' sunday';
+        if (weekday === 6) dayClass += ' saturday';
+        
+        const weekdayNames = ['日', '月', '火', '水', '木', '金', '土'];
+        
+        // その日の予約を取得
+        const dayBookings = bookings.filter(b => b.booking_date === dateStr);
+        const disabledTimes = disabledSlots[dateStr] || [];
+        
+        html += `<div class="${dayClass}" onclick="openDayDetail('${dateStr}')">`;
+        html += `<div class="day-number">${day}<span class="day-weekday">(${weekdayNames[weekday]})</span></div>`;
+        
+        if (isClosed) {
+          html += '<div class="closed-badge">定休日</div>';
+        }
+        
+        html += '<div class="bookings-list">';
+        
+        if (dayBookings.length > 0) {
+          dayBookings.slice(0, 3).forEach(booking => {
+            const timeStr = formatTime(booking.booking_time);
+            html += `
+              <div class="booking-item">
+                <span class="booking-time">${timeStr}</span>
+                <span class="booking-customer">${booking.customer_name}</span>
+                <div class="booking-service">${booking.service_name}</div>
+              </div>
+            `;
+          });
+          
+          if (dayBookings.length > 3) {
+            html += `<div class="booking-item" style="text-align: center; color: #6a8f66; font-weight: 600;">他${dayBookings.length - 3}件</div>`;
+          }
+        } else if (!isClosed && !isPast) {
+          // 無効化された時間枠を表示
+          const disabledCount = disabledTimes.length;
+          if (disabledCount > 0) {
+            html += '<div class="no-bookings">一部時間停止中</div>';
+          } else {
+            html += '<div class="no-bookings">予約なし</div>';
+          }
+        }
+        
+        html += '</div></div>';
+      }
+      
+      grid.innerHTML = html;
+    }
+
+    function openDayDetail(dateStr) {
+      const date = new Date(dateStr + 'T00:00:00');
+      const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const weekday = weekdays[date.getDay()];
+      
+      document.getElementById('modal-date-title').textContent = 
+        `${month}月${day}日（${weekday}）`;
+      
+      const isClosed = closedDates.includes(dateStr);
+      const dayBookings = bookings.filter(b => b.booking_date === dateStr);
+      const disabledTimes = disabledSlots[dateStr] || [];
+      
+      let infoHtml = '';
+      if (isClosed) {
+        infoHtml = '<div style="color: #c66; font-weight: 600; font-size: 1.1em;">🔴 定休日</div>';
+      } else {
+        const availableCount = timeSlots.length - dayBookings.length - disabledTimes.length;
+        infoHtml = `
+          <div style="display: flex; gap: 20px; justify-content: space-around; text-align: center;">
+            <div>
+              <div style="font-size: 0.9em; color: #888; margin-bottom: 4px;">予約件数</div>
+              <div style="font-size: 1.5em; font-weight: 700; color: #ef4444;">${dayBookings.length}件</div>
+            </div>
+            <div>
+              <div style="font-size: 0.9em; color: #888; margin-bottom: 4px;">空き枠</div>
+              <div style="font-size: 1.5em; font-weight: 700; color: #22c55e;">${availableCount}枠</div>
+            </div>
+            <div>
+              <div style="font-size: 0.9em; color: #888; margin-bottom: 4px;">停止中</div>
+              <div style="font-size: 1.5em; font-weight: 700; color: #999;">${disabledTimes.length}枠</div>
+            </div>
+          </div>
+        `;
+      }
+      
+      document.getElementById('modal-day-info').innerHTML = infoHtml;
+      
+      // 時間枠ごとに表示
+      let bookingsHtml = '';
+      
+      if (dayBookings.length === 0 && disabledTimes.length === 0) {
+        bookingsHtml = '<div style="text-align: center; padding: 40px; color: #999;">この日は予約がありません</div>';
+      } else {
+        // 全時間枠を表示
+        timeSlots.forEach(slot => {
+          const slotTimeStr = formatTime(slot.slot_time);
+          const booking = dayBookings.find(b => formatTime(b.booking_time) === slotTimeStr);
+          const isDisabled = disabledTimes.some(t => formatTime(t) === slotTimeStr);
+          
+          if (booking) {
+            bookingsHtml += `
+              <div class="modal-booking-card">
+                <div class="modal-booking-time">⏰ ${slotTimeStr}</div>
+                <div class="modal-booking-detail">
+                  <span class="modal-booking-label">お客様:</span>
+                  <span class="modal-booking-value">${booking.customer_name}</span>
+                </div>
+                <div class="modal-booking-detail">
+                  <span class="modal-booking-label">電話:</span>
+                  <span class="modal-booking-value">${booking.phone_number}</span>
+                </div>
+                <div class="modal-booking-detail">
+                  <span class="modal-booking-label">サービス:</span>
+                  <span class="modal-booking-value">${booking.service_name}</span>
+                </div>
+                ${booking.notes ? `
+                  <div class="modal-booking-detail">
+                    <span class="modal-booking-label">備考:</span>
+                    <span class="modal-booking-value">${booking.notes}</span>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          } else if (isDisabled) {
+            bookingsHtml += `
+              <div class="modal-booking-card disabled">
+                <div class="modal-booking-time" style="color: #999;">⛔ ${slotTimeStr}</div>
+                <div style="color: #999; font-size: 0.9em;">予約受付停止中</div>
+              </div>
+            `;
+          }
+        });
+      }
+      
+      document.getElementById('modal-bookings').innerHTML = bookingsHtml;
+      document.getElementById('detailModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('detailModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    function formatTime(timeStr) {
+      if (!timeStr) return '';
+      if (typeof timeStr === 'string') {
+        return timeStr.substring(0, 5);
+      }
+      return timeStr;
+    }
+
+    function previousMonth() {
+      currentMonth--;
+      if (currentMonth < 1) {
+        currentMonth = 12;
+        currentYear--;
+      }
+      loadData();
+    }
+
+    function nextMonth() {
+      currentMonth++;
+      if (currentMonth > 12) {
+        currentMonth = 1;
+        currentYear++;
+      }
+      loadData();
+    }
+
+    function setView(view) {
+      currentView = view;
+      document.querySelectorAll('.view-toggle button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      if (view === 'week') {
+        alert('週表示は今後実装予定です');
+      }
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById('detailModal');
+      if (event.target === modal) {
+        closeModal();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadData);
+  </script>
+</body>
+</html>
