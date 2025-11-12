@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>サービス紹介 | Salon Coeur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #fefbf5;
+      color: #444;
+      line-height: 1.8;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #a3b18a 0%, #879f6f 100%);
+      color: white;
+      text-align: center;
+      padding: 50px 20px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+      background-size: 30px 30px;
+      animation: drift 20s linear infinite;
+    }
+    
+    @keyframes drift {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(30px, 30px); }
+    }
+    
+    .logo {
+      font-size: 2.5em;
+      margin-bottom: 15px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    h1 {
+      font-size: 2em;
+      font-weight: 400;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+      letter-spacing: 3px;
+    }
+    
+    .subtitle {
+      font-size: 0.95em;
+      opacity: 0.9;
+      font-weight: 300;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .back-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.9em;
+      backdrop-filter: blur(10px);
+      transition: 0.3s;
+      z-index: 2;
+    }
+    
+    .back-button:active {
+      transform: scale(0.95);
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+      margin-top: 20px;
+    }
+    
+    .service-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .service-card:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+    }
+    
+    .service-image {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      background: linear-gradient(135deg, #f5f2ed 0%, #e8e4dc 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4em;
+      position: relative;
+    }
+    
+    .service-badge {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.75em;
+      font-weight: 600;
+      color: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .badge-popular {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    }
+    
+    .badge-campaign {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    }
+    
+    .service-content {
+      padding: 25px;
+    }
+    
+    .service-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+    
+    .service-icon {
+      font-size: 2em;
+    }
+    
+    .service-title {
+      flex: 1;
+    }
+    
+    .service-name {
+      font-size: 1.3em;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 5px;
+    }
+    
+    .service-meta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .service-duration {
+      background: #a3b18a;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.8em;
+      font-weight: 600;
+    }
+    
+    .service-price {
+      font-size: 1.3em;
+      font-weight: 700;
+      color: #6a8f66;
+    }
+    
+    .price-campaign {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .price-original {
+      font-size: 0.9em;
+      color: #999;
+      text-decoration: line-through;
+    }
+    
+    .price-sale {
+      color: #ef4444;
+    }
+    
+    .service-description {
+      color: #666;
+      font-size: 0.95em;
+      line-height: 1.7;
+      margin-top: 15px;
+    }
+    
+    .service-features {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e8e4dc;
+    }
+    
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+      font-size: 0.9em;
+    }
+    
+    .feature-icon {
+      color: #a3b18a;
+      font-size: 1.1em;
+      margin-top: 2px;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+    
+    .no-data {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      overflow-y: auto;
+      animation: fadeIn 0.3s;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .modal-content {
+      background: white;
+      margin: 40px auto;
+      padding: 0;
+      border-radius: 20px;
+      max-width: 700px;
+      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s;
+      overflow: hidden;
+    }
+    
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .modal-header {
+      position: relative;
+      height: 300px;
+      background: linear-gradient(135deg, #f5f2ed 0%, #e8e4dc 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5em;
+    }
+    
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 24px;
+      color: #666;
+      backdrop-filter: blur(10px);
+      transition: 0.3s;
+    }
+    
+    .modal-close:active {
+      transform: scale(0.9);
+      background: white;
+    }
+    
+    .modal-body {
+      padding: 35px 30px;
+    }
+    
+    .modal-title {
+      font-size: 1.8em;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    
+    .modal-description {
+      color: #666;
+      line-height: 1.9;
+      margin-bottom: 25px;
+      font-size: 1.05em;
+    }
+    
+    .modal-features {
+      background: #f8f6f2;
+      padding: 25px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+    }
+    
+    .modal-features h3 {
+      color: #6a8f66;
+      font-size: 1.1em;
+      margin-bottom: 15px;
+    }
+    
+    .modal-action {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .btn {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #a3b18a 0%, #879f6f 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(163, 177, 138, 0.3);
+    }
+    
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+    
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+      font-size: 0.9em;
+    }
+    
+    @media (max-width: 768px) {
+      .header {
+        padding: 40px 20px 30px;
+      }
+      
+      h1 {
+        font-size: 1.6em;
+      }
+      
+      .service-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+      }
+      
+      .modal-content {
+        margin: 20px;
+        max-width: calc(100% - 40px);
+      }
+      
+      .modal-header {
+        height: 250px;
+        font-size: 4em;
+      }
+      
+      .modal-body {
+        padding: 25px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="/home" class="back-button">← ホーム</a>
+    <div class="logo">🌿</div>
+    <h1>サービス紹介</h1>
+    <p class="subtitle">心と体を癒す、上質なトリートメント</p>
+  </div>
+
+  <div class="container">
+    <div id="services-container">
+      <div class="loading">サービス情報を読み込み中...</div>
+    </div>
+  </div>
+
+  <!-- 詳細モーダル -->
+  <div id="serviceModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header" id="modalHeaderImage">
+        <div class="modal-close" onclick="closeModal()">&times;</div>
+      </div>
+      <div class="modal-body">
+        <h2 class="modal-title" id="modalTitle"></h2>
+        <div class="modal-description" id="modalDescription"></div>
+        <div class="modal-features" id="modalFeatures"></div>
+        <div class="modal-action">
+          <button class="btn btn-primary" onclick="goToBooking()">このサービスを予約する</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2025 Salon Coeur</p>
+  </footer>
+
+  <script>
+    let services = [];
+    let selectedService = null;
+
+    async function loadServices() {
+      try {
+        const response = await fetch('/services?active_only=true');
+        const data = await response.json();
+        services = data.services || [];
+        displayServices();
+      } catch (error) {
+        console.error('サービス取得エラー:', error);
+        document.getElementById('services-container').innerHTML = 
+          '<div class="no-data">サービス情報の読み込みに失敗しました</div>';
+      }
+    }
+
+    // ページビュー追跡
+    fetch('/api/track-page-view', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page: 'services' })
+    }).catch(() => {});
+
+    function displayServices() {
+      const container = document.getElementById('services-container');
+      
+      if (services.length === 0) {
+        container.innerHTML = '<div class="no-data">現在、サービス情報はありません</div>';
+        return;
+      }
+
+      const html = '<div class="service-grid">' + services.map(s => {
+        const imageContent = s.image_data 
+          ? `<img src="${s.image_data}" alt="${s.service_name}" style="width: 100%; height: 100%; object-fit: cover;">` 
+          : s.icon || '💆';
+        
+        const priceDisplay = s.is_campaign && s.campaign_price
+          ? `<div class="price-campaign">
+               <span class="price-original">¥${Number(s.price).toLocaleString()}</span>
+               <span class="service-price price-sale">¥${Number(s.campaign_price).toLocaleString()}</span>
+             </div>`
+          : `<span class="service-price">¥${Number(s.price).toLocaleString()}</span>`;
+
+        return `
+          <div class="service-card" onclick="openServiceModal(${s.id})">
+            <div class="service-image">
+              ${imageContent}
+              ${s.is_popular ? '<span class="service-badge badge-popular">🔥 人気</span>' : ''}
+              ${s.is_campaign ? '<span class="service-badge badge-campaign">🎉 キャンペーン</span>' : ''}
+            </div>
+            <div class="service-content">
+              <div class="service-header">
+                ${!s.image_data ? `<div class="service-icon">${s.icon || '💆'}</div>` : ''}
+                <div class="service-title">
+                  <div class="service-name">${s.service_name}</div>
+                  <div class="service-meta">
+                    ${s.duration ? `<span class="service-duration">${s.duration}</span>` : ''}
+                    ${priceDisplay}
+                  </div>
+                </div>
+              </div>
+              ${s.description ? `<div class="service-description">${s.description}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('') + '</div>';
+
+      container.innerHTML = html;
+    }
+
+    function openServiceModal(serviceId) {
+      const service = services.find(s => s.id === serviceId);
+      if (!service) return;
+
+      selectedService = service;
+
+      // ヘッダー画像
+      const headerEl = document.getElementById('modalHeaderImage');
+      if (service.image_data) {
+        headerEl.innerHTML = `
+          <img src="${service.image_data}" alt="${service.service_name}" style="width: 100%; height: 100%; object-fit: cover;">
+          <div class="modal-close" onclick="closeModal()">&times;</div>
+        `;
+      } else {
+        headerEl.innerHTML = `
+          ${service.icon || '💆'}
+          <div class="modal-close" onclick="closeModal()">&times;</div>
+        `;
+      }
+
+      // タイトル
+      document.getElementById('modalTitle').textContent = service.service_name;
+
+      // 説明
+      document.getElementById('modalDescription').textContent = service.description || 'このサービスの詳細説明はまだ登録されていません。';
+
+      // 特徴
+      const featuresHtml = `
+        <h3>✨ サービスの特徴</h3>
+        <div class="feature-item">
+          <span class="feature-icon">⏱️</span>
+          <span>所要時間: ${service.duration || '60分'}</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">💰</span>
+          <span>料金: ${service.is_campaign && service.campaign_price 
+            ? `<s>¥${Number(service.price).toLocaleString()}</s> → <strong style="color: #ef4444;">¥${Number(service.campaign_price).toLocaleString()}</strong>`
+            : `¥${Number(service.price).toLocaleString()}`}</span>
+        </div>
+        ${service.is_popular ? `
+          <div class="feature-item">
+            <span class="feature-icon">🔥</span>
+            <span>人気サービス</span>
+          </div>
+        ` : ''}
+        ${service.is_campaign ? `
+          <div class="feature-item">
+            <span class="feature-icon">🎉</span>
+            <span>キャンペーン実施中</span>
+          </div>
+        ` : ''}
+      `;
+      document.getElementById('modalFeatures').innerHTML = featuresHtml;
+
+      document.getElementById('serviceModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('serviceModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    function goToBooking() {
+      window.location.href = '/booking';
+    }
+
+    // モーダル外クリックで閉じる
+    window.onclick = function(event) {
+      const modal = document.getElementById('serviceModal');
+      if (event.target === modal) {
+        closeModal();
+      }
+    }
+
+    // ページ読み込み時にサービスを取得
+    document.addEventListener('DOMContentLoaded', loadServices);
+  </script>
+</body>
+</html>

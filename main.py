@@ -1005,6 +1005,12 @@ async def admin_calendar_page(request: Request, session_token: str = Cookie(None
         return RedirectResponse(url="/admin/login", status_code=303)
     return templates.TemplateResponse("admin_calendar.html", {"request": request})
 
+@app.get("/services-page", response_class=HTMLResponse)
+def services_intro_page(request: Request):
+    """サービス紹介ページを表示"""
+    track_page_view('services_intro')
+    return templates.TemplateResponse("services.html", {"request": request})
+
 # ========== ページ表示のエンドポイント ========== のセクションに追加
 
 @app.get("/admin/schedule", response_class=HTMLResponse)
