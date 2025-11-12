@@ -1005,6 +1005,15 @@ async def admin_calendar_page(request: Request, session_token: str = Cookie(None
         return RedirectResponse(url="/admin/login", status_code=303)
     return templates.TemplateResponse("admin_calendar.html", {"request": request})
 
+# ========== ページ表示のエンドポイント ========== のセクションに追加
+
+@app.get("/admin/schedule", response_class=HTMLResponse)
+async def admin_schedule_page(request: Request, session_token: str = Cookie(None)):
+    """管理画面 - スケジュールカレンダーを表示"""
+    if not verify_admin_session(session_token):
+        return RedirectResponse(url="/admin/login", status_code=303)
+    return templates.TemplateResponse("admin_schedule.html", {"request": request})
+    
 @app.get("/complete", response_class=HTMLResponse)
 def complete_page(request: Request, customer_name: str = "", phone_number: str = "",
                   service_name: str = "", booking_date: str = "", booking_time: str = "", notes: str = ""):
