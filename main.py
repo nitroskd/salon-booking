@@ -739,10 +739,16 @@ def init_db():
                     id SERIAL PRIMARY KEY,
                     service_name VARCHAR(100) NOT NULL,
                     description TEXT,
+                    intro_text TEXT,
                     price DECIMAL(10, 2) NOT NULL,
+                    campaign_price DECIMAL(10, 2),
                     duration VARCHAR(20),
                     icon VARCHAR(10) DEFAULT '💆',
+                    image_data TEXT,
                     is_popular BOOLEAN DEFAULT FALSE,
+                    is_campaign BOOLEAN DEFAULT FALSE,
+                    show_in_booking BOOLEAN DEFAULT TRUE,
+                    show_in_intro BOOLEAN DEFAULT FALSE,
                     display_order INTEGER DEFAULT 0,
                     is_active BOOLEAN DEFAULT TRUE,
                     created_at TIMESTAMP DEFAULT (NOW() AT TIME ZONE 'Asia/Tokyo'),
@@ -755,6 +761,11 @@ def init_db():
                 c.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS image_data TEXT")
                 c.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS original_price DECIMAL(10, 2)")
                 c.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS brand VARCHAR(100)")
+                c.execute("ALTER TABLE services ADD COLUMN IF NOT EXISTS intro_text TEXT")
+                c.execute("ALTER TABLE services ADD COLUMN IF NOT EXISTS image_data TEXT")
+                c.execute("ALTER TABLE services ADD COLUMN IF NOT EXISTS show_in_booking BOOLEAN DEFAULT TRUE")
+                c.execute("ALTER TABLE services ADD COLUMN IF NOT EXISTS show_in_intro BOOLEAN DEFAULT FALSE")
+                print("✅ servicesテーブルに新しいカラムを追加しました")
             except Exception as e:
                 print(f"カラム追加スキップ: {e}")
                             
@@ -1673,30 +1684,29 @@ async def set_reminder(request: Request):
 # ========== サービス管理API ==========
 
 @app.get("/services")
-def get_services(active_only: bool = True):
+def get_services(active_only: bool = True, for_booking: bool = False, for_intro: bool = False):
     """サービス一覧を取得"""
     with get_db_connection() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as c:
+            query = "SELECT * FROM services WHERE 1=1"
+            params = []
+            
             if active_only:
-                c.execute("""
-                    SELECT 
-                        id, service_name, description, price, duration, icon, 
-                        is_popular, display_order, campaign_price, is_campaign,
-                        created_at, updated_at
-                    FROM services 
-                    WHERE is_active = TRUE
-                    ORDER BY display_order, service_name
-                """)
-            else:
-                c.execute("""
-                    SELECT 
-                        id, service_name, description, price, duration, icon, 
-                        is_popular, display_order, campaign_price, is_campaign,
-                        created_at, updated_at
-                    FROM services 
-                    ORDER BY display_order, service_name
-                """)
+                query += " AND is_active = %s"
+                params.append(True)
+            
+            if for_booking:
+                query += " AND show_in_booking = %s"
+                params.append(True)
+            
+            if for_intro:
+                query += " AND show_in_intro = %s"
+                params.append(True)
+            
+            query += " ORDER BY display_order, service_name"
+            c.execute(query, params)
             services = c.fetchall()
+    
     return {"services": services}
 
 @app.post("/admin/services")
@@ -1719,13 +1729,17 @@ async def create_service(request: Request, session_token: str = Cookie(None)):
                 """, (
                     data['service_name'],
                     data.get('description', ''),
+                    data.get('intro_text', ''),
                     data['price'],
+                    data.get('campaign_price', None),
                     data.get('duration', ''),
                     data.get('icon', '💆'),
+                    data.get('image_data', None),
                     data.get('is_popular', False),
-                    data.get('display_order', 0),
-                    data.get('campaign_price'),
                     data.get('is_campaign', False),
+                    data.get('show_in_booking', True),
+                    data.get('show_in_intro', False),
+                    data.get('display_order', 0)
                 ))
                 service_id = c.fetchone()[0]
                 conn.commit()
@@ -1736,7 +1750,6 @@ async def create_service(request: Request, session_token: str = Cookie(None)):
         import traceback
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
-
 
 @app.put("/admin/services/{service_id}")
 async def update_service(service_id: int, request: Request, session_token: str = Cookie(None)):
@@ -1750,21 +1763,26 @@ async def update_service(service_id: int, request: Request, session_token: str =
             with conn.cursor() as c:
                 c.execute("""
                     UPDATE services 
-                    SET service_name=%s, description=%s, price=%s, duration=%s, 
-                        icon=%s, is_popular=%s, display_order=%s,
-                        campaign_price=%s, is_campaign=%s, 
+                    SET service_name=%s, description=%s, intro_text=%s, price=%s, 
+                        campaign_price=%s, duration=%s, icon=%s, image_data=%s,
+                        is_popular=%s, is_campaign=%s, show_in_booking=%s, 
+                        show_in_intro=%s, display_order=%s,
                         updated_at=CURRENT_TIMESTAMP
                     WHERE id=%s
                 """, (
                     data['service_name'],
                     data.get('description', ''),
+                    data.get('intro_text', ''),
                     data['price'],
+                    data.get('campaign_price', None),
                     data.get('duration', ''),
                     data.get('icon', '💆'),
+                    data.get('image_data', None),
                     data.get('is_popular', False),
-                    data.get('display_order', 0),
-                    data.get('campaign_price'),
                     data.get('is_campaign', False),
+                    data.get('show_in_booking', True),
+                    data.get('show_in_intro', False),
+                    data.get('display_order', 0),
                     service_id
                 ))
                 conn.commit()

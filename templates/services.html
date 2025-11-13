@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>サービス紹介 | Salon Coeur</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -20,13 +20,15 @@
       line-height: 1.8;
     }
     
+    /* ヘッダー */
     .header {
-      background: linear-gradient(135deg, #a3b18a 0%, #879f6f 100%);
+      background: linear-gradient(135deg, #a3b18a 0%, #6a8f66 100%);
       color: white;
       text-align: center;
-      padding: 50px 20px 40px;
+      padding: 60px 20px 50px;
       position: relative;
       overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     }
     
     .header::before {
@@ -36,109 +38,173 @@
       left: -50%;
       width: 200%;
       height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-      background-size: 30px 30px;
-      animation: drift 20s linear infinite;
+      background: radial-gradient(circle, rgba(255,255,255,0.08) 2px, transparent 2px);
+      background-size: 40px 40px;
+      animation: drift 30s linear infinite;
     }
     
     @keyframes drift {
-      0% { transform: translate(0, 0); }
-      100% { transform: translate(30px, 30px); }
+      0% { transform: translate(0, 0) rotate(0deg); }
+      100% { transform: translate(40px, 40px) rotate(360deg); }
     }
     
     .logo {
-      font-size: 2.5em;
-      margin-bottom: 15px;
+      font-size: 3.5em;
+      margin-bottom: 20px;
       position: relative;
       z-index: 1;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
     }
     
     h1 {
-      font-size: 2em;
-      font-weight: 400;
-      margin-bottom: 10px;
+      font-size: 2.2em;
+      font-weight: 600;
+      margin-bottom: 12px;
       position: relative;
       z-index: 1;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     
     .subtitle {
-      font-size: 0.95em;
-      opacity: 0.9;
-      font-weight: 300;
+      font-size: 1.05em;
+      opacity: 0.95;
+      font-weight: 400;
       position: relative;
       z-index: 1;
+      letter-spacing: 1px;
     }
     
     .back-button {
       position: absolute;
       top: 20px;
       left: 20px;
-      padding: 10px 20px;
-      background: rgba(255, 255, 255, 0.2);
+      padding: 12px 24px;
+      background: rgba(255, 255, 255, 0.25);
       color: white;
       text-decoration: none;
-      border-radius: 8px;
-      font-size: 0.9em;
+      border-radius: 10px;
+      font-size: 0.95em;
       backdrop-filter: blur(10px);
-      transition: 0.3s;
+      transition: all 0.3s;
       z-index: 2;
+      font-weight: 500;
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
     
     .back-button:active {
       transform: scale(0.95);
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.35);
     }
     
+    /* コンテナ */
     .container {
-      max-width: 1200px;
+      max-width: 1300px;
       margin: 0 auto;
-      padding: 40px 20px;
+      padding: 50px 20px;
     }
     
+    .section-intro {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    
+    .section-intro h2 {
+      font-size: 1.8em;
+      color: #6a8f66;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+    
+    .section-intro p {
+      color: #888;
+      font-size: 1.05em;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    
+    /* サービスグリッド */
     .service-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 30px;
-      margin-top: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 35px;
+      margin-top: 30px;
     }
     
     .service-card {
       background: white;
-      border-radius: 16px;
+      border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      transition: all 0.3s ease;
+      box-shadow: 0 6px 30px rgba(0, 0, 0, 0.08);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
-    }
-    
-    .service-card:active {
-      transform: translateY(2px);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
-    }
-    
-    .service-image {
-      width: 100%;
-      height: 220px;
-      object-fit: cover;
-      background: linear-gradient(135deg, #f5f2ed 0%, #e8e4dc 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 4em;
       position: relative;
     }
     
-    .service-badge {
+    .service-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 40px rgba(163, 177, 138, 0.25);
+    }
+    
+    .service-card:active {
+      transform: translateY(-4px);
+    }
+    
+    /* 画像エリア */
+    .service-image {
+      width: 100%;
+      height: 260px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #f5f2ed 0%, #e8e4dc 100%);
+    }
+    
+    .service-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s;
+    }
+    
+    .service-card:hover .service-image img {
+      transform: scale(1.05);
+    }
+    
+    .service-image-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5em;
+      height: 100%;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
+    }
+    
+    /* バッジ */
+    .badges-container {
       position: absolute;
       top: 15px;
       right: 15px;
-      padding: 6px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 10;
+    }
+    
+    .service-badge {
+      padding: 8px 16px;
       border-radius: 20px;
-      font-size: 0.75em;
-      font-weight: 600;
+      font-size: 0.8em;
+      font-weight: 700;
       color: white;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      white-space: nowrap;
     }
     
     .badge-popular {
@@ -149,19 +215,21 @@
       background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
     }
     
+    /* コンテンツ */
     .service-content {
-      padding: 25px;
+      padding: 30px;
     }
     
     .service-header {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 15px;
+      gap: 15px;
+      margin-bottom: 18px;
     }
     
     .service-icon {
-      font-size: 2em;
+      font-size: 2.5em;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.1));
     }
     
     .service-title {
@@ -169,30 +237,32 @@
     }
     
     .service-name {
-      font-size: 1.3em;
-      font-weight: 600;
+      font-size: 1.5em;
+      font-weight: 700;
       color: #333;
-      margin-bottom: 5px;
+      margin-bottom: 8px;
+      line-height: 1.3;
     }
     
     .service-meta {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       align-items: center;
       flex-wrap: wrap;
     }
     
     .service-duration {
-      background: #a3b18a;
+      background: linear-gradient(135deg, #a3b18a 0%, #879f6f 100%);
       color: white;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 0.8em;
-      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 14px;
+      font-size: 0.85em;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(163, 177, 138, 0.3);
     }
     
     .service-price {
-      font-size: 1.3em;
+      font-size: 1.5em;
       font-weight: 700;
       color: #6a8f66;
     }
@@ -200,11 +270,11 @@
     .price-campaign {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
     
     .price-original {
-      font-size: 0.9em;
+      font-size: 0.85em;
       color: #999;
       text-decoration: line-through;
     }
@@ -215,43 +285,40 @@
     
     .service-description {
       color: #666;
+      font-size: 1em;
+      line-height: 1.8;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid #f0f0f0;
+    }
+    
+    .read-more {
+      color: #6a8f66;
+      font-weight: 600;
+      margin-top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
       font-size: 0.95em;
-      line-height: 1.7;
-      margin-top: 15px;
     }
     
-    .service-features {
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px solid #e8e4dc;
-    }
-    
-    .feature-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 12px;
-      font-size: 0.9em;
-    }
-    
-    .feature-icon {
-      color: #a3b18a;
+    /* ローディング・空データ */
+    .loading, .no-data {
+      text-align: center;
+      padding: 80px 20px;
+      color: #999;
       font-size: 1.1em;
-      margin-top: 2px;
     }
     
-    .loading {
-      text-align: center;
-      padding: 60px 20px;
-      color: #999;
+    .loading::before {
+      content: '🌿';
+      display: block;
+      font-size: 3em;
+      margin-bottom: 15px;
+      animation: float 2s ease-in-out infinite;
     }
     
-    .no-data {
-      text-align: center;
-      padding: 60px 20px;
-      color: #999;
-    }
-    
+    /* モーダル */
     .modal {
       display: none;
       position: fixed;
@@ -260,9 +327,10 @@
       top: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgba(0, 0, 0, 0.75);
       overflow-y: auto;
       animation: fadeIn 0.3s;
+      backdrop-filter: blur(5px);
     }
     
     @keyframes fadeIn {
@@ -272,19 +340,18 @@
     
     .modal-content {
       background: white;
-      margin: 40px auto;
-      padding: 0;
-      border-radius: 20px;
-      max-width: 700px;
-      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
-      animation: slideUp 0.3s;
+      margin: 50px auto;
+      border-radius: 24px;
+      max-width: 800px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
     }
     
     @keyframes slideUp {
       from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(50px);
       }
       to {
         opacity: 1;
@@ -294,66 +361,107 @@
     
     .modal-header {
       position: relative;
-      height: 300px;
+      height: 350px;
       background: linear-gradient(135deg, #f5f2ed 0%, #e8e4dc 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 5em;
+    }
+    
+    .modal-header img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .modal-header-icon {
+      font-size: 6em;
+      filter: drop-shadow(0 4px 20px rgba(0,0,0,0.15));
     }
     
     .modal-close {
       position: absolute;
-      top: 15px;
-      right: 15px;
-      width: 40px;
-      height: 40px;
-      background: rgba(255, 255, 255, 0.9);
+      top: 20px;
+      right: 20px;
+      width: 45px;
+      height: 45px;
+      background: rgba(255, 255, 255, 0.95);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 24px;
+      font-size: 26px;
       color: #666;
       backdrop-filter: blur(10px);
-      transition: 0.3s;
+      transition: all 0.3s;
+      z-index: 10;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .modal-close:hover {
+      background: white;
+      transform: rotate(90deg);
     }
     
     .modal-close:active {
-      transform: scale(0.9);
-      background: white;
+      transform: scale(0.9) rotate(90deg);
     }
     
     .modal-body {
-      padding: 35px 30px;
+      padding: 40px 35px;
     }
     
     .modal-title {
-      font-size: 1.8em;
-      font-weight: 600;
+      font-size: 2em;
+      font-weight: 700;
       color: #333;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
+      line-height: 1.3;
     }
     
     .modal-description {
       color: #666;
-      line-height: 1.9;
-      margin-bottom: 25px;
+      line-height: 2;
+      margin-bottom: 30px;
       font-size: 1.05em;
+      white-space: pre-wrap;
     }
     
     .modal-features {
-      background: #f8f6f2;
-      padding: 25px;
-      border-radius: 12px;
-      margin-bottom: 25px;
+      background: linear-gradient(135deg, #f8f6f2 0%, #f5f2ed 100%);
+      padding: 30px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border: 1px solid #e8e4dc;
     }
     
     .modal-features h3 {
       color: #6a8f66;
-      font-size: 1.1em;
-      margin-bottom: 15px;
+      font-size: 1.2em;
+      margin-bottom: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+      font-size: 1em;
+      padding: 10px;
+      background: white;
+      border-radius: 10px;
+    }
+    
+    .feature-icon {
+      color: #a3b18a;
+      font-size: 1.3em;
+      margin-top: 1px;
+      flex-shrink: 0;
     }
     
     .modal-action {
@@ -363,45 +471,55 @@
     
     .btn {
       flex: 1;
-      padding: 16px;
+      padding: 18px;
       border: none;
-      border-radius: 12px;
-      font-size: 1.05em;
-      font-weight: 600;
+      border-radius: 14px;
+      font-size: 1.1em;
+      font-weight: 700;
       cursor: pointer;
-      transition: 0.3s;
+      transition: all 0.3s;
       font-family: 'Noto Sans JP', sans-serif;
     }
     
     .btn-primary {
-      background: linear-gradient(135deg, #a3b18a 0%, #879f6f 100%);
+      background: linear-gradient(135deg, #a3b18a 0%, #6a8f66 100%);
       color: white;
-      box-shadow: 0 4px 15px rgba(163, 177, 138, 0.3);
+      box-shadow: 0 6px 20px rgba(163, 177, 138, 0.4);
     }
     
     .btn-primary:active {
-      transform: scale(0.98);
+      transform: translateY(2px);
+      box-shadow: 0 4px 12px rgba(163, 177, 138, 0.4);
     }
     
+    /* フッター */
     footer {
       text-align: center;
-      padding: 40px 20px;
+      padding: 50px 20px;
       color: #999;
-      font-size: 0.9em;
+      font-size: 0.95em;
+      background: #f8f6f2;
+      margin-top: 60px;
     }
     
+    /* レスポンシブ */
     @media (max-width: 768px) {
       .header {
-        padding: 40px 20px 30px;
+        padding: 50px 20px 40px;
       }
       
       h1 {
-        font-size: 1.6em;
+        font-size: 1.8em;
+        letter-spacing: 2px;
+      }
+      
+      .subtitle {
+        font-size: 0.95em;
       }
       
       .service-grid {
         grid-template-columns: 1fr;
-        gap: 25px;
+        gap: 30px;
       }
       
       .modal-content {
@@ -410,25 +528,56 @@
       }
       
       .modal-header {
-        height: 250px;
-        font-size: 4em;
+        height: 280px;
+      }
+      
+      .modal-header-icon {
+        font-size: 5em;
       }
       
       .modal-body {
-        padding: 25px 20px;
+        padding: 30px 25px;
+      }
+      
+      .modal-title {
+        font-size: 1.6em;
+      }
+      
+      .btn {
+        padding: 16px;
+        font-size: 1em;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .service-name {
+        font-size: 1.3em;
+      }
+      
+      .service-price {
+        font-size: 1.3em;
+      }
+      
+      .modal-features {
+        padding: 20px;
       }
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <a href="/home" class="back-button">← ホーム</a>
+    <a href="/home" class="back-button">← ホームに戻る</a>
     <div class="logo">🌿</div>
     <h1>サービス紹介</h1>
     <p class="subtitle">心と体を癒す、上質なトリートメント</p>
   </div>
 
   <div class="container">
+    <div class="section-intro">
+      <h2>✨ 当サロンのメニュー</h2>
+      <p>お客様一人ひとりのお悩みに合わせた、こだわりのケアメニューをご用意しております</p>
+    </div>
+
     <div id="services-container">
       <div class="loading">サービス情報を読み込み中...</div>
     </div>
@@ -445,14 +594,14 @@
         <div class="modal-description" id="modalDescription"></div>
         <div class="modal-features" id="modalFeatures"></div>
         <div class="modal-action">
-          <button class="btn btn-primary" onclick="goToBooking()">このサービスを予約する</button>
+          <button class="btn btn-primary" onclick="goToBooking()">📅 このサービスを予約する</button>
         </div>
       </div>
     </div>
   </div>
 
   <footer>
-    <p>© 2025 Salon Coeur</p>
+    <p>© 2025 Salon Coeur - すべての女性を美しく</p>
   </footer>
 
   <script>
@@ -461,37 +610,46 @@
 
     async function loadServices() {
       try {
-        const response = await fetch('/services?active_only=true');
+        // サービス紹介ページ用（show_in_intro=true）のサービスを取得
+        const response = await fetch('/services?active_only=true&for_intro=true');
         const data = await response.json();
         services = data.services || [];
+        
+        // show_in_introがfalseでも全サービス表示したい場合は以下を使用
+        // const response = await fetch('/services?active_only=true');
+        
         displayServices();
       } catch (error) {
         console.error('サービス取得エラー:', error);
         document.getElementById('services-container').innerHTML = 
-          '<div class="no-data">サービス情報の読み込みに失敗しました</div>';
+          '<div class="no-data">❌ サービス情報の読み込みに失敗しました</div>';
       }
     }
-
-    // ページビュー追跡
-    fetch('/api/track-page-view', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ page: 'services' })
-    }).catch(() => {});
 
     function displayServices() {
       const container = document.getElementById('services-container');
       
       if (services.length === 0) {
-        container.innerHTML = '<div class="no-data">現在、サービス情報はありません</div>';
+        container.innerHTML = '<div class="no-data">📋 現在、表示可能なサービスはありません</div>';
         return;
       }
 
       const html = '<div class="service-grid">' + services.map(s => {
-        const imageContent = s.image_data 
-          ? `<img src="${s.image_data}" alt="${s.service_name}" style="width: 100%; height: 100%; object-fit: cover;">` 
-          : s.icon || '💆';
+        // バッジ
+        let badges = '';
+        if (s.is_popular || s.is_campaign) {
+          badges = '<div class="badges-container">';
+          if (s.is_popular) badges += '<span class="service-badge badge-popular">🔥 人気</span>';
+          if (s.is_campaign) badges += '<span class="service-badge badge-campaign">🎉 キャンペーン</span>';
+          badges += '</div>';
+        }
         
+        // 画像エリア
+        const imageContent = s.image_data 
+          ? `<img src="${s.image_data}" alt="${s.service_name}">` 
+          : `<div class="service-image-icon">${s.icon || '💆'}</div>`;
+        
+        // 価格表示
         const priceDisplay = s.is_campaign && s.campaign_price
           ? `<div class="price-campaign">
                <span class="price-original">¥${Number(s.price).toLocaleString()}</span>
@@ -503,8 +661,7 @@
           <div class="service-card" onclick="openServiceModal(${s.id})">
             <div class="service-image">
               ${imageContent}
-              ${s.is_popular ? '<span class="service-badge badge-popular">🔥 人気</span>' : ''}
-              ${s.is_campaign ? '<span class="service-badge badge-campaign">🎉 キャンペーン</span>' : ''}
+              ${badges}
             </div>
             <div class="service-content">
               <div class="service-header">
@@ -512,12 +669,17 @@
                 <div class="service-title">
                   <div class="service-name">${s.service_name}</div>
                   <div class="service-meta">
-                    ${s.duration ? `<span class="service-duration">${s.duration}</span>` : ''}
+                    ${s.duration ? `<span class="service-duration">⏱️ ${s.duration}</span>` : ''}
                     ${priceDisplay}
                   </div>
                 </div>
               </div>
-              ${s.description ? `<div class="service-description">${s.description}</div>` : ''}
+              ${s.description ? `
+                <div class="service-description">
+                  ${s.description.length > 80 ? s.description.substring(0, 80) + '...' : s.description}
+                </div>
+              ` : ''}
+              <div class="read-more">詳しく見る →</div>
             </div>
           </div>
         `;
@@ -536,12 +698,12 @@
       const headerEl = document.getElementById('modalHeaderImage');
       if (service.image_data) {
         headerEl.innerHTML = `
-          <img src="${service.image_data}" alt="${service.service_name}" style="width: 100%; height: 100%; object-fit: cover;">
+          <img src="${service.image_data}" alt="${service.service_name}">
           <div class="modal-close" onclick="closeModal()">&times;</div>
         `;
       } else {
         headerEl.innerHTML = `
-          ${service.icon || '💆'}
+          <div class="modal-header-icon">${service.icon || '💆'}</div>
           <div class="modal-close" onclick="closeModal()">&times;</div>
         `;
       }
@@ -549,32 +711,33 @@
       // タイトル
       document.getElementById('modalTitle').textContent = service.service_name;
 
-      // 説明
-      document.getElementById('modalDescription').textContent = service.description || 'このサービスの詳細説明はまだ登録されていません。';
+      // 詳細説明（intro_textを優先、なければdescription）
+      const description = service.intro_text || service.description || 'このサービスの詳細説明はまだ登録されていません。';
+      document.getElementById('modalDescription').textContent = description;
 
       // 特徴
       const featuresHtml = `
-        <h3>✨ サービスの特徴</h3>
+        <h3>✨ サービス詳細</h3>
         <div class="feature-item">
           <span class="feature-icon">⏱️</span>
-          <span>所要時間: ${service.duration || '60分'}</span>
+          <span><strong>所要時間:</strong> ${service.duration || '約60分'}</span>
         </div>
         <div class="feature-item">
           <span class="feature-icon">💰</span>
-          <span>料金: ${service.is_campaign && service.campaign_price 
-            ? `<s>¥${Number(service.price).toLocaleString()}</s> → <strong style="color: #ef4444;">¥${Number(service.campaign_price).toLocaleString()}</strong>`
+          <span><strong>料金:</strong> ${service.is_campaign && service.campaign_price 
+            ? `<s style="color: #999;">¥${Number(service.price).toLocaleString()}</s> → <strong style="color: #ef4444;">¥${Number(service.campaign_price).toLocaleString()}</strong> <span style="background: #fef3c7; color: #d97706; padding: 2px 8px; border-radius: 8px; font-size: 0.85em; font-weight: 700;">キャンペーン価格</span>`
             : `¥${Number(service.price).toLocaleString()}`}</span>
         </div>
         ${service.is_popular ? `
           <div class="feature-item">
             <span class="feature-icon">🔥</span>
-            <span>人気サービス</span>
+            <span><strong>人気メニュー</strong> - 多くのお客様にご利用いただいております</span>
           </div>
         ` : ''}
         ${service.is_campaign ? `
           <div class="feature-item">
             <span class="feature-icon">🎉</span>
-            <span>キャンペーン実施中</span>
+            <span><strong>期間限定キャンペーン実施中</strong></span>
           </div>
         ` : ''}
       `;
