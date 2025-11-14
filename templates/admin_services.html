@@ -833,9 +833,93 @@
       document.body.appendChild(input);
       input.click();
       document.body.removeChild(input);
-          input.click();
-          document.body.removeChild(input);
-        };
+    }
+    
+    function removeImage(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      if (!confirm('画像を削除しますか？')) return;
+      
+      document.getElementById('service-image-data').value = '';
+      
+      const uploadArea = document.getElementById('image-upload-area');
+      uploadArea.classList.remove('has-image');
+      uploadArea.innerHTML = `
+        <div id="upload-placeholder">
+          <div style="font-size: 3em; margin-bottom: 10px;">📷</div>
+          <div class="upload-text">クリックして画像をアップロード</div>
+          <div class="upload-text" style="font-size: 0.85em; color: #aaa;">推奨: 横長の画像（16:9）</div>
+        </div>
+      `;
+      setupImageUpload();
+    }
+  
+    function openAddModal() {
+      document.getElementById('modal-title').textContent = '✨ サービス追加';
+      document.getElementById('serviceForm').reset();
+      document.getElementById('service-id').value = '';
+      document.getElementById('service-icon').value = '💆';
+      document.getElementById('service-order').value = '0';
+      document.getElementById('show-in-booking').checked = true;
+      document.getElementById('show-in-intro').checked = false;
+      document.getElementById('service-image-data').value = '';
+      
+      const uploadArea = document.getElementById('image-upload-area');
+      uploadArea.classList.remove('has-image');
+      uploadArea.innerHTML = `
+        <div id="upload-placeholder">
+          <div style="font-size: 3em; margin-bottom: 10px;">📷</div>
+          <div class="upload-text">クリックして画像をアップロード</div>
+          <div class="upload-text" style="font-size: 0.85em; color: #aaa;">推奨: 横長の画像（16:9）</div>
+        </div>
+      `;
+      
+      setupImageUpload();
+      document.getElementById('serviceModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+  
+    function openEditModal(id) {
+      const service = services.find(s => s.id === id);
+      if (!service) return;
+
+      document.getElementById('modal-title').textContent = '✏️ サービス編集';
+      document.getElementById('service-id').value = service.id;
+      document.getElementById('service-name').value = service.service_name;
+      document.getElementById('service-icon').value = service.icon || '💆';
+      document.getElementById('service-price').value = service.price;
+      document.getElementById('service-campaign-price').value = service.campaign_price || '';
+      document.getElementById('service-campaign').checked = service.is_campaign || false;
+      document.getElementById('service-duration').value = service.duration || '';
+      document.getElementById('service-description').value = service.description || '';
+      document.getElementById('service-intro-text').value = service.intro_text || '';
+      document.getElementById('service-order').value = service.display_order || 0;
+      document.getElementById('service-popular').checked = service.is_popular || false;
+      document.getElementById('show-in-booking').checked = service.show_in_booking !== false;
+      document.getElementById('show-in-intro').checked = service.show_in_intro || false;
+      document.getElementById('service-image-data').value = service.image_data || '';
+      
+      const uploadArea = document.getElementById('image-upload-area');
+      if (service.image_data) {
+        uploadArea.classList.add('has-image');
+        uploadArea.innerHTML = `
+          <img src="${service.image_data}" class="preview-image" alt="Preview">
+          <div class="image-controls">
+            <button type="button" class="btn-change-image" onclick="changeImage(event)">📷 変更</button>
+            <button type="button" class="btn-remove-image" onclick="removeImage(event)">🗑️ 削除</button>
+          </div>
+        `;
+      } else {
+        uploadArea.classList.remove('has-image');
+        uploadArea.innerHTML = `
+          <div id="upload-placeholder">
+            <div style="font-size: 3em; margin-bottom: 10px;">📷</div>
+            <div class="upload-text">クリックして画像をアップロード</div>
+            <div class="upload-text" style="font-size: 0.85em; color: #aaa;">推奨: 横長の画像（16:9）</div>
+          </div>
+        `;
+        setupImageUpload();
       }
       
       document.getElementById('serviceModal').style.display = 'block';
@@ -859,7 +943,7 @@
         duration: document.getElementById('service-duration').value,
         description: document.getElementById('service-description').value,
         intro_text: document.getElementById('service-intro-text').value,
-        image_data: document.getElementById('service-image-data') ? document.getElementById('service-image-data').value : null,
+        image_data: document.getElementById('service-image-data').value || null,
         display_order: parseInt(document.getElementById('service-order').value),
         is_popular: document.getElementById('service-popular').checked,
         is_campaign: document.getElementById('service-campaign').checked,
