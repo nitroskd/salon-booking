@@ -190,6 +190,13 @@ def get_db_connection():
     finally:
         conn.close()
 
+# ========== LINE通知設定==========
+@app.post("/line/webhook")
+async def line_webhook(request: Request):
+    body = await request.json()
+    print("LINE Webhook:", body)
+    return {"status": "ok"}
+
 # 通知設定
 GMAIL_USER = os.getenv("GMAIL_USER")
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
