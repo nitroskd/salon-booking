@@ -287,7 +287,6 @@
       transform: translateY(2px);
     }
     
-    /* モーダル */
     .modal {
       display: none;
       position: fixed;
@@ -541,7 +540,6 @@
     </div>
   </div>
 
-  <!-- モーダル -->
   <div id="serviceModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeModal()">&times;</span>
@@ -549,7 +547,6 @@
       <form id="serviceForm">
         <input type="hidden" id="service-id">
         
-        <!-- 基本情報 -->
         <div class="form-section">
           <div class="form-section-title">📝 基本情報</div>
           
@@ -583,7 +580,6 @@
           </div>
         </div>
         
-        <!-- 説明文 -->
         <div class="form-section">
           <div class="form-section-title">💬 説明文</div>
           
@@ -598,14 +594,11 @@
           </div>
         </div>
         
-        <!-- 画像 -->
         <div class="form-section">
           <div class="form-section-title">🖼️ サービス画像</div>
           
           <div class="form-group">
-            <div class="image-upload-area" id="image-upload-area" onclick="document.getElementById('image-input').click()">
-              <input type="file" id="image-input" accept="image/*" style="display: none" onchange="handleImageUpload(event)">
-              <input type="hidden" id="service-image-data">
+            <div class="image-upload-area" id="image-upload-area">
               <div id="upload-content">
                 <div style="font-size: 3em; margin-bottom: 10px;">📷</div>
                 <div class="upload-text">クリックして画像をアップロード</div>
@@ -615,7 +608,6 @@
           </div>
         </div>
         
-        <!-- 表示設定 -->
         <div class="form-section">
           <div class="form-section-title">⚙️ 表示設定</div>
           
@@ -750,154 +742,148 @@
     }
     
     function handleImageUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const imageData = e.target.result;
-    
-    // hidden inputに画像データを保存（存在確認）
-    let hiddenInput = document.getElementById('service-image-data');
-    if (!hiddenInput) {
-      // hidden inputが存在しない場合は作成してフォームに追加
-      hiddenInput = document.createElement('input');
-      hiddenInput.type = 'hidden';
-      hiddenInput.id = 'service-image-data';
-      document.getElementById('serviceForm').appendChild(hiddenInput);
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const imageData = e.target.result;
+        
+        let hiddenInput = document.getElementById('service-image-data');
+        if (!hiddenInput) {
+          hiddenInput = document.createElement('input');
+          hiddenInput.type = 'hidden';
+          hiddenInput.id = 'service-image-data';
+          document.getElementById('serviceForm').appendChild(hiddenInput);
+        }
+        hiddenInput.value = imageData;
+        
+        const uploadArea = document.getElementById('image-upload-area');
+        uploadArea.classList.add('has-image');
+        uploadArea.innerHTML = `<img src="${imageData}" class="preview-image" alt="Preview" style="cursor: pointer;">`;
+        
+        uploadArea.onclick = function() {
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          fileInput.accept = 'image/*';
+          fileInput.style.display = 'none';
+          fileInput.onchange = handleImageUpload;
+          document.body.appendChild(fileInput);
+          fileInput.click();
+          document.body.removeChild(fileInput);
+        };
+      };
+      reader.readAsDataURL(file);
     }
-    hiddenInput.value = imageData;
-    
-    // プレビュー表示
-    const uploadArea = document.getElementById('image-upload-area');
-    uploadArea.classList.add('has-image');
-    uploadArea.innerHTML = `<img src="${imageData}" class="preview-image" alt="Preview" style="cursor: pointer;">`;
-    
-    // クリックで画像を再選択できるようにする
-    uploadArea.onclick = function() {
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = 'image/*';
-      fileInput.style.display = 'none';
-      fileInput.onchange = handleImageUpload;
-      document.body.appendChild(fileInput);
-      fileInput.click();
-      document.body.removeChild(fileInput);
-    };
-  };
-  reader.readAsDataURL(file);
-}
+  
+    function openAddModal() {
+      document.getElementById('modal-title').textContent = '✨ サービス追加';
+      document.getElementById('serviceForm').reset();
+      document.getElementById('service-id').value = '';
+      document.getElementById('service-icon').value = '💆';
+      document.getElementById('service-order').value = '0';
+      document.getElementById('show-in-booking').checked = true;
+      document.getElementById('show-in-intro').checked = false;
+      
+      let hiddenInput = document.getElementById('service-image-data');
+      if (!hiddenInput) {
+        hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.id = 'service-image-data';
+        document.getElementById('serviceForm').appendChild(hiddenInput);
+      }
+      hiddenInput.value = '';
+      
+      const uploadArea = document.getElementById('image-upload-area');
+      uploadArea.classList.remove('has-image');
+      uploadArea.innerHTML = `
+        <div id="upload-content">
+          <div style="font-size: 3em; margin-bottom: 10px;">📷</div>
+          <div class="upload-text">クリックして画像をアップロード</div>
+          <div class="upload-text" style="font-size: 0.85em; color: #aaa;">推奨: 横長の画像（16:9）</div>
+        </div>
+      `;
+      uploadArea.onclick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.style.display = 'none';
+        input.onchange = handleImageUpload;
+        document.body.appendChild(input);
+        input.click();
+        document.body.removeChild(input);
+      };
+      
+      document.getElementById('serviceModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+  
+    function openEditModal(id) {
+      const service = services.find(s => s.id === id);
+      if (!service) return;
 
-function openAddModal() {
-  document.getElementById('modal-title').textContent = '✨ サービス追加';
-  document.getElementById('serviceForm').reset();
-  document.getElementById('service-id').value = '';
-  document.getElementById('service-icon').value = '💆';
-  document.getElementById('service-order').value = '0';
-  document.getElementById('show-in-booking').checked = true;
-  document.getElementById('show-in-intro').checked = false;
-  
-  // hidden inputを確実に作成
-  let hiddenInput = document.getElementById('service-image-data');
-  if (!hiddenInput) {
-    hiddenInput = document.createElement('input');
-    hiddenInput.type = 'hidden';
-    hiddenInput.id = 'service-image-data';
-    document.getElementById('serviceForm').appendChild(hiddenInput);
-  }
-  hiddenInput.value = '';
-  
-  const uploadArea = document.getElementById('image-upload-area');
-  uploadArea.classList.remove('has-image');
-  uploadArea.innerHTML = `
-    <div id="upload-content">
-      <div style="font-size: 3em; margin-bottom: 10px;">📷</div>
-      <div class="upload-text">クリックして画像をアップロード</div>
-      <div class="upload-text" style="font-size: 0.85em; color: #aaa;">推奨: 横長の画像（16:9）</div>
-    </div>
-  `;
-  uploadArea.onclick = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.style.display = 'none';
-    input.onchange = handleImageUpload;
-    document.body.appendChild(input);
-    input.click();
-    document.body.removeChild(input);
-  };
-  
-  document.getElementById('serviceModal').style.display = 'block';
-  document.body.style.overflow = 'hidden';
-}
-
-function openEditModal(id) {
-  const service = services.find(s => s.id === id);
-  if (!service) return;
-
-  document.getElementById('modal-title').textContent = '✏️ サービス編集';
-  document.getElementById('service-id').value = service.id;
-  document.getElementById('service-name').value = service.service_name;
-  document.getElementById('service-icon').value = service.icon || '💆';
-  document.getElementById('service-price').value = service.price;
-  document.getElementById('service-campaign-price').value = service.campaign_price || '';
-  document.getElementById('service-campaign').checked = service.is_campaign || false;
-  document.getElementById('service-duration').value = service.duration || '';
-  document.getElementById('service-description').value = service.description || '';
-  document.getElementById('service-intro-text').value = service.intro_text || '';
-  document.getElementById('service-order').value = service.display_order || 0;
-  document.getElementById('service-popular').checked = service.is_popular || false;
-  document.getElementById('show-in-booking').checked = service.show_in_booking !== false;
-  document.getElementById('show-in-intro').checked = service.show_in_intro || false;
-  
-  // hidden inputを確実に作成してデータを設定
-  let hiddenInput = document.getElementById('service-image-data');
-  if (!hiddenInput) {
-    hiddenInput = document.createElement('input');
-    hiddenInput.type = 'hidden';
-    hiddenInput.id = 'service-image-data';
-    document.getElementById('serviceForm').appendChild(hiddenInput);
-  }
-  hiddenInput.value = service.image_data || '';
-  
-  const uploadArea = document.getElementById('image-upload-area');
-  if (service.image_data) {
-    uploadArea.classList.add('has-image');
-    uploadArea.innerHTML = `<img src="${service.image_data}" class="preview-image" alt="Preview" style="cursor: pointer;">`;
-    uploadArea.onclick = function() {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.style.display = 'none';
-      input.onchange = handleImageUpload;
-      document.body.appendChild(input);
-      input.click();
-      document.body.removeChild(input);
-    };
-  } else {
-    uploadArea.classList.remove('has-image');
-    uploadArea.innerHTML = `
-      <div id="upload-content">
-        <div style="font-size: 3em; margin-bottom: 10px;">📷</div>
-        <div class="upload-text">クリックして画像をアップロード</div>
-        <div class="upload-text" style="font-size: 0.85em; color: #aaa;">推奨: 横長の画像（16:9）</div>
-      </div>
-    `;
-    uploadArea.onclick = function() {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.style.display = 'none';
-      input.onchange = handleImageUpload;
-      document.body.appendChild(input);
-      input.click();
-      document.body.removeChild(input);
-    };
-  }
-  
-  document.getElementById('serviceModal').style.display = 'block';
-  document.body.style.overflow = 'hidden';
-}
+      document.getElementById('modal-title').textContent = '✏️ サービス編集';
+      document.getElementById('service-id').value = service.id;
+      document.getElementById('service-name').value = service.service_name;
+      document.getElementById('service-icon').value = service.icon || '💆';
+      document.getElementById('service-price').value = service.price;
+      document.getElementById('service-campaign-price').value = service.campaign_price || '';
+      document.getElementById('service-campaign').checked = service.is_campaign || false;
+      document.getElementById('service-duration').value = service.duration || '';
+      document.getElementById('service-description').value = service.description || '';
+      document.getElementById('service-intro-text').value = service.intro_text || '';
+      document.getElementById('service-order').value = service.display_order || 0;
+      document.getElementById('service-popular').checked = service.is_popular || false;
+      document.getElementById('show-in-booking').checked = service.show_in_booking !== false;
+      document.getElementById('show-in-intro').checked = service.show_in_intro || false;
+      
+      let hiddenInput = document.getElementById('service-image-data');
+      if (!hiddenInput) {
+        hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.id = 'service-image-data';
+        document.getElementById('serviceForm').appendChild(hiddenInput);
+      }
+      hiddenInput.value = service.image_data || '';
+      
+      const uploadArea = document.getElementById('image-upload-area');
+      if (service.image_data) {
+        uploadArea.classList.add('has-image');
+        uploadArea.innerHTML = `<img src="${service.image_data}" class="preview-image" alt="Preview" style="cursor: pointer;">`;
+        uploadArea.onclick = function() {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.style.display = 'none';
+          input.onchange = handleImageUpload;
+          document.body.appendChild(input);
+          input.click();
+          document.body.removeChild(input);
+        };
+      } else {
+        uploadArea.classList.remove('has-image');
+        uploadArea.innerHTML = `
+          <div id="upload-content">
+            <div style="font-size: 3em; margin-bottom: 10px;">📷</div>
+            <div class="upload-text">クリックして画像をアップロード</div>
+            <div class="upload-text" style="font-size: 0.85em; color: #aaa;">推奨: 横長の画像（16:9）</div>
+          </div>
+        `;
+        uploadArea.onclick = function() {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.style.display = 'none';
+          input.onchange = handleImageUpload;
+          document.body.appendChild(input);
+          input.click();
+          document.body.removeChild(input);
+        };
+      }
+      
+      document.getElementById('serviceModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
   
     function closeModal() {
       document.getElementById('serviceModal').style.display = 'none';
@@ -916,7 +902,7 @@ function openEditModal(id) {
         duration: document.getElementById('service-duration').value,
         description: document.getElementById('service-description').value,
         intro_text: document.getElementById('service-intro-text').value,
-        image_data: document.getElementById('service-image-data').value || null,
+        image_data: document.getElementById('service-image-data') ? document.getElementById('service-image-data').value : null,
         display_order: parseInt(document.getElementById('service-order').value),
         is_popular: document.getElementById('service-popular').checked,
         is_campaign: document.getElementById('service-campaign').checked,
