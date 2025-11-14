@@ -15,112 +15,136 @@
     
     body {
       font-family: 'Noto Sans JP', sans-serif;
-      background: #fefbf5;
+      background: linear-gradient(135deg, #fefbf5 0%, #f8f6f0 100%);
       color: #444;
       padding: 15px;
-      padding-bottom: 40px;
+      padding-bottom: 60px;
+      min-height: 100vh;
     }
     
     .header {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
     }
     
     .logo {
-      font-size: 2em;
-      margin-bottom: 10px;
+      font-size: 2.5em;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
     }
     
     h1 {
       color: #6a8f66;
-      font-size: 1.6em;
-      font-weight: 500;
-      margin-bottom: 15px;
+      font-size: 1.8em;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-shadow: 0 2px 4px rgba(106, 143, 102, 0.1);
+    }
+    
+    .subtitle {
+      color: #888;
+      font-size: 0.9em;
+      margin-bottom: 20px;
     }
     
     nav {
       display: flex;
       gap: 8px;
       justify-content: center;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       flex-wrap: wrap;
     }
     
     nav a {
-      padding: 8px 15px;
-      background: #a3b18a;
+      padding: 10px 18px;
+      background: linear-gradient(135deg, #a3b18a 0%, #879f6f 100%);
       color: white;
       text-decoration: none;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 0.85em;
-      transition: 0.3s;
+      transition: all 0.3s;
       white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(163, 177, 138, 0.3);
     }
     
     nav a:active {
-      transform: scale(0.98);
+      transform: scale(0.95);
     }
     
     .btn-calendar {
-      background: #5da3d5;
+      background: linear-gradient(135deg, #5da3d5 0%, #4a8fc7 100%);
+      box-shadow: 0 2px 8px rgba(93, 163, 213, 0.3);
     }
-    
+
     .btn-schedule {
-      background: #f39c12;
+      background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
     }
     
     .btn-logout {
-      background: #d9534f;
+      background: linear-gradient(135deg, #d9534f 0%, #c9302c 100%);
+      box-shadow: 0 2px 8px rgba(217, 83, 79, 0.3);
     }
     
     .container {
-      max-width: 1000px;
+      max-width: 1200px;
       margin: 0 auto;
       background: white;
-      padding: 20px 15px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      padding: 30px 20px;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
     }
     
     .add-button {
       width: 100%;
-      max-width: 300px;
-      padding: 14px;
-      background: #6a8f66;
+      max-width: 350px;
+      padding: 16px;
+      background: linear-gradient(135deg, #6a8f66 0%, #5a7f56 100%);
       color: white;
       border: none;
-      border-radius: 8px;
-      font-size: 1em;
-      font-weight: 500;
-      margin: 0 auto 20px;
+      border-radius: 12px;
+      font-size: 1.05em;
+      font-weight: 600;
+      margin: 0 auto 30px;
       display: block;
       cursor: pointer;
       font-family: 'Noto Sans JP', sans-serif;
+      box-shadow: 0 4px 16px rgba(106, 143, 102, 0.4);
+      transition: all 0.3s;
     }
     
     .add-button:active {
-      transform: scale(0.98);
+      transform: translateY(2px);
+      box-shadow: 0 2px 8px rgba(106, 143, 102, 0.4);
     }
     
     .services-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
     }
     
     .service-card {
-      background: #fcfaf4;
-      padding: 15px;
-      border-radius: 10px;
-      border: 1px solid #e8e4dc;
+      background: linear-gradient(135deg, #ffffff 0%, #fcfaf4 100%);
+      padding: 20px;
+      border-radius: 16px;
+      border: 2px solid #e8e4dc;
       position: relative;
+      transition: all 0.3s;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
       overflow: hidden;
+    }
+    
+    .service-card:hover {
+      border-color: #a3b18a;
+      box-shadow: 0 8px 24px rgba(163, 177, 138, 0.2);
+      transform: translateY(-4px);
     }
     
     .badges-container {
       position: absolute;
-      top: 10px;
-      right: 10px;
+      top: 15px;
+      right: 15px;
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -130,14 +154,15 @@
     }
     
     .popular-badge, .campaign-badge {
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 0.7em;
-      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75em;
+      font-weight: 700;
       color: white;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      white-space: nowrap;
     }
-
+    
     .popular-badge {
       background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
     }
@@ -146,17 +171,27 @@
       background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
     }
     
+    .service-image {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      background: #f5f5f5;
+    }
+    
     .service-header {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 10px;
+      gap: 15px;
+      margin-bottom: 12px;
       padding-right: 100px;
     }
     
     .service-icon {
-      font-size: 2.5em;
+      font-size: 3em;
       flex-shrink: 0;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
     }
     
     .service-info {
@@ -164,80 +199,96 @@
     }
     
     .service-name {
-      font-weight: 600;
+      font-weight: 700;
       color: #333;
-      font-size: 1.1em;
-      margin-bottom: 4px;
+      font-size: 1.3em;
+      margin-bottom: 8px;
+      line-height: 1.3;
     }
     
     .service-meta {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       align-items: center;
       flex-wrap: wrap;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
     
     .service-duration {
-      background: #a3b18a;
+      background: linear-gradient(135deg, #a3b18a 0%, #879f6f 100%);
       color: white;
-      padding: 3px 10px;
-      border-radius: 10px;
-      font-size: 0.75em;
-      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 12px;
+      font-size: 0.8em;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(163, 177, 138, 0.3);
     }
     
     .service-price {
       color: #6a8f66;
-      font-size: 1.2em;
-      font-weight: 600;
+      font-size: 1.4em;
+      font-weight: 700;
     }
     
     .service-description {
       color: #666;
-      font-size: 0.9em;
-      line-height: 1.6;
-      margin: 8px 0;
+      font-size: 0.95em;
+      line-height: 1.7;
+      margin: 12px 0;
+      padding: 12px;
+      background: #f8f6f2;
+      border-radius: 8px;
     }
     
-    .service-image {
-      width: 100%;
-      max-height: 180px;
-      object-fit: cover;
-      border-radius: 8px;
-      margin-bottom: 10px;
+    .service-display-options {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+      font-size: 0.8em;
+    }
+    
+    .display-badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+      background: #e8f5e9;
+      color: #22c55e;
+      border: 1px solid #22c55e;
     }
     
     .action-buttons {
       display: flex;
-      gap: 8px;
-      margin-top: 12px;
+      gap: 10px;
+      margin-top: 15px;
     }
     
     .btn-edit, .btn-delete {
       flex: 1;
-      padding: 10px;
+      padding: 12px;
       border: none;
-      border-radius: 6px;
-      font-size: 0.9em;
-      font-weight: 500;
+      border-radius: 10px;
+      font-size: 0.95em;
+      font-weight: 600;
       cursor: pointer;
       font-family: 'Noto Sans JP', sans-serif;
-      touch-action: manipulation;
+      transition: all 0.3s;
     }
     
     .btn-edit {
-      background: #5da3d5;
+      background: linear-gradient(135deg, #5da3d5 0%, #4a8fc7 100%);
       color: white;
+      box-shadow: 0 2px 8px rgba(93, 163, 213, 0.3);
     }
     
     .btn-delete {
-      background: #d9534f;
+      background: linear-gradient(135deg, #d9534f 0%, #c9302c 100%);
       color: white;
+      box-shadow: 0 2px 8px rgba(217, 83, 79, 0.3);
     }
     
     .btn-edit:active, .btn-delete:active {
-      opacity: 0.8;
+      transform: translateY(2px);
     }
     
     .modal {
@@ -248,88 +299,146 @@
       top: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0,0,0,0.5);
+      background-color: rgba(0,0,0,0.7);
       overflow-y: auto;
     }
     
     .modal-content {
-      background-color: white;
-      margin: 20px auto;
-      padding: 25px 20px;
-      border-radius: 12px;
+      background: white;
+      margin: 30px auto;
+      padding: 35px 30px;
+      border-radius: 20px;
       width: calc(100% - 40px);
-      max-width: 500px;
+      max-width: 650px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.3);
+      max-height: calc(100vh - 60px);
+      overflow-y: auto;
     }
     
     .close {
       float: right;
-      font-size: 28px;
+      font-size: 32px;
       font-weight: bold;
       color: #aaa;
       cursor: pointer;
       line-height: 1;
+      transition: 0.3s;
+    }
+    
+    .close:hover {
+      color: #333;
     }
     
     .modal h2 {
       color: #6a8f66;
-      margin-bottom: 20px;
-      font-size: 1.3em;
+      margin-bottom: 25px;
+      font-size: 1.5em;
       clear: both;
+      font-weight: 700;
     }
     
-    .form-group {
+    .form-section {
+      margin-bottom: 25px;
+      padding: 20px;
+      background: #f8f6f2;
+      border-radius: 12px;
+    }
+    
+    .form-section-title {
+      font-size: 1.1em;
+      font-weight: 700;
+      color: #6a8f66;
       margin-bottom: 15px;
-    }
-    
-    .form-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 500;
-      color: #555;
-      font-size: 0.95em;
-    }
-    
-    .form-group input,
-    .form-group textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #d9d6ce;
-      border-radius: 8px;
-      font-size: 16px;
-      font-family: 'Noto Sans JP', sans-serif;
-    }
-    
-    .form-group textarea {
-      min-height: 80px;
-      resize: vertical;
-    }
-    
-    .checkbox-group {
       display: flex;
       align-items: center;
       gap: 8px;
     }
     
+    .form-group {
+      margin-bottom: 18px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #555;
+      font-size: 0.95em;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid #e8e4dc;
+      border-radius: 10px;
+      font-size: 16px;
+      font-family: 'Noto Sans JP', sans-serif;
+      transition: all 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #a3b18a;
+      box-shadow: 0 0 0 4px rgba(163, 177, 138, 0.1);
+    }
+    
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: white;
+      border-radius: 8px;
+      border: 2px solid #e8e4dc;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .checkbox-group:hover {
+      border-color: #a3b18a;
+    }
+    
     .checkbox-group input[type="checkbox"] {
       width: auto;
-      transform: scale(1.3);
+      transform: scale(1.4);
       cursor: pointer;
+    }
+    
+    .checkbox-group label {
+      margin: 0 !important;
+      cursor: pointer;
+      flex: 1;
     }
     
     .image-upload-area {
       border: 2px dashed #d9d6ce;
-      border-radius: 8px;
-      padding: 20px;
+      border-radius: 12px;
+      padding: 30px;
       text-align: center;
       cursor: pointer;
-      transition: 0.3s;
-      background: #fafafa;
+      transition: all 0.3s;
+      background: white;
       position: relative;
     }
     
     .image-upload-area:hover {
       border-color: #a3b18a;
-      background: #f5f5f5;
+      background: #f8f6f2;
     }
     
     .image-upload-area.has-image {
@@ -339,9 +448,9 @@
     
     .preview-image {
       width: 100%;
-      max-height: 200px;
+      max-height: 250px;
       object-fit: cover;
-      border-radius: 6px;
+      border-radius: 12px;
       display: block;
     }
     
@@ -355,45 +464,59 @@
     }
     
     .image-controls button {
-      padding: 6px 10px;
+      padding: 8px 12px;
       border: none;
-      border-radius: 6px;
-      font-size: 0.8em;
-      cursor: pointer;
+      border-radius: 8px;
+      font-size: 0.85em;
       font-weight: 600;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      transition: all 0.2s;
+    }
+    
+    .image-controls button:active {
+      transform: scale(0.95);
     }
     
     .btn-change-image {
-      background: #5da3d5;
+      background: linear-gradient(135deg, #5da3d5 0%, #4a8fc7 100%);
       color: white;
     }
     
     .btn-remove-image {
-      background: #d9534f;
+      background: linear-gradient(135deg, #d9534f 0%, #c9302c 100%);
       color: white;
+    }
+    
+    .upload-text {
+      color: #888;
+      font-size: 0.95em;
+      margin-top: 10px;
     }
     
     .modal-buttons {
       display: flex;
-      gap: 10px;
-      margin-top: 20px;
+      gap: 12px;
+      margin-top: 30px;
     }
     
     .btn-save, .btn-cancel {
       flex: 1;
-      padding: 14px;
+      padding: 16px;
       border: none;
-      border-radius: 8px;
-      font-size: 1em;
-      font-weight: 500;
+      border-radius: 12px;
+      font-size: 1.05em;
+      font-weight: 600;
       cursor: pointer;
       font-family: 'Noto Sans JP', sans-serif;
+      transition: all 0.3s;
     }
     
     .btn-save {
-      background: #6a8f66;
+      background: linear-gradient(135deg, #6a8f66 0%, #5a7f56 100%);
       color: white;
+      box-shadow: 0 4px 16px rgba(106, 143, 102, 0.4);
     }
     
     .btn-cancel {
@@ -401,18 +524,36 @@
       color: white;
     }
     
+    .btn-save:active, .btn-cancel:active {
+      transform: translateY(2px);
+    }
+    
     .loading, .no-data {
       text-align: center;
       color: #999;
-      padding: 40px;
-      font-size: 0.95em;
+      padding: 60px;
+      font-size: 1.1em;
     }
     
     footer {
       text-align: center;
       color: #888;
-      margin-top: 30px;
+      margin-top: 40px;
       font-size: 0.85em;
+    }
+    
+    @media (max-width: 768px) {
+      .services-list {
+        grid-template-columns: 1fr;
+      }
+      
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .modal-content {
+        padding: 25px 20px;
+      }
     }
   </style>
 </head>
@@ -420,6 +561,7 @@
   <div class="header">
     <div class="logo">🌿</div>
     <h1>サービス管理</h1>
+    <p class="subtitle">サロンのサービス・メニューを管理します</p>
   </div>
   
   <nav>
@@ -432,7 +574,7 @@
   </nav>
 
   <div class="container">
-    <button class="add-button" onclick="openAddModal()">+ 新規サービス追加</button>
+    <button class="add-button" onclick="openAddModal()">✨ 新規サービス追加</button>
     
     <div id="services-container">
       <div class="loading">読み込み中...</div>
@@ -447,68 +589,110 @@
         <input type="hidden" id="service-id">
         <input type="hidden" id="service-image-data">
         
-        <div class="form-group">
-          <label>サービス名 *</label>
-          <input type="text" id="service-name" required>
-        </div>
-        
-        <div class="form-group">
-          <label>アイコン（絵文字）*</label>
-          <input type="text" id="service-icon" value="💆" required maxlength="2">
-        </div>
-        
-        <div class="form-group">
-          <label>価格（円）*</label>
-          <input type="number" id="service-price" min="0" step="100" required>
-        </div>
-
-        <div class="form-group">
-          <label>キャンペーン価格（円）</label>
-          <input type="number" id="service-campaign-price" min="0" step="100">
-        </div>
-        
-        <div class="form-group">
-          <div class="checkbox-group">
-            <input type="checkbox" id="service-campaign">
-            <label for="service-campaign" style="margin: 0; cursor: pointer;">🎉 キャンペーン中として表示</label>
+        <div class="form-section">
+          <div class="form-section-title">📝 基本情報</div>
+          
+          <div class="form-group">
+            <label>サービス名 *</label>
+            <input type="text" id="service-name" required placeholder="例: フェイシャルケア">
           </div>
-        </div>
-        
-        <div class="form-group">
-          <label>所要時間</label>
-          <input type="text" id="service-duration" placeholder="例: 60分">
-        </div>
-        
-        <div class="form-group">
-          <label>説明</label>
-          <textarea id="service-description"></textarea>
-        </div>
-        
-        <div class="form-group">
-          <label>サービス画像</label>
-          <div class="image-upload-area" id="image-upload-area">
-            <div id="upload-placeholder">
-              <div style="font-size: 2em; margin-bottom: 8px;">📷</div>
-              <div style="font-size: 0.9em; color: #888;">クリックして画像をアップロード</div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>アイコン *</label>
+              <input type="text" id="service-icon" value="💆" required maxlength="2" placeholder="💆">
+            </div>
+            
+            <div class="form-group">
+              <label>所要時間</label>
+              <input type="text" id="service-duration" placeholder="例: 60分">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>通常価格（円）*</label>
+              <input type="number" id="service-price" min="0" step="100" required placeholder="8000">
+            </div>
+            
+            <div class="form-group">
+              <label>キャンペーン価格（円）</label>
+              <input type="number" id="service-campaign-price" min="0" step="100" placeholder="6800">
             </div>
           </div>
         </div>
         
-        <div class="form-group">
-          <label>表示順</label>
-          <input type="number" id="service-order" min="0" value="0">
+        <div class="form-section">
+          <div class="form-section-title">💬 説明文</div>
+          
+          <div class="form-group">
+            <label>予約モーダル用（簡潔な説明）</label>
+            <textarea id="service-description" placeholder="予約画面のモーダルで表示される簡潔な説明を入力してください"></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>サービス紹介ページ用（詳細な説明）</label>
+            <textarea id="service-intro-text" placeholder="サービス紹介ページで表示される詳しい説明を入力してください"></textarea>
+          </div>
         </div>
         
-        <div class="form-group">
-          <div class="checkbox-group">
-            <input type="checkbox" id="service-popular">
-            <label for="service-popular" style="margin: 0; cursor: pointer;">🔥 人気サービスとして表示</label>
+        <div class="form-section">
+          <div class="form-section-title">🖼️ サービス画像</div>
+          
+          <div class="form-group">
+            <div class="image-upload-area" id="image-upload-area">
+              <div id="upload-placeholder">
+                <div style="font-size: 3em; margin-bottom: 10px;">📷</div>
+                <div class="upload-text">クリックして画像をアップロード</div>
+                <div class="upload-text" style="font-size: 0.85em; color: #aaa;">推奨: 横長の画像（16:9）</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-section">
+          <div class="form-section-title">⚙️ 表示設定</div>
+          
+          <div class="form-group">
+            <label>表示順</label>
+            <input type="number" id="service-order" min="0" value="0" placeholder="0">
+            <small style="color: #888; font-size: 0.85em; display: block; margin-top: 5px;">
+              数字が小さいほど上に表示されます
+            </small>
+          </div>
+          
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="service-popular">
+              <label for="service-popular">🔥 人気サービスとして表示</label>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="service-campaign">
+              <label for="service-campaign">🎉 キャンペーン中として表示</label>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="show-in-booking">
+              <label for="show-in-booking">📅 予約モーダルに表示</label>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="show-in-intro">
+              <label for="show-in-intro">📄 サービス紹介ページに表示</label>
+            </div>
           </div>
         </div>
         
         <div class="modal-buttons">
           <button type="button" class="btn-cancel" onclick="closeModal()">キャンセル</button>
-          <button type="submit" class="btn-save">保存</button>
+          <button type="submit" class="btn-save">💾 保存する</button>
         </div>
       </form>
     </div>
@@ -518,7 +702,7 @@
 
   <script>
     let services = [];
-
+  
     async function loadServices() {
       try {
         const response = await fetch('/services?active_only=false');
@@ -526,62 +710,79 @@
         services = data.services || [];
         displayServices();
       } catch (error) {
+        console.error('データ読み込みエラー:', error);
         document.getElementById('services-container').innerHTML = 
-          '<div class="no-data">データの読み込みに失敗しました</div>';
+          '<div class="no-data">❌ データの読み込みに失敗しました</div>';
       }
     }
-
+  
     function displayServices() {
       const container = document.getElementById('services-container');
       
       if (services.length === 0) {
-        container.innerHTML = '<div class="no-data">サービスがありません</div>';
+        container.innerHTML = '<div class="no-data">📋 サービスがまだ登録されていません</div>';
         return;
       }
-
+  
       const html = '<div class="services-list">' + services.map(s => {
         let badges = '';
-        if (s.is_popular || s.is_campaign) {
-          badges = '<div class="badges-container">';
-          if (s.is_popular) badges += '<div class="popular-badge">🔥 人気</div>';
-          if (s.is_campaign) badges += '<div class="campaign-badge">🎉 キャンペーン</div>';
-          badges += '</div>';
+        if (s.is_popular && s.is_campaign) {
+          badges = `
+            <div class="badges-container">
+              <div class="popular-badge">🔥 人気</div>
+              <div class="campaign-badge">🎉 キャンペーン</div>
+            </div>
+          `;
+        } else if (s.is_popular) {
+          badges = '<div class="badges-container"><div class="popular-badge">🔥 人気</div></div>';
+        } else if (s.is_campaign) {
+          badges = '<div class="badges-container"><div class="campaign-badge">🎉 キャンペーン</div></div>';
         }
-
+  
         let priceDisplay = '';
         if (s.is_campaign && s.campaign_price) {
-          priceDisplay = `<span class="service-price"><s style="color:#999; font-size:0.9em;">¥${Number(s.price).toLocaleString()}</s> <span style="color:#ef4444;">→ ¥${Number(s.campaign_price).toLocaleString()}</span></span>`;
+          priceDisplay = `
+            <span class="service-price">
+              <s style="color:#999; font-size:0.85em;">¥${Number(s.price).toLocaleString()}</s> 
+              <span style="color:#ef4444;">¥${Number(s.campaign_price).toLocaleString()}</span>
+            </span>
+          `;
         } else {
           priceDisplay = `<span class="service-price">¥${Number(s.price).toLocaleString()}</span>`;
         }
-
+        
+        let displayOptions = '';
+        if (s.show_in_booking) displayOptions += '<span class="display-badge">📅 予約表示</span>';
+        if (s.show_in_intro) displayOptions += '<span class="display-badge">📄 紹介表示</span>';
+  
         return `
           <div class="service-card">
             ${badges}
             ${s.image_data ? `<img src="${s.image_data}" class="service-image" alt="${s.service_name}">` : ''}
             <div class="service-header">
-              <div class="service-icon">${s.icon}</div>
+              <div class="service-icon">${s.icon || '💆'}</div>
               <div class="service-info">
                 <div class="service-name">${s.service_name}</div>
                 <div class="service-meta">
-                  ${s.duration ? `<span class="service-duration">${s.duration}</span>` : ''}
+                  ${s.duration ? `<span class="service-duration">⏱️ ${s.duration}</span>` : ''}
                   ${priceDisplay}
                 </div>
-                ${s.description ? `<div class="service-description">${s.description}</div>` : ''}
-                <div style="font-size: 0.8em; color: #999;">表示順: ${s.display_order}</div>
               </div>
             </div>
+            ${s.description ? `<div class="service-description">💬 ${s.description}</div>` : ''}
+            ${displayOptions ? `<div class="service-display-options">${displayOptions}</div>` : ''}
+            <div style="font-size: 0.8em; color: #999; margin-top: 10px;">表示順: ${s.display_order || 0}</div>
             <div class="action-buttons">
-              <button class="btn-edit" onclick="openEditModal(${s.id})">編集</button>
-              <button class="btn-delete" onclick="deleteService(${s.id}, '${s.service_name.replace(/'/g, "\\'")}')">削除</button>
+              <button class="btn-edit" onclick="openEditModal(${s.id})">✏️ 編集</button>
+              <button class="btn-delete" onclick="deleteService(${s.id}, '${s.service_name.replace(/'/g, "\\'")}')">🗑️ 削除</button>
             </div>
           </div>
         `;
       }).join('') + '</div>';
-
+  
       container.innerHTML = html;
     }
-
+    
     function setupImageUpload() {
       const uploadArea = document.getElementById('image-upload-area');
       uploadArea.onclick = function(e) {
@@ -597,7 +798,7 @@
         document.body.removeChild(input);
       };
     }
-
+    
     function handleImageUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -612,14 +813,14 @@
         uploadArea.innerHTML = `
           <img src="${imageData}" class="preview-image" alt="Preview">
           <div class="image-controls">
-            <button type="button" class="btn-change-image" onclick="changeImage(event)">変更</button>
-            <button type="button" class="btn-remove-image" onclick="removeImage(event)">削除</button>
+            <button type="button" class="btn-change-image" onclick="changeImage(event)">📷 変更</button>
+            <button type="button" class="btn-remove-image" onclick="removeImage(event)">🗑️ 削除</button>
           </div>
         `;
       };
       reader.readAsDataURL(file);
     }
-
+    
     function changeImage(event) {
       event.preventDefault();
       event.stopPropagation();
@@ -632,92 +833,20 @@
       document.body.appendChild(input);
       input.click();
       document.body.removeChild(input);
-    }
-
-    function removeImage(event) {
-      event.preventDefault();
-      event.stopPropagation();
-      
-      if (!confirm('画像を削除しますか？')) return;
-      
-      document.getElementById('service-image-data').value = '';
-      
-      const uploadArea = document.getElementById('image-upload-area');
-      uploadArea.classList.remove('has-image');
-      uploadArea.innerHTML = `
-        <div id="upload-placeholder">
-          <div style="font-size: 2em; margin-bottom: 8px;">📷</div>
-          <div style="font-size: 0.9em; color: #888;">クリックして画像をアップロード</div>
-        </div>
-      `;
-    }
-
-    function openAddModal() {
-      document.getElementById('modal-title').textContent = 'サービス追加';
-      document.getElementById('serviceForm').reset();
-      document.getElementById('service-id').value = '';
-      document.getElementById('service-icon').value = '💆';
-      document.getElementById('service-order').value = '0';
-      document.getElementById('service-image-data').value = '';
-      
-      const uploadArea = document.getElementById('image-upload-area');
-      uploadArea.classList.remove('has-image');
-      uploadArea.innerHTML = `
-        <div id="upload-placeholder">
-          <div style="font-size: 2em; margin-bottom: 8px;">📷</div>
-          <div style="font-size: 0.9em; color: #888;">クリックして画像をアップロード</div>
-        </div>
-      `;
-      
-      setupImageUpload();
-      document.getElementById('serviceModal').style.display = 'block';
-    }
-
-    function openEditModal(id) {
-      const service = services.find(s => s.id === id);
-      if (!service) return;
-
-      document.getElementById('modal-title').textContent = 'サービス編集';
-      document.getElementById('service-id').value = service.id;
-      document.getElementById('service-name').value = service.service_name;
-      document.getElementById('service-icon').value = service.icon || '💆';
-      document.getElementById('service-price').value = service.price;
-      document.getElementById('service-campaign-price').value = service.campaign_price || '';
-      document.getElementById('service-campaign').checked = service.is_campaign || false;
-      document.getElementById('service-duration').value = service.duration || '';
-      document.getElementById('service-description').value = service.description || '';
-      document.getElementById('service-order').value = service.display_order || 0;
-      document.getElementById('service-popular').checked = service.is_popular || false;
-      document.getElementById('service-image-data').value = service.image_data || '';
-      
-      const uploadArea = document.getElementById('image-upload-area');
-      if (service.image_data) {
-        uploadArea.classList.add('has-image');
-        uploadArea.innerHTML = `
-          <img src="${service.image_data}" class="preview-image" alt="Preview">
-          <div class="image-controls">
-            <button type="button" class="btn-change-image" onclick="changeImage(event)">変更</button>
-            <button type="button" class="btn-remove-image" onclick="removeImage(event)">削除</button>
-          </div>
-        `;
-      } else {
-        uploadArea.classList.remove('has-image');
-        uploadArea.innerHTML = `
-          <div id="upload-placeholder">
-            <div style="font-size: 2em; margin-bottom: 8px;">📷</div>
-            <div style="font-size: 0.9em; color: #888;">クリックして画像をアップロード</div>
-          </div>
-        `;
+          input.click();
+          document.body.removeChild(input);
+        };
       }
       
-      setupImageUpload();
       document.getElementById('serviceModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
     }
-
+  
     function closeModal() {
       document.getElementById('serviceModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
     }
-
+  
     document.getElementById('serviceForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       
@@ -729,12 +858,15 @@
         campaign_price: parseFloat(document.getElementById('service-campaign-price').value) || null,
         duration: document.getElementById('service-duration').value,
         description: document.getElementById('service-description').value,
+        intro_text: document.getElementById('service-intro-text').value,
+        image_data: document.getElementById('service-image-data') ? document.getElementById('service-image-data').value : null,
         display_order: parseInt(document.getElementById('service-order').value),
         is_popular: document.getElementById('service-popular').checked,
         is_campaign: document.getElementById('service-campaign').checked,
-        image_data: document.getElementById('service-image-data').value || null
+        show_in_booking: document.getElementById('show-in-booking').checked,
+        show_in_intro: document.getElementById('show-in-intro').checked
       };
-
+  
       try {
         const url = id ? `/admin/services/${id}` : '/admin/services';
         const method = id ? 'PUT' : 'POST';
@@ -744,41 +876,43 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
-
+  
         if (response.ok) {
           closeModal();
           loadServices();
-          alert(id ? 'サービスを更新しました' : 'サービスを追加しました');
+          alert(id ? '✅ サービスを更新しました' : '✅ サービスを追加しました');
         } else if (response.status === 401) {
-          alert('セッションが切れました。再度ログインしてください。');
+          alert('⚠️ セッションが切れました。再度ログインしてください。');
           window.location.href = '/admin/login';
         } else {
-          alert('エラーが発生しました');
+          alert('❌ エラーが発生しました');
         }
       } catch (error) {
-        alert('エラーが発生しました');
+        console.error('保存エラー:', error);
+        alert('❌ エラーが発生しました');
       }
     });
-
+  
     async function deleteService(id, name) {
-      if (!confirm(`「${name}」を削除しますか?`)) return;
-
+      if (!confirm(`「${name}」を削除してもよろしいですか？\nこの操作は取り消せません。`)) return;
+  
       try {
         const response = await fetch(`/admin/services/${id}`, { method: 'DELETE' });
         if (response.ok) {
           loadServices();
-          alert('サービスを削除しました');
+          alert('✅ サービスを削除しました');
         } else if (response.status === 401) {
-          alert('セッションが切れました。再度ログインしてください。');
+          alert('⚠️ セッションが切れました。再度ログインしてください。');
           window.location.href = '/admin/login';
         } else {
-          alert('削除に失敗しました');
+          alert('❌ 削除に失敗しました');
         }
       } catch (error) {
-        alert('エラーが発生しました');
+        console.error('削除エラー:', error);
+        alert('❌ エラーが発生しました');
       }
     }
-
+  
     document.addEventListener('DOMContentLoaded', loadServices);
     
     window.onclick = function(event) {
