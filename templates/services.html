@@ -25,7 +25,7 @@
       background: linear-gradient(135deg, #a3b18a 0%, #6a8f66 100%);
       color: white;
       text-align: center;
-      padding: 60px 20px 50px;
+      padding: 40px 20px 35px;
       position: relative;
       overflow: hidden;
       box-shadow: 0 4px 20px rgba(0,0,0,0.1);
@@ -49,8 +49,8 @@
     }
     
     .logo {
-      font-size: 3.5em;
-      margin-bottom: 20px;
+      font-size: 2.8em;
+      margin-bottom: 15px;
       position: relative;
       z-index: 1;
       filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
@@ -63,22 +63,22 @@
     }
     
     h1 {
-      font-size: 2.2em;
+      font-size: 1.9em;
       font-weight: 600;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       position: relative;
       z-index: 1;
-      letter-spacing: 4px;
+      letter-spacing: 3px;
       text-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     
     .subtitle {
-      font-size: 1.05em;
+      font-size: 0.95em;
       opacity: 0.95;
       font-weight: 400;
       position: relative;
       z-index: 1;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
     
     .back-button {
@@ -505,21 +505,107 @@
     /* レスポンシブ */
     @media (max-width: 768px) {
       .header {
-        padding: 50px 20px 40px;
+        padding: 35px 20px 30px;
+      }
+      
+      .logo {
+        font-size: 2.3em;
+        margin-bottom: 12px;
       }
       
       h1 {
-        font-size: 1.8em;
+        font-size: 1.5em;
         letter-spacing: 2px;
       }
       
       .subtitle {
+        font-size: 0.85em;
+      }
+      
+      .container {
+        padding: 35px 15px;
+      }
+      
+      .section-intro {
+        margin-bottom: 35px;
+      }
+      
+      .section-intro h2 {
+        font-size: 1.5em;
+      }
+      
+      .section-intro p {
         font-size: 0.95em;
       }
       
       .service-grid {
-        grid-template-columns: 1fr;
-        gap: 30px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+      
+      .service-card {
+        border-radius: 16px;
+      }
+      
+      .service-image {
+        height: 160px;
+      }
+      
+      .service-image-icon {
+        font-size: 3.5em;
+      }
+      
+      .service-content {
+        padding: 18px;
+      }
+      
+      .service-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      
+      .service-icon {
+        font-size: 2em;
+      }
+      
+      .service-name {
+        font-size: 1.15em;
+      }
+      
+      .service-meta {
+        gap: 8px;
+      }
+      
+      .service-duration {
+        padding: 4px 10px;
+        font-size: 0.75em;
+      }
+      
+      .service-price {
+        font-size: 1.2em;
+      }
+      
+      .service-description {
+        font-size: 0.85em;
+        margin-top: 12px;
+        padding-top: 12px;
+      }
+      
+      .read-more {
+        font-size: 0.85em;
+        margin-top: 8px;
+      }
+      
+      .badges-container {
+        top: 10px;
+        right: 10px;
+        gap: 5px;
+      }
+      
+      .service-badge {
+        padding: 5px 10px;
+        font-size: 0.7em;
       }
       
       .modal-content {
@@ -550,12 +636,28 @@
     }
     
     @media (max-width: 480px) {
+      .service-grid {
+        gap: 12px;
+      }
+      
+      .service-image {
+        height: 140px;
+      }
+      
+      .service-content {
+        padding: 15px;
+      }
+      
       .service-name {
-        font-size: 1.3em;
+        font-size: 1.05em;
       }
       
       .service-price {
-        font-size: 1.3em;
+        font-size: 1.1em;
+      }
+      
+      .service-description {
+        font-size: 0.8em;
       }
       
       .modal-features {
